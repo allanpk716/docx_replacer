@@ -18,14 +18,6 @@ type Keyword struct {
 
 // Config 表示配置文件的结构
 type Config struct {
-	// InputDocx 输入的docx文件路径（单文件模式）
-	InputDocx string `json:"input_docx,omitempty"`
-	// OutputDocx 输出的docx文件路径（单文件模式）
-	OutputDocx string `json:"output_docx,omitempty"`
-	// InputFolder 输入文件夹路径（批量模式）
-	InputFolder string `json:"input_folder,omitempty"`
-	// OutputFolder 输出文件夹路径（批量模式）
-	OutputFolder string `json:"output_folder,omitempty"`
 	// Keywords 关键词替换列表
 	Keywords []Keyword `json:"keywords"`
 }
@@ -40,18 +32,6 @@ func LoadConfig(configPath string) (*Config, error) {
 	var config Config
 	if err := json.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("解析配置文件失败: %w", err)
-	}
-
-	// 验证配置 - 支持单文件模式和批量模式
-	isSingleMode := config.InputDocx != "" && config.OutputDocx != ""
-	isBatchMode := config.InputFolder != "" && config.OutputFolder != ""
-	
-	if !isSingleMode && !isBatchMode {
-		return nil, fmt.Errorf("必须指定单文件模式（input_docx + output_docx）或批量模式（input_folder + output_folder）")
-	}
-	
-	if isSingleMode && isBatchMode {
-		return nil, fmt.Errorf("不能同时使用单文件模式和批量模式")
 	}
 
 	// 验证Keywords字段的完整性
@@ -90,14 +70,4 @@ func (c *Config) GetKeywordByKey(key string) *Keyword {
 		}
 	}
 	return nil
-}
-
-// IsBatchMode 判断是否为批量处理模式
-func (c *Config) IsBatchMode() bool {
-	return c.InputFolder != "" && c.OutputFolder != ""
-}
-
-// IsSingleMode 判断是否为单文件处理模式
-func (c *Config) IsSingleMode() bool {
-	return c.InputDocx != "" && c.OutputDocx != ""
 }

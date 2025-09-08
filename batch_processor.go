@@ -9,15 +9,19 @@ import (
 
 // BatchProcessor 批量处理器
 type BatchProcessor struct {
-	config  *Config
-	verbose bool
+	config       *Config
+	inputFolder  string
+	outputFolder string
+	verbose      bool
 }
 
 // NewBatchProcessor 创建新的批量处理器
-func NewBatchProcessor(config *Config, verbose bool) *BatchProcessor {
+func NewBatchProcessor(config *Config, inputFolder, outputFolder string, verbose bool) *BatchProcessor {
 	return &BatchProcessor{
-		config:  config,
-		verbose: verbose,
+		config:       config,
+		inputFolder:  inputFolder,
+		outputFolder: outputFolder,
+		verbose:      verbose,
 	}
 }
 
@@ -50,28 +54,24 @@ func (bp *BatchProcessor) FindDocxFiles(folderPath string) ([]string, error) {
 
 // ProcessBatch 批量处理文件夹中的所有docx文件
 func (bp *BatchProcessor) ProcessBatch() error {
-	if !bp.config.IsBatchMode() {
-		return fmt.Errorf("配置不是批量模式")
-	}
-
 	// 检查输入文件夹是否存在
-	if _, err := os.Stat(bp.config.InputFolder); os.IsNotExist(err) {
-		return fmt.Errorf("输入文件夹不存在: %s", bp.config.InputFolder)
+	if _, err := os.Stat(bp.inputFolder); os.IsNotExist(err) {
+		return fmt.Errorf("输入文件夹不存在: %s", bp.inputFolder)
 	}
 
 	// 创建输出文件夹（如果不存在）
-	if err := os.MkdirAll(bp.config.OutputFolder, 0755); err != nil {
+	if err := os.MkdirAll(bp.outputFolder, 0755); err != nil {
 		return fmt.Errorf("创建输出文件夹失败: %w", err)
 	}
 
 	// 查找所有docx文件
-	docxFiles, err := bp.FindDocxFiles(bp.config.InputFolder)
+	docxFiles, err := bp.FindDocxFiles(bp.inputFolder)
 	if err != nil {
 		return err
 	}
 
 	if len(docxFiles) == 0 {
-		fmt.Printf("在文件夹 %s 中未找到任何docx文件\n", bp.config.InputFolder)
+		fmt.Printf("在文件夹 %s 中未找到任何docx文件\n", bp.inputFolder)
 		return nil
 	}
 
@@ -119,7 +119,7 @@ func (bp *BatchProcessor) ProcessBatch() error {
 // generateOutputPath 生成输出文件路径
 func (bp *BatchProcessor) generateOutputPath(inputFile string) (string, error) {
 	// 获取相对于输入文件夹的路径
-	relPath, err := filepath.Rel(bp.config.InputFolder, inputFile)
+	relPath, err := filepath.Rel(bp.inputFolder, inputFile)
 	if err != nil {
 		return "", fmt.Errorf("计算相对路径失败: %w", err)
 	}
@@ -132,7 +132,7 @@ func (bp *BatchProcessor) generateOutputPath(inputFile string) (string, error) {
 	newFilename := nameWithoutExt + "_替换后" + ext
 
 	// 构建完整的输出路径
-	outputPath := filepath.Join(bp.config.OutputFolder, dir, newFilename)
+	outputPath := filepath.Join(bp.outputFolder, dir, newFilename)
 
 	// 确保输出目录存在
 	outputDir := filepath.Dir(outputPath)
