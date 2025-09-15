@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 
 	"github.com/nguyenthenguyen/docx"
@@ -40,42 +41,96 @@ func (dp *DocxProcessor) ReplaceKeywords(replacements map[string]string, verbose
 	// 初始化替换计数器
 	dp.replacementCount = make(map[string]int)
 
-	// 使用nguyenthenguyen/docx库进行替换
+	// 使用增强的替换方法
 	for oldText, replacement := range replacements {
-		// 获取替换前的内容以计算替换次数
-		content := dp.editable.GetContent()
-		count := 0
-		for i := 0; i < len(content); {
-			index := strings.Index(content[i:], oldText)
-			if index == -1 {
-				break
-			}
-			count++
-			i += index + len(oldText)
+
+		// 执行增强替换
+		count, err := dp.enhancedReplace(oldText, replacement, verbose)
+		if err != nil {
+			return fmt.Errorf("替换关键词 '%s' 失败: %v", oldText, err)
 		}
 
-		if count > 0 {
-			dp.replacementCount[oldText] = count
-			// 执行替换（-1表示替换所有匹配项）
-			wrappedOldText := "#" + oldText + "#"
-			err := dp.editable.Replace(wrappedOldText, replacement, -1)
-			if err != nil {
-				return fmt.Errorf("替换文本失败: %v", err)
-			}
-			// 同时替换页眉和页脚
-			err = dp.editable.ReplaceHeader(wrappedOldText, replacement)
-			if err != nil {
-				log.Printf("替换页眉失败: %v", err)
-			}
-			err = dp.editable.ReplaceFooter(wrappedOldText, replacement)
-			if err != nil {
-				log.Printf("替换页脚失败: %v", err)
-			}
+		dp.replacementCount[oldText] = count
 
-			if verbose {
+		if verbose {
+			if count > 0 {
 				log.Printf("替换 '%s' -> '%s' (%d次)", oldText, replacement, count)
+			} else {
+				log.Printf("未找到关键词 '%s'", oldText)
 			}
 		}
+	}
+
+	return nil
+}
+
+// enhancedReplace 增强的替换方法，能更好地处理表格等复杂结构
+func (dp *DocxProcessor) enhancedReplace(oldText, replacement string, verbose bool) (int, error) {
+	// 获取文档内容进行计数
+	content := dp.editable.GetContent()
+	originalCount := strings.Count(content, oldText)
+
+	if originalCount == 0 {
+		return 0, nil
+	}
+
+	// 方法1: 使用标准Replace方法
+	err := dp.editable.Replace(oldText, replacement, -1)
+	if err != nil {
+		log.Printf("标准替换失败: %v", err)
+	}
+
+	// 方法2: 使用ReplaceRaw方法（直接操作XML内容）
+	dp.editable.ReplaceRaw(oldText, replacement, -1)
+
+	// 方法3: 替换页眉和页脚
+	err = dp.editable.ReplaceHeader(oldText, replacement)
+	if err != nil && verbose {
+		log.Printf("替换页眉失败: %v", err)
+	}
+	err = dp.editable.ReplaceFooter(oldText, replacement)
+	if err != nil && verbose {
+		log.Printf("替换页脚失败: %v", err)
+	}
+
+	// 方法4: 使用正则表达式进行更深层的内容替换
+	// 这个方法可以处理被XML标签分割的文本
+	err = dp.regexBasedReplace(oldText, replacement)
+	if err != nil && verbose {
+		log.Printf("正则替换失败: %v", err)
+	}
+
+	return originalCount, nil
+}
+
+// regexBasedReplace 基于正则表达式的替换，处理被XML标签分割的文本
+func (dp *DocxProcessor) regexBasedReplace(oldText, replacement string) error {
+	// 获取当前文档的完整XML内容
+	content := dp.editable.GetContent()
+
+	// 转义特殊字符
+	escapedOldText := regexp.QuoteMeta(oldText)
+
+	// 创建一个正则表达式，允许XML标签在关键词中间
+	// 这个正则会匹配被<w:t>标签分割的文本
+	pattern := strings.ReplaceAll(escapedOldText, "\\ ", "(?:<[^>]*>)*\\s*(?:<[^>]*>)*")
+	for i := 0; i < len(oldText); i++ {
+		char := string(oldText[i])
+		if char != " " {
+			escapedChar := regexp.QuoteMeta(char)
+			pattern = strings.Replace(pattern, escapedChar, escapedChar+"(?:<[^>]*>)*", 1)
+		}
+	}
+
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return fmt.Errorf("编译正则表达式失败: %v", err)
+	}
+
+	// 如果找到匹配项，使用SetContent更新整个文档
+	if re.MatchString(content) {
+		newContent := re.ReplaceAllString(content, replacement)
+		dp.editable.SetContent(newContent)
 	}
 
 	return nil
