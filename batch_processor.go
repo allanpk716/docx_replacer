@@ -152,8 +152,17 @@ func (bp *BatchProcessor) processSingleFile(inputFile, outputFile string, replac
 	}
 	defer processor.Close()
 
+	// 调试：显示文档内容和关键词分析
+	if bp.verbose {
+		keywords := make([]string, 0, len(replacementMap))
+		for keyword := range replacementMap {
+			keywords = append(keywords, keyword)
+		}
+		processor.DebugContent(keywords)
+	}
+
 	// 执行替换
-	if err := processor.ReplaceKeywordsWithHashWrapper(replacementMap, bp.verbose); err != nil {
+	if err := processor.ReplaceKeywordsWithOptions(replacementMap, bp.verbose, true); err != nil {
 		return fmt.Errorf("替换关键词失败: %w", err)
 	}
 

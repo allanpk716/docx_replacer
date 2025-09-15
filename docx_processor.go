@@ -32,17 +32,6 @@ func NewDocxProcessor(filePath string) (*DocxProcessor, error) {
 	}, nil
 }
 
-// ReplaceKeywords 替换文档中的关键词
-// ReplaceKeywords 替换关键词（保持向后兼容）
-func (dp *DocxProcessor) ReplaceKeywords(replacements map[string]string, verbose bool) error {
-	return dp.ReplaceKeywordsWithOptions(replacements, verbose, false)
-}
-
-// ReplaceKeywordsWithHashWrapper 使用井号包装的关键词替换
-func (dp *DocxProcessor) ReplaceKeywordsWithHashWrapper(replacements map[string]string, verbose bool) error {
-	return dp.ReplaceKeywordsWithOptions(replacements, verbose, true)
-}
-
 // ReplaceKeywordsWithOptions 带选项的关键词替换方法
 func (dp *DocxProcessor) ReplaceKeywordsWithOptions(replacements map[string]string, verbose bool, useHashWrapper bool) error {
 	if dp.editable == nil {
@@ -184,4 +173,36 @@ func (dp *DocxProcessor) Close() error {
 // GetReplacementCount 获取关键词替换次数统计
 func (dp *DocxProcessor) GetReplacementCount() map[string]int {
 	return dp.replacementCount
+}
+
+// DebugContent 调试方法：显示文档内容和关键词分析
+func (dp *DocxProcessor) DebugContent(keywords []string) {
+	if dp.editable == nil {
+		log.Println("文档未初始化")
+		return
+	}
+
+	content := dp.editable.GetContent()
+	log.Printf("=== 文档内容调试信息 ===")
+	log.Printf("文档总字符数: %d", len(content))
+
+	// 显示前500个字符
+	previewLength := 500
+	if len(content) < previewLength {
+		previewLength = len(content)
+	}
+	log.Printf("文档内容预览（前%d字符）:", previewLength)
+	log.Printf("%s", content[:previewLength])
+
+	// 检查关键词
+	log.Printf("=== 关键词分析 ===")
+	for _, keyword := range keywords {
+		// 检查不带井号的
+		plainCount := strings.Count(content, keyword)
+		// 检查带井号的
+		hashCount := strings.Count(content, "#"+keyword+"#")
+
+		log.Printf("关键词 '%s': 不带井号=%d次, 带井号=%d次", keyword, plainCount, hashCount)
+	}
+	log.Printf("=== 调试信息结束 ===")
 }
