@@ -33,7 +33,18 @@ func NewDocxProcessor(filePath string) (*DocxProcessor, error) {
 }
 
 // ReplaceKeywords 替换文档中的关键词
+// ReplaceKeywords 替换关键词（保持向后兼容）
 func (dp *DocxProcessor) ReplaceKeywords(replacements map[string]string, verbose bool) error {
+	return dp.ReplaceKeywordsWithOptions(replacements, verbose, false)
+}
+
+// ReplaceKeywordsWithHashWrapper 使用井号包装的关键词替换
+func (dp *DocxProcessor) ReplaceKeywordsWithHashWrapper(replacements map[string]string, verbose bool) error {
+	return dp.ReplaceKeywordsWithOptions(replacements, verbose, true)
+}
+
+// ReplaceKeywordsWithOptions 带选项的关键词替换方法
+func (dp *DocxProcessor) ReplaceKeywordsWithOptions(replacements map[string]string, verbose bool, useHashWrapper bool) error {
 	if dp.editable == nil {
 		return fmt.Errorf("文档未初始化")
 	}
@@ -43,9 +54,14 @@ func (dp *DocxProcessor) ReplaceKeywords(replacements map[string]string, verbose
 
 	// 使用增强的替换方法
 	for oldText, replacement := range replacements {
+		searchText := oldText
+		if useHashWrapper {
+			// 在 oldText 前后添加井号
+			searchText = "#" + oldText + "#"
+		}
 
 		// 执行增强替换
-		count, err := dp.enhancedReplace(oldText, replacement, verbose)
+		count, err := dp.enhancedReplace(searchText, replacement, verbose)
 		if err != nil {
 			return fmt.Errorf("替换关键词 '%s' 失败: %v", oldText, err)
 		}

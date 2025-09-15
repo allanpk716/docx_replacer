@@ -153,7 +153,7 @@ func (bp *BatchProcessor) processSingleFile(inputFile, outputFile string, replac
 	defer processor.Close()
 
 	// 执行替换
-	if err := processor.ReplaceKeywords(replacementMap, bp.verbose); err != nil {
+	if err := processor.ReplaceKeywordsWithHashWrapper(replacementMap, bp.verbose); err != nil {
 		return fmt.Errorf("替换关键词失败: %w", err)
 	}
 
