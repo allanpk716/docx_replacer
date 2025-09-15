@@ -57,7 +57,7 @@ func TestDocxProcessor_ReplaceKeywords(t *testing.T) {
 
 // TestDocxProcessor_ReplaceKeywordsWithHashWrapper 测试带井号包装的关键词替换
 func TestDocxProcessor_ReplaceKeywordsWithHashWrapper(t *testing.T) {
-	testFile := createTestDocxWithHashKeywords(t)
+	testFile := createTestDocx(t)
 	defer os.Remove(testFile)
 
 	processor, err := NewDocxProcessor(testFile)
@@ -66,21 +66,41 @@ func TestDocxProcessor_ReplaceKeywordsWithHashWrapper(t *testing.T) {
 	}
 	defer processor.Close()
 
-	replacements := map[string]string{
-		"测试关键词": "替换的内容",
+	// 第一步：先在文档中添加带井号的关键词（模拟实际文档场景）
+	replacements1 := map[string]string{
+		"注册申请人": "#姓名#",
+		"法定代表人": "#法人#",
+	}
+	err = processor.ReplaceKeywords(replacements1, true)
+	if err != nil {
+		t.Fatalf("添加井号关键词失败: %v", err)
 	}
 
-	err = processor.ReplaceKeywordsWithHashWrapper(replacements, true)
+	// 第二步：测试井号包装功能
+	// 提供不带井号的关键词，应该能找到并替换文档中带井号的文本
+	replacements2 := map[string]string{
+		"姓名": "张三",
+		"法人": "李四",
+	}
+
+	err = processor.ReplaceKeywordsWithHashWrapper(replacements2, true)
 	if err != nil {
 		t.Fatalf("替换带井号关键词失败: %v", err)
 	}
 
-	// 检查方法调用成功，不强制要求替换计数
+	// 检查替换计数
 	counts := processor.GetReplacementCount()
 	if counts == nil {
 		t.Error("替换计数不应该为nil")
 	}
-	// 测试通过表示方法正常工作
+
+	// 验证井号关键词被正确替换
+	if counts["姓名"] == 0 {
+		t.Error("应该找到并替换 #姓名# 关键词")
+	}
+	if counts["法人"] == 0 {
+		t.Error("应该找到并替换 #法人# 关键词")
+	}
 }
 
 // TestDocxProcessor_ReplaceKeywordsWithOptions 测试带选项的关键词替换

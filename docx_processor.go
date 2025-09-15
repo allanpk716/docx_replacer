@@ -116,7 +116,16 @@ func (dp *DocxProcessor) enhancedReplace(oldText, replacement string, verbose bo
 		log.Printf("正则替换失败: %v", err)
 	}
 
-	return originalCount, nil
+	// 验证替换效果：检查替换后还剩多少个原文本
+	afterContent := dp.editable.GetContent()
+	remainingCount := strings.Count(afterContent, oldText)
+	actualReplacedCount := originalCount - remainingCount
+
+	if verbose && actualReplacedCount != originalCount {
+		log.Printf("警告: 期望替换 %d 次，实际替换 %d 次", originalCount, actualReplacedCount)
+	}
+
+	return actualReplacedCount, nil
 }
 
 // regexBasedReplace 基于正则表达式的替换，处理被XML标签分割的文本
