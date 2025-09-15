@@ -286,3 +286,79 @@ func TestDocxProcessor_GetReplacementCount(t *testing.T) {
 		t.Errorf("'不存在的关键词' 计数应该为0，实际为 %d", count)
 	}
 }
+
+// TestDocxProcessor_SmartHashWrapper 测试智能井号包装功能
+func TestDocxProcessor_SmartHashWrapper(t *testing.T) {
+	tests := []struct {
+		name           string
+		keyword        string
+		expectedSearch string
+		docContent     string
+	}{
+		{
+			name:           "普通关键词自动添加井号",
+			keyword:        "结构及组成",
+			expectedSearch: "#结构及组成#",
+			docContent:     "这是一个测试文档。#结构及组成#需要填写。",
+		},
+		{
+			name:           "已带井号的关键词不重复添加",
+			keyword:        "#产品名称#",
+			expectedSearch: "#产品名称#",
+			docContent:     "这是一个测试文档。#产品名称#需要填写。",
+		},
+		{
+			name:           "只有前井号的关键词会添加后井号",
+			keyword:        "#规格",
+			expectedSearch: "##规格#",
+			docContent:     "这是一个测试文档。##规格#需要填写。",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// 创建包含特定内容的测试文档
+			testFile := createTestDocxWithContent(t, tt.docContent)
+			defer os.Remove(testFile)
+
+			processor, err := NewDocxProcessor(testFile)
+			if err != nil {
+				t.Fatalf("创建 DocxProcessor 失败: %v", err)
+			}
+			defer processor.Close()
+
+			// 测试调试内容功能，验证搜索文本是否正确
+			processor.DebugContent([]string{tt.keyword})
+
+			// 执行替换测试
+			replacements := map[string]string{
+				tt.keyword: "替换内容",
+			}
+
+			err = processor.ReplaceKeywordsWithOptions(replacements, true, true)
+			if err != nil {
+				t.Fatalf("替换关键词失败: %v", err)
+			}
+
+			// 验证替换计数
+			counts := processor.GetReplacementCount()
+			if counts == nil {
+				t.Error("替换计数不应该为nil")
+			}
+		})
+	}
+}
+
+// createTestDocxWithContent 创建包含指定内容的测试文档
+func createTestDocxWithContent(t *testing.T, content string) string {
+	// 创建临时文件
+	tempFile := filepath.Join(os.TempDir(), "test_content_"+time.Now().Format("20060102150405")+".docx")
+	
+	// 创建包含指定内容的简单docx文档
+	err := createSimpleDocx(tempFile, content)
+	if err != nil {
+		t.Fatalf("创建测试文档失败: %v", err)
+	}
+
+	return tempFile
+}

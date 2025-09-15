@@ -45,8 +45,10 @@ func (dp *DocxProcessor) ReplaceKeywordsWithOptions(replacements map[string]stri
 	for oldText, replacement := range replacements {
 		searchText := oldText
 		if useHashWrapper {
-			// 在 oldText 前后添加井号
-			searchText = "#" + oldText + "#"
+			// 智能处理井号包装：如果关键词已经包含井号，则不再添加
+			if !strings.HasPrefix(oldText, "#") || !strings.HasSuffix(oldText, "#") {
+				searchText = "#" + oldText + "#"
+			}
 		}
 
 		// 执行增强替换
@@ -59,9 +61,9 @@ func (dp *DocxProcessor) ReplaceKeywordsWithOptions(replacements map[string]stri
 
 		if verbose {
 			if count > 0 {
-				log.Printf("替换 '%s' -> '%s' (%d次)", oldText, replacement, count)
+				log.Printf("替换 '%s' -> '%s' (%d次)", searchText, replacement, count)
 			} else {
-				log.Printf("未找到关键词 '%s'", oldText)
+				log.Printf("未找到关键词 '%s'（搜索: '%s'）", oldText, searchText)
 			}
 		}
 	}
@@ -199,10 +201,15 @@ func (dp *DocxProcessor) DebugContent(keywords []string) {
 	for _, keyword := range keywords {
 		// 检查不带井号的
 		plainCount := strings.Count(content, keyword)
-		// 检查带井号的
-		hashCount := strings.Count(content, "#"+keyword+"#")
+		
+		// 智能确定搜索文本（与ReplaceKeywordsWithOptions中的逻辑保持一致）
+		searchText := keyword
+		if !strings.HasPrefix(keyword, "#") || !strings.HasSuffix(keyword, "#") {
+			searchText = "#" + keyword + "#"
+		}
+		searchCount := strings.Count(content, searchText)
 
-		log.Printf("关键词 '%s': 不带井号=%d次, 带井号=%d次", keyword, plainCount, hashCount)
+		log.Printf("关键词 '%s': 原文=%d次, 实际搜索'%s'=%d次", keyword, plainCount, searchText, searchCount)
 	}
 	log.Printf("=== 调试信息结束 ===")
 }
