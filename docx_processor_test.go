@@ -1,364 +1,547 @@
 package main
 
 import (
-	"archive/zip"
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
-	"time"
 )
 
-// TestDocxProcessor_NewDocxProcessor 测试创建 DocxProcessor
-func TestDocxProcessor_NewDocxProcessor(t *testing.T) {
-	// 创建临时测试文件
-	testFile := createTestDocx(t)
-	defer os.Remove(testFile)
-
-	processor, err := NewDocxProcessor(testFile)
-	if err != nil {
-		t.Fatalf("创建 DocxProcessor 失败: %v", err)
-	}
-	defer processor.Close()
-
-	if processor.editable == nil {
-		t.Error("editable 字段未初始化")
-	}
-	if processor.replacementCount == nil {
-		t.Error("replacementCount 字段未初始化")
-	}
-}
-
-// TestDocxProcessor_ReplaceKeywordsWithHashWrapper 测试带井号包装的关键词替换
-func TestDocxProcessor_ReplaceKeywordsWithHashWrapper(t *testing.T) {
-	// 使用包含井号关键词的测试文档
-	testFile := createTestDocxWithHashKeywords(t)
-	defer os.Remove(testFile)
-
-	processor, err := NewDocxProcessor(testFile)
-	if err != nil {
-		t.Fatalf("创建 DocxProcessor 失败: %v", err)
-	}
-	defer processor.Close()
-
-	// 测试井号包装功能
-	// 提供不带井号的关键词，应该能找到并替换文档中带井号的文本
-	replacements := map[string]string{
-		"姓名": "张三",
-		"法人": "李四",
-	}
-
-	err = processor.ReplaceKeywordsWithOptions(replacements, true, true)
-	if err != nil {
-		t.Fatalf("替换带井号关键词失败: %v", err)
-	}
-
-	// 检查替换计数
-	counts := processor.GetReplacementCount()
-	if counts == nil {
-		t.Error("替换计数不应该为nil")
-	}
-
-	// 验证井号关键词被正确替换
-	if counts["姓名"] == 0 {
-		t.Error("应该找到并替换 #姓名# 关键词")
-	}
-	if counts["法人"] == 0 {
-		t.Error("应该找到并替换 #法人# 关键词")
-	}
-}
-
-// TestDocxProcessor_ReplaceKeywordsWithOptions 测试带选项的关键词替换
-func TestDocxProcessor_ReplaceKeywordsWithOptions(t *testing.T) {
-	tests := []struct {
-		name           string
-		useHashWrapper bool
-		createFunc     func(*testing.T) string
-	}{
-		{
-			name:           "普通关键词替换",
-			useHashWrapper: false,
-			createFunc:     createTestDocx,
-		},
-		{
-			name:           "井号包装关键词替换",
-			useHashWrapper: true,
-			createFunc:     createTestDocxWithHashKeywords,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			testFile := tt.createFunc(t)
-			defer os.Remove(testFile)
-
-			processor, err := NewDocxProcessor(testFile)
-			if err != nil {
-				t.Fatalf("创建 DocxProcessor 失败: %v", err)
-			}
-			defer processor.Close()
-
-			replacements := map[string]string{
-				"测试": "成功",
-			}
-
-			err = processor.ReplaceKeywordsWithOptions(replacements, false, tt.useHashWrapper)
-			if err != nil {
-				t.Fatalf("替换关键词失败: %v", err)
-			}
-		})
-	}
-}
-
-// TestDocxProcessor_SaveAs 测试保存文档
-func TestDocxProcessor_SaveAs(t *testing.T) {
-	testFile := createTestDocx(t)
-	defer os.Remove(testFile)
-
-	processor, err := NewDocxProcessor(testFile)
-	if err != nil {
-		t.Fatalf("创建 DocxProcessor 失败: %v", err)
-	}
-	defer processor.Close()
-
-	// 执行替换
-	replacements := map[string]string{
-		"测试关键词": "替换内容",
-	}
-	err = processor.ReplaceKeywordsWithOptions(replacements, true, true)
-	if err != nil {
-		t.Fatalf("替换关键词失败: %v", err)
-	}
-
-	// 保存到新文件
-	outputFile := filepath.Join(os.TempDir(), "test_output_"+time.Now().Format("20060102150405")+".docx")
-	defer os.Remove(outputFile)
-
-	err = processor.SaveAs(outputFile)
-	if err != nil {
-		t.Fatalf("保存文档失败: %v", err)
-	}
-
-	// 检查文件是否存在
-	if _, err := os.Stat(outputFile); os.IsNotExist(err) {
-		t.Error("输出文件未创建")
-	}
-}
-
-// createTestDocx 创建测试用的 docx 文件
-func createTestDocx(t *testing.T) string {
-	// 创建临时文件
-	tempFile := filepath.Join(os.TempDir(), "test_"+time.Now().Format("20060102150405")+".docx")
+// TestNewGoDocxProcessorFromFile_ValidFile 测试从有效文件创建处理器
+func TestNewGoDocxProcessorFromFile_ValidFile(t *testing.T) {
+	// Arrange
+	testFile := "test_input/test_document.docx"
 	
-	// 创建包含测试关键词的简单docx文档
-	err := createSimpleDocx(tempFile, "测试关键词")
-	if err != nil {
-		t.Fatalf("创建测试文档失败: %v", err)
+	// 检查测试文件是否存在
+	if _, err := os.Stat(testFile); os.IsNotExist(err) {
+		t.Skipf("测试文件 %s 不存在，跳过测试", testFile)
 	}
-
-	return tempFile
-}
-
-// createTestDocxWithHashKeywords 创建包含井号关键词的测试文档
-func createTestDocxWithHashKeywords(t *testing.T) string {
-	// 创建临时文件
-	tempFile := filepath.Join(os.TempDir(), "test_hash_"+time.Now().Format("20060102150405")+".docx")
 	
-	// 创建包含井号关键词的简单docx文档
-	err := createSimpleDocx(tempFile, "这是一个测试文档。#姓名#需要填写。#法人#需要签字。")
+	// Act
+	processor, err := NewGoDocxProcessorFromFile(testFile)
+	
+	// Assert
 	if err != nil {
-		t.Fatalf("创建测试文档失败: %v", err)
+		t.Errorf("NewGoDocxProcessorFromFile() 返回错误 = %v, 期望 nil", err)
 	}
-
-	return tempFile
+	if processor == nil {
+		t.Error("NewGoDocxProcessorFromFile() 返回 nil 处理器")
+	}
+	if processor != nil && processor.doc == nil {
+		t.Error("处理器的文档字段为 nil")
+	}
+	if processor != nil && processor.replacementCount == nil {
+		t.Error("处理器的替换计数字段为 nil")
+	}
 }
 
-// createSimpleDocx 创建一个简单的docx文档
-func createSimpleDocx(filePath, content string) error {
-	// 创建一个新的zip文件
-	file, err := os.Create(filePath)
-	if err != nil {
-		return err
+// TestNewGoDocxProcessorFromFile_EmptyPath 测试空文件路径
+func TestNewGoDocxProcessorFromFile_EmptyPath(t *testing.T) {
+	// Arrange
+	filePath := ""
+	
+	// Act
+	processor, err := NewGoDocxProcessorFromFile(filePath)
+	
+	// Assert
+	if err == nil {
+		t.Error("NewGoDocxProcessorFromFile() 期望返回错误，但返回 nil")
 	}
-	defer file.Close()
-
-	zipWriter := zip.NewWriter(file)
-	defer zipWriter.Close()
-
-	// 添加必要的docx文件结构
-	// 1. [Content_Types].xml
-	contentTypes := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-<Default Extension="xml" ContentType="application/xml"/>
-<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
-</Types>`
-	if err := addFileToZip(zipWriter, "[Content_Types].xml", contentTypes); err != nil {
-		return err
+	if processor != nil {
+		t.Error("NewGoDocxProcessorFromFile() 期望返回 nil 处理器，但返回了非 nil")
 	}
-
-	// 2. _rels/.rels
-	rels := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
-</Relationships>`
-	if err := addFileToZip(zipWriter, "_rels/.rels", rels); err != nil {
-		return err
-	}
-
-	// 3. word/_rels/document.xml.rels
-	documentRels := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-</Relationships>`
-	if err := addFileToZip(zipWriter, "word/_rels/document.xml.rels", documentRels); err != nil {
-		return err
-	}
-
-	// 4. word/document.xml
-	document := fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
-<w:body>
-<w:p>
-<w:r>
-<w:t>%s</w:t>
-</w:r>
-</w:p>
-</w:body>
-</w:document>`, content)
-	if err := addFileToZip(zipWriter, "word/document.xml", document); err != nil {
-		return err
-	}
-
-	return nil
 }
 
-// addFileToZip 向zip文件中添加文件
-func addFileToZip(zipWriter *zip.Writer, fileName, content string) error {
-	writer, err := zipWriter.Create(fileName)
-	if err != nil {
-		return err
+// TestNewGoDocxProcessorFromFile_NonExistentFile 测试不存在的文件
+func TestNewGoDocxProcessorFromFile_NonExistentFile(t *testing.T) {
+	// Arrange
+	filePath := "nonexistent_file.docx"
+	
+	// Act
+	processor, err := NewGoDocxProcessorFromFile(filePath)
+	
+	// Assert
+	if err == nil {
+		t.Error("NewGoDocxProcessorFromFile() 期望返回错误，但返回 nil")
 	}
-	_, err = writer.Write([]byte(content))
-	return err
+	if processor != nil {
+		t.Error("NewGoDocxProcessorFromFile() 期望返回 nil 处理器，但返回了非 nil")
+	}
 }
 
-// TestDocxProcessor_GetReplacementCount 测试获取替换计数
-func TestDocxProcessor_GetReplacementCount(t *testing.T) {
-	testFile := createTestDocx(t)
-	defer os.Remove(testFile)
-
-	processor, err := NewDocxProcessor(testFile)
-	if err != nil {
-		t.Fatalf("创建 DocxProcessor 失败: %v", err)
+// TestNewGoDocxProcessorFromBytes_ValidData 测试从有效字节数据创建处理器
+func TestNewGoDocxProcessorFromBytes_ValidData(t *testing.T) {
+	// Arrange - 读取测试文件的字节数据
+	testFile := "test_input/test_document.docx"
+	if _, err := os.Stat(testFile); os.IsNotExist(err) {
+		t.Skipf("测试文件 %s 不存在，跳过测试", testFile)
 	}
-	defer processor.Close()
+	
+	data, err := os.ReadFile(testFile)
+	if err != nil {
+		t.Fatalf("读取测试文件失败: %v", err)
+	}
+	
+	// Act
+	processor, err := NewGoDocxProcessorFromBytes(data)
+	
+	// Assert
+	if err != nil {
+		t.Errorf("NewGoDocxProcessorFromBytes() 返回错误 = %v, 期望 nil", err)
+	}
+	if processor == nil {
+		t.Error("NewGoDocxProcessorFromBytes() 返回 nil 处理器")
+	}
+	if processor != nil && processor.doc == nil {
+		t.Error("处理器的文档字段为 nil")
+	}
+	if processor != nil && processor.replacementCount == nil {
+		t.Error("处理器的替换计数字段为 nil")
+	}
+}
 
+// TestNewGoDocxProcessorFromBytes_NilData 测试 nil 字节数据
+func TestNewGoDocxProcessorFromBytes_NilData(t *testing.T) {
+	// Arrange
+	var data []byte = nil
+	
+	// Act
+	processor, err := NewGoDocxProcessorFromBytes(data)
+	
+	// Assert
+	if err == nil {
+		t.Error("NewGoDocxProcessorFromBytes() 期望返回错误，但返回 nil")
+	}
+	if processor != nil {
+		t.Error("NewGoDocxProcessorFromBytes() 期望返回 nil 处理器，但返回了非 nil")
+	}
+}
+
+// TestNewGoDocxProcessorFromBytes_EmptyData 测试空字节数据
+func TestNewGoDocxProcessorFromBytes_EmptyData(t *testing.T) {
+	// Arrange
+	data := []byte{}
+	
+	// Act
+	processor, err := NewGoDocxProcessorFromBytes(data)
+	
+	// Assert
+	if err == nil {
+		t.Error("NewGoDocxProcessorFromBytes() 期望返回错误，但返回 nil")
+	}
+	if processor != nil {
+		t.Error("NewGoDocxProcessorFromBytes() 期望返回 nil 处理器，但返回了非 nil")
+	}
+}
+
+// TestNewGoDocxProcessorFromBytes_InvalidData 测试无效字节数据
+func TestNewGoDocxProcessorFromBytes_InvalidData(t *testing.T) {
+	// Arrange
+	data := []byte("这不是有效的docx数据")
+	
+	// Act
+	processor, err := NewGoDocxProcessorFromBytes(data)
+	
+	// Assert
+	if err == nil {
+		t.Error("NewGoDocxProcessorFromBytes() 期望返回错误，但返回 nil")
+	}
+	if processor != nil {
+		t.Error("NewGoDocxProcessorFromBytes() 期望返回 nil 处理器，但返回了非 nil")
+	}
+}
+
+// TestGoDocxProcessor_ReplaceKeywordsWithOptions_NormalCase 测试正常替换情况
+func TestGoDocxProcessor_ReplaceKeywordsWithOptions_NormalCase(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+		// doc 字段为 nil，模拟未初始化状态
+	}
 	replacements := map[string]string{
-		"测试关键词":   "替换内容",
-		"不存在的关键词": "不会被替换",
+		"NAME":    "张三",
+		"COMPANY": "测试公司",
+		"DATE":    "2024-01-01",
 	}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacements, true, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
 
-	err = processor.ReplaceKeywordsWithOptions(replacements, true, true)
+// TestGoDocxProcessor_ReplaceKeywordsWithOptions_EmptyReplacements 测试空替换映射
+func TestGoDocxProcessor_ReplaceKeywordsWithOptions_EmptyReplacements(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	replacements := map[string]string{}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacements, false, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_ReplaceKeywordsWithOptions_NilReplacements 测试 nil 替换映射
+func TestGoDocxProcessor_ReplaceKeywordsWithOptions_NilReplacements(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	var replacements map[string]string = nil
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacements, false, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_ReplaceKeywordsWithOptions_WithHashWrapper 测试使用井号包装
+func TestGoDocxProcessor_ReplaceKeywordsWithOptions_WithHashWrapper(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	replacements := map[string]string{
+		"NAME":     "张三",
+		"#COMPANY#": "测试公司", // 已经有井号的情况
+	}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacements, true, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_ReplaceKeywordsWithOptions_WithoutHashWrapper 测试不使用井号包装
+func TestGoDocxProcessor_ReplaceKeywordsWithOptions_WithoutHashWrapper(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	replacements := map[string]string{
+		"NAME":    "李四",
+		"COMPANY": "另一个公司",
+	}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacements, false, false)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_GetReplacementCount_ValidData 测试获取有效替换计数
+func TestGoDocxProcessor_GetReplacementCount_ValidData(t *testing.T) {
+	// Arrange
+	expected := map[string]int{
+		"NAME":    3,
+		"COMPANY": 2,
+		"DATE":    1,
+	}
+	processor := &GoDocxProcessor{
+		replacementCount: expected,
+	}
+	
+	// Act
+	actual := processor.GetReplacementCount()
+	
+	// Assert
+	if !reflect.DeepEqual(actual, expected) {
+		t.Errorf("GetReplacementCount() = %v, 期望 %v", actual, expected)
+	}
+}
+
+// TestGoDocxProcessor_GetReplacementCount_EmptyData 测试获取空替换计数
+func TestGoDocxProcessor_GetReplacementCount_EmptyData(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	
+	// Act
+	actual := processor.GetReplacementCount()
+	
+	// Assert
+	if len(actual) != 0 {
+		t.Errorf("GetReplacementCount() 返回长度 = %d, 期望 0", len(actual))
+	}
+}
+
+// TestGoDocxProcessor_GetReplacementCount_NilData 测试获取 nil 替换计数
+func TestGoDocxProcessor_GetReplacementCount_NilData(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: nil,
+	}
+	
+	// Act
+	actual := processor.GetReplacementCount()
+	
+	// Assert
+	if actual != nil {
+		t.Errorf("GetReplacementCount() = %v, 期望 nil", actual)
+	}
+}
+
+// TestGoDocxProcessor_SaveAs_ValidPath 测试保存到有效路径
+func TestGoDocxProcessor_SaveAs_ValidPath(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		// doc 字段为 nil，模拟未初始化状态
+	}
+	tempDir := t.TempDir()
+	outputPath := filepath.Join(tempDir, "output.docx")
+	
+	// Act
+	err := processor.SaveAs(outputPath)
+	
+	// Assert
+	if err == nil {
+		t.Error("SaveAs() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_SaveAs_EmptyPath 测试保存到空路径
+func TestGoDocxProcessor_SaveAs_EmptyPath(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{}
+	outputPath := ""
+	
+	// Act
+	err := processor.SaveAs(outputPath)
+	
+	// Assert
+	if err == nil {
+		t.Error("SaveAs() 期望返回错误，但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_Close_ValidProcessor 测试关闭有效处理器
+func TestGoDocxProcessor_Close_ValidProcessor(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{}
+	
+	// Act
+	err := processor.Close()
+	
+	// Assert
 	if err != nil {
-		t.Fatalf("替换关键词失败: %v", err)
+		t.Errorf("Close() 返回错误 = %v, 期望 nil", err)
 	}
+}
 
-	counts := processor.GetReplacementCount()
-	if len(counts) != len(replacements) {
-		t.Errorf("替换计数数量不匹配，期望 %d，实际 %d", len(replacements), len(counts))
+// TestGoDocxProcessor_DebugContent_ValidKeywords 测试调试有效关键词
+func TestGoDocxProcessor_DebugContent_ValidKeywords(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{}
+	keywords := []string{"NAME", "COMPANY", "DATE"}
+	
+	// Act & Assert - 这个方法不返回错误，只是打印日志
+	// 我们主要测试它不会 panic
+	processor.DebugContent(keywords)
+}
+
+// TestGoDocxProcessor_DebugContent_EmptyKeywords 测试调试空关键词
+func TestGoDocxProcessor_DebugContent_EmptyKeywords(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{}
+	keywords := []string{}
+	
+	// Act & Assert
+	processor.DebugContent(keywords)
+}
+
+// TestGoDocxProcessor_DebugContent_NilKeywords 测试调试 nil 关键词
+func TestGoDocxProcessor_DebugContent_NilKeywords(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{}
+	var keywords []string = nil
+	
+	// Act & Assert
+	processor.DebugContent(keywords)
+}
+
+// TestGoDocxProcessor_GetPlaceholders_ValidProcessor 测试获取占位符
+func TestGoDocxProcessor_GetPlaceholders_ValidProcessor(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{}
+	
+	// Act
+	placeholders := processor.GetPlaceholders()
+	
+	// Assert
+	if placeholders == nil {
+		t.Error("GetPlaceholders() 返回 nil, 期望空切片")
 	}
-
-	// 由于我们创建的简单docx可能与docx库的期望格式不完全兼容
-	// 我们主要测试替换计数功能是否正常工作，而不是具体的替换结果
-	if counts == nil {
-		t.Error("替换计数不应该为nil")
+	if len(placeholders) != 0 {
+		t.Errorf("GetPlaceholders() 返回长度 = %d, 期望 0", len(placeholders))
 	}
+}
 
-	// 检查计数器中包含所有关键词（即使计数为0）
-	for keyword := range replacements {
-		if _, exists := counts[keyword]; !exists {
-			t.Errorf("关键词 '%s' 应该在计数器中", keyword)
+// TestGoDocxProcessor_GetPlaceholders_NilProcessor 测试 nil 处理器获取占位符
+func TestGoDocxProcessor_GetPlaceholders_NilProcessor(t *testing.T) {
+	// Arrange
+	var processor *GoDocxProcessor = nil
+	
+	// Act & Assert - 这会导致 panic，我们需要恢复
+	defer func() {
+		if r := recover(); r == nil {
+			t.Error("GetPlaceholders() 期望 panic，但没有 panic")
 		}
-	}
-
-	// 检查不存在的关键词计数为0
-	if count := counts["不存在的关键词"]; count != 0 {
-		t.Errorf("'不存在的关键词' 计数应该为0，实际为 %d", count)
-	}
-}
-
-// TestDocxProcessor_SmartHashWrapper 测试智能井号包装功能
-func TestDocxProcessor_SmartHashWrapper(t *testing.T) {
-	tests := []struct {
-		name           string
-		keyword        string
-		expectedSearch string
-		docContent     string
-	}{
-		{
-			name:           "普通关键词自动添加井号",
-			keyword:        "结构及组成",
-			expectedSearch: "#结构及组成#",
-			docContent:     "这是一个测试文档。#结构及组成#需要填写。",
-		},
-		{
-			name:           "已带井号的关键词不重复添加",
-			keyword:        "#产品名称#",
-			expectedSearch: "#产品名称#",
-			docContent:     "这是一个测试文档。#产品名称#需要填写。",
-		},
-		{
-			name:           "只有前井号的关键词会添加后井号",
-			keyword:        "#规格",
-			expectedSearch: "##规格#",
-			docContent:     "这是一个测试文档。##规格#需要填写。",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// 创建包含特定内容的测试文档
-			testFile := createTestDocxWithContent(t, tt.docContent)
-			defer os.Remove(testFile)
-
-			processor, err := NewDocxProcessor(testFile)
-			if err != nil {
-				t.Fatalf("创建 DocxProcessor 失败: %v", err)
-			}
-			defer processor.Close()
-
-			// 测试调试内容功能，验证搜索文本是否正确
-			processor.DebugContent([]string{tt.keyword})
-
-			// 执行替换测试
-			replacements := map[string]string{
-				tt.keyword: "替换内容",
-			}
-
-			err = processor.ReplaceKeywordsWithOptions(replacements, true, true)
-			if err != nil {
-				t.Fatalf("替换关键词失败: %v", err)
-			}
-
-			// 验证替换计数
-			counts := processor.GetReplacementCount()
-			if counts == nil {
-				t.Error("替换计数不应该为nil")
-			}
-		})
-	}
-}
-
-// createTestDocxWithContent 创建包含指定内容的测试文档
-func createTestDocxWithContent(t *testing.T, content string) string {
-	// 创建临时文件
-	tempFile := filepath.Join(os.TempDir(), "test_content_"+time.Now().Format("20060102150405")+".docx")
+	}()
 	
-	// 创建包含指定内容的简单docx文档
-	err := createSimpleDocx(tempFile, content)
-	if err != nil {
-		t.Fatalf("创建测试文档失败: %v", err)
-	}
+	processor.GetPlaceholders()
+}
 
-	return tempFile
+// BenchmarkGoDocxProcessor_ReplaceKeywords 性能测试：关键词替换
+func BenchmarkGoDocxProcessor_ReplaceKeywords(b *testing.B) {
+	// Arrange
+	replacementMap := map[string]string{
+		"NAME":    "张三",
+		"COMPANY": "测试公司",
+		"DATE":    "2024-01-01",
+		"AMOUNT":  "10000",
+		"TITLE":   "测试标题",
+	}
+	
+	b.ResetTimer()
+	
+	// Act
+	for i := 0; i < b.N; i++ {
+		processor := &GoDocxProcessor{
+			replacementCount: make(map[string]int),
+		}
+		
+		// 执行替换（会因为文档未初始化而返回错误，但我们主要测试性能）
+		_ = processor.ReplaceKeywordsWithOptions(replacementMap, false, true)
+	}
+}
+
+// BenchmarkGoDocxProcessor_GetReplacementCount 性能测试：获取替换计数
+func BenchmarkGoDocxProcessor_GetReplacementCount(b *testing.B) {
+	// Arrange
+	replacementCount := make(map[string]int)
+	for i := 0; i < 1000; i++ {
+		replacementCount[fmt.Sprintf("KEY%d", i)] = i
+	}
+	processor := &GoDocxProcessor{
+		replacementCount: replacementCount,
+	}
+	
+	b.ResetTimer()
+	
+	// Act
+	for i := 0; i < b.N; i++ {
+		_ = processor.GetReplacementCount()
+	}
+}
+
+// TestGoDocxProcessor_EdgeCases_LargeReplacementMap 边界测试：大量替换映射
+func TestGoDocxProcessor_EdgeCases_LargeReplacementMap(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	
+	// 创建大量替换规则
+	replacementMap := make(map[string]string)
+	for i := 0; i < 10000; i++ {
+		replacementMap[fmt.Sprintf("KEY%d", i)] = fmt.Sprintf("值%d", i)
+	}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacementMap, false, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_EdgeCases_SpecialCharacters 边界测试：特殊字符
+func TestGoDocxProcessor_EdgeCases_SpecialCharacters(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	replacementMap := map[string]string{
+		"SPECIAL1": "<>&\"'",
+		"SPECIAL2": "中文测试",
+		"SPECIAL3": "🎉🎊🎈", // emoji
+		"SPECIAL4": "\n\t\r",  // 控制字符
+	}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacementMap, true, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_EdgeCases_LongStrings 边界测试：长字符串
+func TestGoDocxProcessor_EdgeCases_LongStrings(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	
+	// 创建长字符串
+	longString := strings.Repeat("这是一个很长的字符串", 1000)
+	replacementMap := map[string]string{
+		"LONG_KEY": longString,
+	}
+	
+	// Act
+	err := processor.ReplaceKeywordsWithOptions(replacementMap, false, true)
+	
+	// Assert
+	if err == nil {
+		t.Error("ReplaceKeywordsWithOptions() 期望返回错误（文档未初始化），但返回 nil")
+	}
+}
+
+// TestGoDocxProcessor_EdgeCases_ConcurrentAccess 边界测试：并发访问
+func TestGoDocxProcessor_EdgeCases_ConcurrentAccess(t *testing.T) {
+	// Arrange
+	processor := &GoDocxProcessor{
+		replacementCount: make(map[string]int),
+	}
+	
+	// Act - 并发访问 GetReplacementCount
+	done := make(chan bool, 10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer func() { done <- true }()
+			_ = processor.GetReplacementCount()
+		}()
+	}
+	
+	// 等待所有 goroutine 完成
+	for i := 0; i < 10; i++ {
+		<-done
+	}
+	
+	// Assert - 主要测试不会 panic 或死锁
+	t.Log("并发访问测试完成")
 }

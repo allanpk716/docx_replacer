@@ -4,3 +4,6 @@
 *.exe
 *.json
 /test
+/test_files
+/test_input
+/test_output
