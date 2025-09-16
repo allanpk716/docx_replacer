@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p>
+      <w:r><w:t>合同编号: </w:t></w:r>
+      <w:r><w:t>#NA</w:t></w:r>
+      <w:r><w:t>ME#</w:t></w:r>
+    </w:p>
+    <w:tbl>
+      <w:tr>
+        <w:tc>
+          <w:p>
+            <w:r><w:t>公司名称</w:t></w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:p>
+            <w:r><w:t>#COM</w:t></w:r>
+            <w:r><w:t>PANY#</w:t></w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:p>
+            <w:r><w:t>签约日期</w:t></w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:p>
+            <w:r><w:t>#DA</w:t></w:r>
+            <w:r><w:t>TE</w:t></w:r>
+            <w:r><w:t>#</w:t></w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+      <w:tr>
+        <w:tc>
+          <w:p>
+            <w:r><w:t>合同金额</w:t></w:r>
+          </w:p>
+        </w:tc>
+        <w:tc>
+          <w:p>
+            <w:r><w:t>#AMO</w:t></w:r>
+            <w:r><w:t>UNT#</w:t></w:r>
+            <w:r><w:t> 元</w:t></w:r>
+          </w:p>
+        </w:tc>
+      </w:tr>
+    </w:tbl>
+  </w:body>
+</w:document>
