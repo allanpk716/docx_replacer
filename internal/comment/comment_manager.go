@@ -215,8 +215,21 @@ func (cm *CommentManager) GenerateCommentXML(keyword, replacement string) string
 		return ""
 	}
 	
+	// 检查是否已存在该关键词的注释
+	var lastValue string
+	var replaceCount int
+	if existing, exists := cm.comments[keyword]; exists {
+		// 使用已存储的注释信息
+		lastValue = existing.LastValue
+		replaceCount = existing.ReplaceCount
+	} else {
+		// 使用传入的replacement参数
+		lastValue = replacement
+		replaceCount = 1
+	}
+	
 	// 生成XML注释格式
-	commentText := cm.GenerateComment(keyword, replacement, 1)
+	commentText := cm.GenerateComment(keyword, lastValue, replaceCount)
 	if commentText == "" {
 		return ""
 	}

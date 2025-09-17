@@ -140,8 +140,16 @@ func getInputOutputPaths() (string, string, bool) {
 		break
 	}
 	
+	// 检查是否成功获取输入路径
+	if inputPath == "" {
+		log.Fatal("未能获取有效的输入路径")
+	}
+	
 	// 判断是文件还是目录
-	info, _ := os.Stat(inputPath)
+	info, err := os.Stat(inputPath)
+	if err != nil {
+		log.Fatalf("无法获取路径信息: %v", err)
+	}
 	isBatchMode := info.IsDir()
 	
 	if isBatchMode {
@@ -179,6 +187,11 @@ func getInputOutputPaths() (string, string, bool) {
 		outputPath = input
 		fmt.Printf("✓ 输出路径: %s\n", input)
 		break
+	}
+	
+	// 检查是否成功获取输出路径
+	if outputPath == "" {
+		log.Fatal("未能获取有效的输出路径")
 	}
 	
 	return inputPath, outputPath, isBatchMode
