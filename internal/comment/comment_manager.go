@@ -224,3 +224,15 @@ func (cm *CommentManager) GenerateCommentXML(keyword, replacement string) string
 	// 创建新注释
 	return cm.GenerateComment(keyword, replacement, 1)
 }
+
+// HasReplaced 检查关键词是否已经被替换过
+func (cm *CommentManager) HasReplaced(keyword, replacement string) bool {
+	if !cm.enabled {
+		return false
+	}
+
+	if comment, exists := cm.comments[keyword]; exists {
+		return comment.LastValue == replacement
+	}
+	return false
+}

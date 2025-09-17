@@ -11,20 +11,37 @@ import (
 	"github.com/allanpk716/docx_replacer/internal/comment"
 )
 
-// EnhancedXMLProcessor 增强的XML处理器，支持注释追踪
+// EnhancedXMLProcessor 增强的XML处理器，支持注释追踪和自定义属性追踪
 type EnhancedXMLProcessor struct {
-	filePath       string
-	commentManager *comment.CommentManager
-	enableTracking bool
+	filePath         string
+	commentManager   *comment.CommentManager
+	propertyManager  *CustomPropertyManager
+	enableTracking   bool
+	useCustomProps   bool
 }
 
 // NewEnhancedXMLProcessor 创建新的增强XML处理器
 func NewEnhancedXMLProcessor(filePath string, commentConfig *comment.CommentConfig) *EnhancedXMLProcessor {
 	commentManager := comment.NewCommentManager(commentConfig)
+	propertyManager := NewCustomPropertyManager()
 	return &EnhancedXMLProcessor{
-		filePath:       filePath,
-		commentManager: commentManager,
-		enableTracking: commentManager.IsEnabled(),
+		filePath:         filePath,
+		commentManager:   commentManager,
+		propertyManager:  propertyManager,
+		enableTracking:   commentManager.IsEnabled(),
+		useCustomProps:   true, // 默认使用自定义属性追踪
+	}
+}
+
+// NewEnhancedXMLProcessorWithCustomProps 创建使用自定义属性追踪的处理器
+func NewEnhancedXMLProcessorWithCustomProps(filePath string) *EnhancedXMLProcessor {
+	propertyManager := NewCustomPropertyManager()
+	return &EnhancedXMLProcessor{
+		filePath:         filePath,
+		commentManager:   nil,
+		propertyManager:  propertyManager,
+		enableTracking:   false,
+		useCustomProps:   true,
 	}
 }
 
@@ -51,6 +68,13 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 	replacementCount := 0
 	var documentXMLContent string
 	var commentsXMLContent string
+	var customPropsContent string
+	var customProps *CustomProperties
+
+	// 如果使用自定义属性追踪，先读取现有属性
+	if exp.useCustomProps {
+		customProps = &CustomProperties{}
+	}
 
 	// 遍历ZIP文件中的所有文件
 	for _, file := range reader.File {
@@ -68,6 +92,19 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 
 		// 处理不同类型的文件
 		switch file.Name {
+		case "docProps/custom.xml":
+			if exp.useCustomProps {
+				customPropsContent = string(content)
+				var err error
+				customProps, err = exp.propertyManager.ParseCustomProperties(customPropsContent)
+				if err != nil {
+					fmt.Printf("解析自定义属性失败: %v\n", err)
+					// 创建默认属性结构
+					customProps, _ = exp.propertyManager.ParseCustomProperties("")
+				}
+				// 跳过写入，稍后统一处理
+				continue
+			}
 		case "word/document.xml":
 			documentXMLContent = string(content)
 			if exp.enableTracking {
@@ -78,11 +115,23 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 			// 执行关键词替换
 			modifiedContent := documentXMLContent
 			for keyword, replacement := range replacements {
+				// 检查是否已经替换过
+				if exp.enableTracking {
+					if exp.commentManager.HasReplaced(keyword, replacement) {
+						fmt.Printf("关键词 '%s' 已经被替换过，跳过\n", keyword)
+						continue
+					}
+				} else if exp.useCustomProps {
+					if exp.propertyManager.HasReplaced(customProps, keyword, replacement) {
+						fmt.Printf("关键词 '%s' 已经被替换过，跳过\n", keyword)
+						continue
+					}
+				}
 				modifiedContent, replacementCount = exp.replaceKeywordWithTracking(
-					modifiedContent, keyword, replacement, replacementCount)
+					modifiedContent, keyword, replacement, replacementCount, customProps)
 			}
 
-			// 如果启用追踪，添加注释
+			// 如果启用了追踪，添加注释或记录到自定义属性
 			if exp.enableTracking {
 				modifiedContent = exp.addTrackingComments(modifiedContent, replacements)
 				// 清理孤立注释
@@ -91,6 +140,14 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 					activeKeywords = append(activeKeywords, keyword)
 				}
 				modifiedContent = exp.commentManager.CleanupOrphanedComments(modifiedContent, activeKeywords)
+			} else if exp.useCustomProps {
+				// 生成更新后的自定义属性XML
+				var err error
+				customPropsContent, err = exp.propertyManager.GenerateCustomPropertiesXML(customProps)
+				if err != nil {
+					fmt.Printf("生成自定义属性XML失败: %v\n", err)
+					customPropsContent = ""
+				}
 			}
 
 			content = []byte(modifiedContent)
@@ -125,6 +182,24 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 		}
 	}
 
+	// 如果使用自定义属性追踪，更新custom.xml
+	if exp.useCustomProps {
+		// 重新生成包含所有属性的XML内容
+		customPropsContent, err = exp.propertyManager.GenerateCustomPropertiesXML(customProps)
+		if err != nil {
+			return fmt.Errorf("生成自定义属性XML失败: %v", err)
+		}
+		
+		writer, err := zipWriter.Create("docProps/custom.xml")
+		if err != nil {
+			return fmt.Errorf("创建custom.xml失败: %v", err)
+		}
+		_, err = writer.Write([]byte(customPropsContent))
+		if err != nil {
+			return fmt.Errorf("写入custom.xml失败: %v", err)
+		}
+	}
+
 	fmt.Printf("文档处理完成，总共替换了 %d 个关键词\n", replacementCount)
 	if exp.enableTracking {
 		fmt.Printf("注释追踪已启用，管理了 %d 个注释\n", exp.commentManager.GetCommentCount())
@@ -133,8 +208,9 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 }
 
 // replaceKeywordWithTracking 替换关键词并更新追踪信息
-func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, replacement string, currentCount int) (string, int) {
+func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, replacement string, currentCount int, customProps *CustomProperties) (string, int) {
 	replacementCount := currentCount
+	fmt.Printf("[DEBUG] replaceKeywordWithTracking: keyword=%s, enableTracking=%v, useCustomProps=%v\n", keyword, exp.enableTracking, exp.useCustomProps)
 
 	// 检查是否存在该关键词的历史替换记录
 	var targetValue string
@@ -148,8 +224,17 @@ func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, re
 			targetValue = keyword
 			fmt.Printf("首次替换 '%s' -> '%s'\n", keyword, replacement)
 		}
+	} else if exp.useCustomProps {
+		// 如果使用自定义属性追踪，检查历史记录
+		if lastValue := exp.propertyManager.GetLastValueFromProps(customProps, keyword); lastValue != "" {
+			targetValue = lastValue
+			fmt.Printf("发现自定义属性历史记录，将替换 '%s' -> '%s'\n", targetValue, replacement)
+		} else {
+			targetValue = keyword
+			fmt.Printf("首次替换 '%s' -> '%s'\n", keyword, replacement)
+		}
 	} else {
-		// 如果未启用追踪，直接替换关键词
+		// 如果未启用任何追踪，直接替换关键词
 		targetValue = keyword
 	}
 
@@ -160,16 +245,24 @@ func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, re
 		replacementCount += count
 		fmt.Printf("完成替换 '%s' -> '%s' (%d次)\n", targetValue, replacement, count)
 
-		// 更新注释追踪
+		// 更新追踪信息（只在实际发生替换时）
 		if exp.enableTracking {
 			exp.commentManager.AddOrUpdateComment(keyword, replacement)
+			fmt.Printf("[DEBUG] 更新注释追踪: %s\n", keyword)
+		} else if exp.useCustomProps {
+			// 更新自定义属性追踪
+			fmt.Printf("[DEBUG] 准备更新自定义属性追踪: %s\n", keyword)
+			exp.propertyManager.AddReplacement(customProps, keyword, "", replacement)
+			fmt.Printf("[DEBUG] 完成更新自定义属性追踪: %s\n", keyword)
 		}
+	} else {
+		fmt.Printf("未找到目标值 '%s'，跳过替换\n", targetValue)
 	}
 
 	// 处理被XML标签分割的关键词（仅在首次替换时需要）
 	if targetValue == keyword {
 		var additionalCount int
-		content, additionalCount = exp.handleSplitKeywordWithTracking(content, keyword, replacement)
+		content, additionalCount = exp.handleSplitKeywordWithTracking(content, keyword, replacement, customProps)
 		replacementCount += additionalCount
 	}
 
@@ -177,7 +270,7 @@ func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, re
 }
 
 // handleSplitKeywordWithTracking 处理被XML标签分割的关键词并追踪
-func (exp *EnhancedXMLProcessor) handleSplitKeywordWithTracking(content, keyword, replacement string) (string, int) {
+func (exp *EnhancedXMLProcessor) handleSplitKeywordWithTracking(content, keyword, replacement string, customProps *CustomProperties) (string, int) {
 	replacementCount := 0
 
 	// 移除关键词中的#符号来构建搜索模式
@@ -209,9 +302,12 @@ func (exp *EnhancedXMLProcessor) handleSplitKeywordWithTracking(content, keyword
 			replacementCount++
 			fmt.Printf("处理分割关键词 '%s' -> '%s'\n", match, replacement)
 
-			// 更新注释追踪
+			// 更新追踪信息
 			if exp.enableTracking {
 				exp.commentManager.AddOrUpdateComment(keyword, replacement)
+			} else if exp.useCustomProps {
+				// 更新自定义属性追踪
+				exp.propertyManager.AddReplacement(customProps, keyword, "", replacement)
 			}
 		}
 	}
@@ -288,6 +384,34 @@ func (exp *EnhancedXMLProcessor) createCommentsXML(zipWriter *zip.Writer, replac
 // GetCommentManager 获取注释管理器
 func (exp *EnhancedXMLProcessor) GetCommentManager() *comment.CommentManager {
 	return exp.commentManager
+}
+
+// readCustomProperties 读取自定义属性XML内容
+func (exp *EnhancedXMLProcessor) readCustomProperties() (string, error) {
+	reader, err := zip.OpenReader(exp.filePath)
+	if err != nil {
+		return "", fmt.Errorf("打开DOCX文件失败: %v", err)
+	}
+	defer reader.Close()
+
+	for _, file := range reader.File {
+		if file.Name == "docProps/custom.xml" {
+			rc, err := file.Open()
+			if err != nil {
+				return "", fmt.Errorf("打开custom.xml失败: %v", err)
+			}
+			defer rc.Close()
+
+			content, err := io.ReadAll(rc)
+			if err != nil {
+				return "", fmt.Errorf("读取custom.xml内容失败: %v", err)
+			}
+			return string(content), nil
+		}
+	}
+
+	// 如果没有找到custom.xml文件，返回空字符串
+	return "", nil
 }
 
 // ExtractTextContent 提取DOCX文档的纯文本内容
