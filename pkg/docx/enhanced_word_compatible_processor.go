@@ -147,6 +147,10 @@ func (p *EnhancedWordCompatibleProcessor) replaceInDocumentXML(src io.Reader, ds
 func (p *EnhancedWordCompatibleProcessor) replaceTextContent(text string) string {
 	replacedText := text
 	for oldText, newText := range p.replacements {
+		// 跳过空关键词，避免错误替换
+		if oldText == "" {
+			continue
+		}
 		// 使用精确匹配替换
 		if strings.Contains(replacedText, oldText) {
 			// 直接替换为新值，不保留原关键词
@@ -200,65 +204,44 @@ func (p *EnhancedWordCompatibleProcessor) reconstructSplitKeywords(xmlContent st
 			continue // 只处理以#开头和结尾的关键词
 		}
 
-		// 移除首尾的#号，获取核心关键词
-		coreKeyword := strings.Trim(keyword, "#")
-		
-		// 构建匹配被分割关键词的复杂正则表达式
-		// 匹配模式：<w:t>#</w:t>...复杂XML结构...核心关键词...复杂XML结构...<w:t>#</w:t>
+		// 构建更灵活的匹配模式，能够处理关键词被完全分割的情况
+		// 匹配从第一个#开始到最后一个#结束的整个区域
 		pattern := fmt.Sprintf(
-			`<w:t[^>]*>#</w:t>[\s\S]*?<w:t[^>]*>%s</w:t>[\s\S]*?<w:t[^>]*>#</w:t>`,
-			regexp.QuoteMeta(coreKeyword),
+			`<w:t[^>]*>#</w:t>[\s\S]*?<w:t[^>]*>#</w:t>`,
 		)
 		splitRegex := regexp.MustCompile(pattern)
 		
-		// 查找所有匹配的分割关键词
+		// 查找所有可能的分割区域
 		matches := splitRegex.FindAllString(xmlContent, -1)
 		for _, match := range matches {
-			// 创建替换的XML结构，将分割的关键词合并到一个<w:t>标签中
-			// 保持第一个<w:t>标签的格式，但将内容替换为完整关键词
-			firstTagRegex := regexp.MustCompile(`<w:t[^>]*>#</w:t>`)
-			firstTagMatch := firstTagRegex.FindString(match)
+			// 提取匹配区域中的所有文本内容
+			textRegex := regexp.MustCompile(`<w:t[^>]*>([^<]*)</w:t>`)
+			textMatches := textRegex.FindAllStringSubmatch(match, -1)
 			
-			if firstTagMatch != "" {
-				// 提取<w:t>标签的属性部分
-				tagWithAttrs := strings.Replace(firstTagMatch, ">#</w:t>", "", 1)
-				// 创建新的完整标签
-				newTag := tagWithAttrs + ">" + keyword + "</w:t>"
-				
-				fmt.Printf("重组分割关键词: 找到匹配，长度=%d字符\n", len(match))
-				fmt.Printf("  -> 替换为: %s\n", newTag)
-				
-				// 执行替换
-				xmlContent = strings.ReplaceAll(xmlContent, match, newTag)
+			// 拼接所有文本内容
+			var fullText strings.Builder
+			for _, textMatch := range textMatches {
+				if len(textMatch) > 1 {
+					fullText.WriteString(textMatch[1])
+				}
 			}
-		}
-		
-		// 如果上面的复杂模式没有找到，尝试更宽松的模式
-		if len(matches) == 0 {
-			// 尝试更宽松的模式：查找包含核心关键词的区域，前后可能有#
-		loosePattern := fmt.Sprintf(
-				`<w:t[^>]*>#</w:t>[\s\S]{1,500}?%s[\s\S]{1,500}?<w:t[^>]*>#</w:t>`,
-				regexp.QuoteMeta(coreKeyword),
-			)
-			looseRegex := regexp.MustCompile(loosePattern)
-			looseMatches := looseRegex.FindAllString(xmlContent, -1)
 			
-			for _, match := range looseMatches {
-				// 验证这个匹配确实包含我们要找的关键词
-				if strings.Contains(match, coreKeyword) {
-					// 提取第一个<w:t>标签
-					firstTagRegex := regexp.MustCompile(`<w:t[^>]*>#</w:t>`)
-					firstTagMatch := firstTagRegex.FindString(match)
+			// 检查拼接后的文本是否包含我们要找的关键词
+			if fullText.String() == keyword {
+				// 找到匹配的分割关键词，进行重组
+				// 提取第一个<w:t>标签的格式
+				firstTagRegex := regexp.MustCompile(`<w:t[^>]*>`)
+				firstTagMatch := firstTagRegex.FindString(match)
+				
+				if firstTagMatch != "" {
+					// 创建新的完整标签
+					newTag := firstTagMatch + keyword + "</w:t>"
 					
-					if firstTagMatch != "" {
-						tagWithAttrs := strings.Replace(firstTagMatch, ">#</w:t>", "", 1)
-						newTag := tagWithAttrs + ">" + keyword + "</w:t>"
-						
-						fmt.Printf("宽松模式重组关键词: 找到匹配，长度=%d字符\n", len(match))
-						fmt.Printf("  -> 替换为: %s\n", newTag)
-						
-						xmlContent = strings.ReplaceAll(xmlContent, match, newTag)
-					}
+					fmt.Printf("重组分割关键词: 找到匹配 '%s'\n", keyword)
+					fmt.Printf("  -> 替换为: %s\n", newTag)
+					
+					// 执行替换
+					xmlContent = strings.ReplaceAll(xmlContent, match, newTag)
 				}
 			}
 		}
