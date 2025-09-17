@@ -211,29 +211,16 @@ func (cm *CommentManager) CleanupOrphanedComments(xmlContent string, activeKeywo
 
 // GenerateCommentXML 生成XML格式的注释
 func (cm *CommentManager) GenerateCommentXML(keyword, replacement string) string {
-	if !cm.enabled {
+	if !cm.config.EnableCommentTracking {
 		return ""
 	}
-	
+
 	// 检查是否已存在该关键词的注释
-	var lastValue string
-	var replaceCount int
 	if existing, exists := cm.comments[keyword]; exists {
-		// 使用已存储的注释信息
-		lastValue = existing.LastValue
-		replaceCount = existing.ReplaceCount
-	} else {
-		// 使用传入的replacement参数
-		lastValue = replacement
-		replaceCount = 1
+		// 使用新的替换值，但保持递增的替换次数
+		return cm.GenerateComment(keyword, replacement, existing.ReplaceCount+1)
 	}
-	
-	// 生成XML注释格式
-	commentText := cm.GenerateComment(keyword, lastValue, replaceCount)
-	if commentText == "" {
-		return ""
-	}
-	
-	// 包装为XML注释
-	return fmt.Sprintf("<!-- %s -->", commentText[5:len(commentText)-4]) // 移除原有的<!-- -->
+
+	// 创建新注释
+	return cm.GenerateComment(keyword, replacement, 1)
 }

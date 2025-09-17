@@ -136,12 +136,29 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, replacement string, currentCount int) (string, int) {
 	replacementCount := currentCount
 
-	// 直接替换完整的关键词
-	if strings.Contains(content, keyword) {
-		count := strings.Count(content, keyword)
-		content = strings.ReplaceAll(content, keyword, replacement)
+	// 检查是否存在该关键词的历史替换记录
+	var targetValue string
+	if exp.enableTracking {
+		if comment, exists := exp.commentManager.GetComment(keyword); exists {
+			// 如果存在历史记录，替换上次的值而不是原始关键词
+			targetValue = comment.LastValue
+			fmt.Printf("发现历史替换记录，将替换 '%s' -> '%s'\n", targetValue, replacement)
+		} else {
+			// 如果没有历史记录，替换原始关键词
+			targetValue = keyword
+			fmt.Printf("首次替换 '%s' -> '%s'\n", keyword, replacement)
+		}
+	} else {
+		// 如果未启用追踪，直接替换关键词
+		targetValue = keyword
+	}
+
+	// 直接替换完整的目标值
+	if strings.Contains(content, targetValue) {
+		count := strings.Count(content, targetValue)
+		content = strings.ReplaceAll(content, targetValue, replacement)
 		replacementCount += count
-		fmt.Printf("直接替换 '%s' -> '%s' (%d次)\n", keyword, replacement, count)
+		fmt.Printf("完成替换 '%s' -> '%s' (%d次)\n", targetValue, replacement, count)
 
 		// 更新注释追踪
 		if exp.enableTracking {
@@ -149,9 +166,12 @@ func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, re
 		}
 	}
 
-	// 处理被XML标签分割的关键词
-	content, additionalCount := exp.handleSplitKeywordWithTracking(content, keyword, replacement)
-	replacementCount += additionalCount
+	// 处理被XML标签分割的关键词（仅在首次替换时需要）
+	if targetValue == keyword {
+		var additionalCount int
+		content, additionalCount = exp.handleSplitKeywordWithTracking(content, keyword, replacement)
+		replacementCount += additionalCount
+	}
 
 	return content, replacementCount
 }

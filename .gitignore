@@ -9,3 +9,7 @@
 /test_output
 /input
 /*.docx
+/out1/*.docx
+/out2/*.docx
+/out3/*.docx
+/*.txt

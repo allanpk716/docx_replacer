@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -25,8 +26,24 @@ func main() {
 	fmt.Println("欢迎使用 DOCX 关键词替换工具！")
 	fmt.Println()
 
-	// 交互式获取配置文件路径
-	configFile := getConfigFilePath()
+	// 解析命令行参数
+	var configFile, inputPath, outputPath string
+	flag.StringVar(&configFile, "config", "", "配置文件路径")
+	flag.StringVar(&inputPath, "input", "", "输入文件或目录路径")
+	flag.StringVar(&outputPath, "output", "", "输出文件或目录路径")
+	flag.Parse()
+
+	// 如果没有提供命令行参数，使用交互式模式
+	if configFile == "" {
+		// 交互式获取配置文件路径
+		configFile = getConfigFilePath()
+	} else {
+		// 验证配置文件
+		if _, err := os.Stat(configFile); os.IsNotExist(err) {
+			log.Fatalf("配置文件不存在: %s", configFile)
+		}
+		fmt.Printf("✓ 配置文件路径: %s\n", configFile)
+	}
 	
 	// 加载增强配置文件
 	enhancedConfigManager := config.NewEnhancedConfigManager()
@@ -52,8 +69,30 @@ func main() {
 		log.Fatalf("没有找到有效的关键词")
 	}
 
-	// 交互式获取输入和输出路径
-	inputPath, outputPath, isBatchMode := getInputOutputPaths()
+	// 获取输入和输出路径
+	var isBatchMode bool
+	if inputPath == "" || outputPath == "" {
+		// 交互式获取输入和输出路径
+		inputPath, outputPath, isBatchMode = getInputOutputPaths()
+	} else {
+		// 验证输入路径
+		if _, err := os.Stat(inputPath); os.IsNotExist(err) {
+			log.Fatalf("输入路径不存在: %s", inputPath)
+		}
+		// 判断是否为批量模式
+		info, err := os.Stat(inputPath)
+		if err != nil {
+			log.Fatalf("无法获取输入路径信息: %v", err)
+		}
+		isBatchMode = info.IsDir()
+		fmt.Printf("✓ 输入路径: %s\n", inputPath)
+		fmt.Printf("✓ 输出路径: %s\n", outputPath)
+		if isBatchMode {
+			fmt.Println("检测到输入目录，将进行批量处理")
+		} else {
+			fmt.Println("检测到输入文件，将进行单文件处理")
+		}
+	}
 
 	// 创建上下文
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
