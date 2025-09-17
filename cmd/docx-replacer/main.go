@@ -262,30 +262,18 @@ func processXMLSingleFile(ctx context.Context, inputFile, outputFile string, key
 		return fmt.Errorf("创建输出目录失败: %w", err)
 	}
 
-	// 询问用户选择处理模式
-	useWordCompatible := askForProcessingMode()
-	
-	if useWordCompatible {
-		// 使用Word兼容处理器
-		wordProcessor := docx.NewWordCompatibleProcessor(inputFile)
-		if err := wordProcessor.ReplaceKeywordsWithWordCompatibility(keywordMap, outputFile); err != nil {
-			return fmt.Errorf("Word兼容处理失败: %w", err)
-		}
-	} else {
-		// 创建增强XML处理器（使用自定义属性追踪）
-		enhancedProcessor := docx.NewEnhancedXMLProcessorWithCustomProps(inputFile)
-		
-		// 执行替换
-		if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
-			return fmt.Errorf("处理文件失败: %w", err)
-		}
+	// 直接使用增强Word兼容处理器，这是最有效的方案
+	fmt.Println("使用增强Word兼容模式...")
+	enhancedWordProcessor := docx.NewEnhancedWordCompatibleProcessor(keywordMap)
+	if err := enhancedWordProcessor.ReplaceKeywordsWithWordCompatibility(inputFile, outputFile); err != nil {
+		return fmt.Errorf("增强Word兼容处理失败: %w", err)
 	}
 
 	log.Printf("文件处理完成: %s", outputFile)
 	return nil
 }
 
-// processXMLBatchFiles 使用增强XML处理器批量处理文件
+// processXMLBatchFiles 使用增强Word兼容处理器批量处理文件
 func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywordMap map[string]string, cfg *config.EnhancedConfig) error {
 	// 创建输出目录
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
@@ -303,9 +291,7 @@ func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywo
 	}
 
 	log.Printf("找到 %d 个 DOCX 文件", len(docxFiles))
-
-	// 询问用户选择处理模式
-	useWordCompatible := askForProcessingMode()
+	fmt.Println("使用增强Word兼容模式...")
 
 	// 处理每个文件
 	for i, inputFile := range docxFiles {
@@ -331,22 +317,11 @@ func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywo
 
 		log.Printf("[%d/%d] 处理文件: %s", i+1, len(docxFiles), inputFile)
 
-		if useWordCompatible {
-			// 使用Word兼容处理器
-			wordProcessor := docx.NewWordCompatibleProcessor(inputFile)
-			if err := wordProcessor.ReplaceKeywordsWithWordCompatibility(keywordMap, outputFile); err != nil {
-				log.Printf("Word兼容处理失败 %s: %v", inputFile, err)
-				continue
-			}
-		} else {
-			// 创建增强XML处理器（使用自定义属性追踪）
-			enhancedProcessor := docx.NewEnhancedXMLProcessorWithCustomProps(inputFile)
-			
-			// 执行替换
-			if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
-				log.Printf("处理文件失败 %s: %v", inputFile, err)
-				continue
-			}
+		// 直接使用增强Word兼容处理器，这是最有效的方案
+		enhancedWordProcessor := docx.NewEnhancedWordCompatibleProcessor(keywordMap)
+		if err := enhancedWordProcessor.ReplaceKeywordsWithWordCompatibility(inputFile, outputFile); err != nil {
+			log.Printf("增强Word兼容处理失败 %s: %v", inputFile, err)
+			continue
 		}
 
 		log.Printf("文件处理完成: %s", outputFile)
@@ -379,33 +354,7 @@ func findDocxFiles(dir string) ([]string, error) {
 	return docxFiles, err
 }
 
-// askForProcessingMode 询问用户选择处理模式
-func askForProcessingMode() bool {
-	fmt.Println()
-	fmt.Println("请选择处理模式:")
-	fmt.Println("1. 标准模式 (保持原有XML结构，可能在Word中显示异常)")
-	fmt.Println("2. Word兼容模式 (重建XML结构，确保在Word中正确显示) [推荐]")
-	fmt.Print("请输入选择 (1/2，默认为2): ")
-	
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		input := strings.TrimSpace(scanner.Text())
-		if input == "" || input == "2" {
-			fmt.Println("✓ 已选择Word兼容模式")
-			return true
-		} else if input == "1" {
-			fmt.Println("✓ 已选择标准模式")
-			return false
-		} else {
-			fmt.Print("请输入有效选择 (1/2): ")
-			continue
-		}
-	}
-	
-	// 默认返回Word兼容模式
-	fmt.Println("✓ 默认选择Word兼容模式")
-	return true
-}
+
 
 // loadOrCreateCommentTrackingConfig 加载或创建注释追踪配置文件
 func loadOrCreateCommentTrackingConfig(configFilePath string, enhancedCfg *config.EnhancedConfig) error {
