@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/allanpk716/docx_replacer/internal/cmd"
+	"github.com/allanpk716/docx_replacer/internal/comment"
 	"github.com/allanpk716/docx_replacer/internal/config"
 	"github.com/allanpk716/docx_replacer/pkg/docx"
 )
@@ -26,18 +27,21 @@ func main() {
 	// 交互式获取配置文件路径
 	configFile := getConfigFilePath()
 	
-	// 加载配置文件
-	configManager := config.NewConfigManager()
-	cfg, err := configManager.LoadConfig(configFile)
+	// 加载增强配置文件
+	enhancedConfigManager := config.NewEnhancedConfigManager()
+	enhancedCfg, err := enhancedConfigManager.LoadConfigWithMigration(configFile)
 	if err != nil {
 		log.Fatalf("加载配置文件失败: %v", err)
 	}
 
-	fmt.Printf("✓ 成功加载配置文件 (项目: %s, 关键词数量: %d)\n", cfg.ProjectName, len(cfg.Keywords))
+	fmt.Printf("✓ 成功加载配置文件 (项目: %s, 关键词数量: %d)\n", enhancedCfg.ProjectName, len(enhancedCfg.Keywords))
+	if enhancedCfg.CommentTracking != nil && enhancedCfg.CommentTracking.EnableCommentTracking {
+		fmt.Println("✓ 注释追踪功能已启用")
+	}
 	fmt.Println()
 
-	// 获取关键词映射
-	keywordMap := configManager.GetKeywordMap(cfg)
+	// 获取启用的关键词映射
+	keywordMap := enhancedConfigManager.GetEnabledKeywords(enhancedCfg)
 	if len(keywordMap) == 0 {
 		log.Fatalf("没有找到有效的关键词")
 	}
@@ -50,7 +54,7 @@ func main() {
 	defer cancel()
 
 	// 执行处理
-	if err := executeInteractiveProcessing(ctx, inputPath, outputPath, isBatchMode, keywordMap); err != nil {
+	if err := executeInteractiveProcessing(ctx, inputPath, outputPath, isBatchMode, keywordMap, enhancedCfg); err != nil {
 		log.Fatalf("处理失败: %v", err)
 	}
 
@@ -175,19 +179,19 @@ func getInputOutputPaths() (string, string, bool) {
 }
 
 // executeInteractiveProcessing 执行交互式处理逻辑
-func executeInteractiveProcessing(ctx context.Context, inputPath, outputPath string, isBatchMode bool, keywordMap map[string]string) error {
+func executeInteractiveProcessing(ctx context.Context, inputPath, outputPath string, isBatchMode bool, keywordMap map[string]string, cfg *config.EnhancedConfig) error {
 	fmt.Println()
 	fmt.Println("开始处理...")
 	
 	if isBatchMode {
-		return processXMLBatchFiles(ctx, inputPath, outputPath, keywordMap)
+		return processXMLBatchFiles(ctx, inputPath, outputPath, keywordMap, cfg)
 	} else {
-		return processXMLSingleFile(ctx, inputPath, outputPath, keywordMap)
+		return processXMLSingleFile(ctx, inputPath, outputPath, keywordMap, cfg)
 	}
 }
 
-// processXMLSingleFile 使用XML处理器处理单个文件
-func processXMLSingleFile(ctx context.Context, inputFile, outputFile string, keywordMap map[string]string) error {
+// processXMLSingleFile 使用增强XML处理器处理单个文件
+func processXMLSingleFile(ctx context.Context, inputFile, outputFile string, keywordMap map[string]string, cfg *config.EnhancedConfig) error {
 	log.Printf("处理文件: %s -> %s", inputFile, outputFile)
 
 	// 检查输入文件是否存在
@@ -201,9 +205,24 @@ func processXMLSingleFile(ctx context.Context, inputFile, outputFile string, key
 		return fmt.Errorf("创建输出目录失败: %w", err)
 	}
 
-	// 创建XML处理器并执行替换
-	xmlProcessor := docx.NewXMLProcessor(inputFile)
-	if err := xmlProcessor.ReplaceKeywords(keywordMap, outputFile); err != nil {
+	// 创建注释配置
+	var commentConfig *comment.CommentConfig
+	if cfg.CommentTracking != nil && cfg.CommentTracking.EnableCommentTracking {
+		commentConfig = &comment.CommentConfig{
+			EnableCommentTracking: true,
+			CommentFormat:         cfg.CommentTracking.CommentFormat,
+			MaxCommentHistory:     cfg.CommentTracking.MaxCommentHistory,
+		}
+		log.Printf("✓ 注释追踪已启用")
+	} else {
+		commentConfig = &comment.CommentConfig{EnableCommentTracking: false}
+	}
+	
+	// 创建增强XML处理器
+	enhancedProcessor := docx.NewEnhancedXMLProcessor(inputFile, commentConfig)
+	
+	// 执行替换
+	if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
 		return fmt.Errorf("处理文件失败: %w", err)
 	}
 
@@ -211,8 +230,8 @@ func processXMLSingleFile(ctx context.Context, inputFile, outputFile string, key
 	return nil
 }
 
-// processXMLBatchFiles 使用XML处理器批量处理文件
-func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywordMap map[string]string) error {
+// processXMLBatchFiles 使用增强XML处理器批量处理文件
+func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywordMap map[string]string, cfg *config.EnhancedConfig) error {
 	// 创建输出目录
 	if err := os.MkdirAll(outputDir, 0755); err != nil {
 		return fmt.Errorf("创建输出目录失败: %w", err)
@@ -254,9 +273,23 @@ func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywo
 
 		log.Printf("[%d/%d] 处理文件: %s", i+1, len(docxFiles), inputFile)
 
-		// 创建XML处理器并执行替换
-		xmlProcessor := docx.NewXMLProcessor(inputFile)
-		if err := xmlProcessor.ReplaceKeywords(keywordMap, outputFile); err != nil {
+		// 创建注释配置
+		var commentConfig *comment.CommentConfig
+		if cfg.CommentTracking != nil && cfg.CommentTracking.EnableCommentTracking {
+			commentConfig = &comment.CommentConfig{
+				EnableCommentTracking: true,
+				CommentFormat:         cfg.CommentTracking.CommentFormat,
+				MaxCommentHistory:     cfg.CommentTracking.MaxCommentHistory,
+			}
+		} else {
+			commentConfig = &comment.CommentConfig{EnableCommentTracking: false}
+		}
+		
+		// 创建增强XML处理器
+		enhancedProcessor := docx.NewEnhancedXMLProcessor(inputFile, commentConfig)
+		
+		// 执行替换
+		if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
 			log.Printf("处理文件失败 %s: %v", inputFile, err)
 			continue
 		}
