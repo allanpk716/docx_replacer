@@ -13,3 +13,10 @@
 /out2/*.docx
 /out3/*.docx
 /*.txt
+*.xml
+/temp_check_final
+/temp_check_fixed
+/temp_check_input
+/temp_check_output
+/temp_check_original
+/temp_debug

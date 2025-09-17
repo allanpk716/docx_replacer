@@ -140,15 +140,8 @@ func (exp *EnhancedXMLProcessor) ReplaceKeywordsWithTracking(replacements map[st
 					activeKeywords = append(activeKeywords, keyword)
 				}
 				modifiedContent = exp.commentManager.CleanupOrphanedComments(modifiedContent, activeKeywords)
-			} else if exp.useCustomProps {
-				// 生成更新后的自定义属性XML
-				var err error
-				customPropsContent, err = exp.propertyManager.GenerateCustomPropertiesXML(customProps)
-				if err != nil {
-					fmt.Printf("生成自定义属性XML失败: %v\n", err)
-					customPropsContent = ""
-				}
 			}
+			// 注意：自定义属性的XML生成将在所有替换完成后统一处理
 
 			content = []byte(modifiedContent)
 			fmt.Printf("在document.xml中完成 %d 次关键词替换\n", replacementCount)
@@ -251,9 +244,7 @@ func (exp *EnhancedXMLProcessor) replaceKeywordWithTracking(content, keyword, re
 			fmt.Printf("[DEBUG] 更新注释追踪: %s\n", keyword)
 		} else if exp.useCustomProps {
 			// 更新自定义属性追踪
-			fmt.Printf("[DEBUG] 准备更新自定义属性追踪: %s\n", keyword)
 			exp.propertyManager.AddReplacement(customProps, keyword, "", replacement)
-			fmt.Printf("[DEBUG] 完成更新自定义属性追踪: %s\n", keyword)
 		}
 	} else {
 		fmt.Printf("未找到目标值 '%s'，跳过替换\n", targetValue)
@@ -307,7 +298,7 @@ func (exp *EnhancedXMLProcessor) handleSplitKeywordWithTracking(content, keyword
 				exp.commentManager.AddOrUpdateComment(keyword, replacement)
 			} else if exp.useCustomProps {
 				// 更新自定义属性追踪
-				exp.propertyManager.AddReplacement(customProps, keyword, "", replacement)
+			exp.propertyManager.AddReplacement(customProps, keyword, "", replacement)
 			}
 		}
 	}

@@ -292,12 +292,7 @@ func (xp *XMLProcessor) extractTextFromXML(xmlContent string) string {
 
 // addHiddenCommentToXML 在XML文档中添加隐藏注释
 func (xp *XMLProcessor) addHiddenCommentToXML(content, commentXML string) string {
-	// 查找文档体的结束标签
-	bodyEndPattern := `</w:body>`
-	if strings.Contains(content, bodyEndPattern) {
-		// 在body结束标签前插入隐藏注释
-		hiddenComment := fmt.Sprintf(`<w:p><w:pPr><w:rPr><w:vanish/></w:rPr></w:pPr><w:r><w:rPr><w:vanish/></w:rPr><w:t>%s</w:t></w:r></w:p>`, commentXML)
-		content = strings.Replace(content, bodyEndPattern, hiddenComment+bodyEndPattern, 1)
-	}
+	// 暂时禁用隐藏注释功能，避免破坏XML结构
+	// TODO: 重新实现正确的隐藏注释逻辑
 	return content
 }

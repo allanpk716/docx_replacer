@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"github.com/allanpk716/docx_replacer/internal/cmd"
-	"github.com/allanpk716/docx_replacer/internal/comment"
 	"github.com/allanpk716/docx_replacer/internal/config"
 	"github.com/allanpk716/docx_replacer/pkg/docx"
 )
@@ -263,25 +262,23 @@ func processXMLSingleFile(ctx context.Context, inputFile, outputFile string, key
 		return fmt.Errorf("创建输出目录失败: %w", err)
 	}
 
-	// 创建注释配置
-	var commentConfig *comment.CommentConfig
-	if cfg.CommentTracking != nil && cfg.CommentTracking.EnableCommentTracking {
-		commentConfig = &comment.CommentConfig{
-			EnableCommentTracking: true,
-			CommentFormat:         cfg.CommentTracking.CommentFormat,
-			MaxCommentHistory:     cfg.CommentTracking.MaxCommentHistory,
+	// 询问用户选择处理模式
+	useWordCompatible := askForProcessingMode()
+	
+	if useWordCompatible {
+		// 使用Word兼容处理器
+		wordProcessor := docx.NewWordCompatibleProcessor(inputFile)
+		if err := wordProcessor.ReplaceKeywordsWithWordCompatibility(keywordMap, outputFile); err != nil {
+			return fmt.Errorf("Word兼容处理失败: %w", err)
 		}
-		log.Printf("✓ 注释追踪已启用")
 	} else {
-		commentConfig = &comment.CommentConfig{EnableCommentTracking: false}
-	}
-	
-	// 创建增强XML处理器
-	enhancedProcessor := docx.NewEnhancedXMLProcessor(inputFile, commentConfig)
-	
-	// 执行替换
-	if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
-		return fmt.Errorf("处理文件失败: %w", err)
+		// 创建增强XML处理器（使用自定义属性追踪）
+		enhancedProcessor := docx.NewEnhancedXMLProcessorWithCustomProps(inputFile)
+		
+		// 执行替换
+		if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
+			return fmt.Errorf("处理文件失败: %w", err)
+		}
 	}
 
 	log.Printf("文件处理完成: %s", outputFile)
@@ -307,6 +304,9 @@ func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywo
 
 	log.Printf("找到 %d 个 DOCX 文件", len(docxFiles))
 
+	// 询问用户选择处理模式
+	useWordCompatible := askForProcessingMode()
+
 	// 处理每个文件
 	for i, inputFile := range docxFiles {
 		select {
@@ -331,25 +331,22 @@ func processXMLBatchFiles(ctx context.Context, inputDir, outputDir string, keywo
 
 		log.Printf("[%d/%d] 处理文件: %s", i+1, len(docxFiles), inputFile)
 
-		// 创建注释配置
-		var commentConfig *comment.CommentConfig
-		if cfg.CommentTracking != nil && cfg.CommentTracking.EnableCommentTracking {
-			commentConfig = &comment.CommentConfig{
-				EnableCommentTracking: true,
-				CommentFormat:         cfg.CommentTracking.CommentFormat,
-				MaxCommentHistory:     cfg.CommentTracking.MaxCommentHistory,
+		if useWordCompatible {
+			// 使用Word兼容处理器
+			wordProcessor := docx.NewWordCompatibleProcessor(inputFile)
+			if err := wordProcessor.ReplaceKeywordsWithWordCompatibility(keywordMap, outputFile); err != nil {
+				log.Printf("Word兼容处理失败 %s: %v", inputFile, err)
+				continue
 			}
 		} else {
-			commentConfig = &comment.CommentConfig{EnableCommentTracking: false}
-		}
-		
-		// 创建增强XML处理器
-		enhancedProcessor := docx.NewEnhancedXMLProcessor(inputFile, commentConfig)
-		
-		// 执行替换
-		if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
-			log.Printf("处理文件失败 %s: %v", inputFile, err)
-			continue
+			// 创建增强XML处理器（使用自定义属性追踪）
+			enhancedProcessor := docx.NewEnhancedXMLProcessorWithCustomProps(inputFile)
+			
+			// 执行替换
+			if err := enhancedProcessor.ReplaceKeywordsWithTracking(keywordMap, outputFile); err != nil {
+				log.Printf("处理文件失败 %s: %v", inputFile, err)
+				continue
+			}
 		}
 
 		log.Printf("文件处理完成: %s", outputFile)
@@ -380,6 +377,34 @@ func findDocxFiles(dir string) ([]string, error) {
 	})
 
 	return docxFiles, err
+}
+
+// askForProcessingMode 询问用户选择处理模式
+func askForProcessingMode() bool {
+	fmt.Println()
+	fmt.Println("请选择处理模式:")
+	fmt.Println("1. 标准模式 (保持原有XML结构，可能在Word中显示异常)")
+	fmt.Println("2. Word兼容模式 (重建XML结构，确保在Word中正确显示) [推荐]")
+	fmt.Print("请输入选择 (1/2，默认为2): ")
+	
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		input := strings.TrimSpace(scanner.Text())
+		if input == "" || input == "2" {
+			fmt.Println("✓ 已选择Word兼容模式")
+			return true
+		} else if input == "1" {
+			fmt.Println("✓ 已选择标准模式")
+			return false
+		} else {
+			fmt.Print("请输入有效选择 (1/2): ")
+			continue
+		}
+	}
+	
+	// 默认返回Word兼容模式
+	fmt.Println("✓ 默认选择Word兼容模式")
+	return true
 }
 
 // loadOrCreateCommentTrackingConfig 加载或创建注释追踪配置文件
