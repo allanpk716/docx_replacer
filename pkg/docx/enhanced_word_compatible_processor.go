@@ -148,7 +148,10 @@ func (p *EnhancedWordCompatibleProcessor) replaceTextContent(text string) string
 	replacedText := text
 	for oldText, newText := range p.replacements {
 		// 使用精确匹配替换
-		replacedText = strings.ReplaceAll(replacedText, oldText, newText)
+		if strings.Contains(replacedText, oldText) {
+			// 直接替换为新值，不保留原关键词
+			replacedText = strings.ReplaceAll(replacedText, oldText, newText)
+		}
 	}
 	return replacedText
 }
