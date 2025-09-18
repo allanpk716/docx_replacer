@@ -16,14 +16,7 @@ type EnhancedKeyword struct {
 	Category   string `json:"category,omitempty"`
 }
 
-// CommentTracking 注释追踪配置
-type CommentTracking struct {
-	EnableCommentTracking   bool   `json:"enable_comment_tracking"`
-	CleanupOrphanedComments bool   `json:"cleanup_orphaned_comments"`
-	CommentFormat          string `json:"comment_format"`
-	MaxCommentHistory      int    `json:"max_comment_history"`
-	AutoBackup             bool   `json:"auto_backup"`
-}
+
 
 // ProcessingConfig 处理配置
 type ProcessingConfig struct {
@@ -38,7 +31,6 @@ type ProcessingConfig struct {
 type EnhancedConfig struct {
 	ProjectName      string            `json:"project_name"`
 	Keywords         []EnhancedKeyword `json:"keywords"`
-	CommentTracking  *CommentTracking  `json:"comment_tracking,omitempty"`
 	ProcessingConfig *ProcessingConfig `json:"processing_config,omitempty"`
 	Version          string            `json:"version,omitempty"`
 	CreatedAt        *time.Time        `json:"created_at,omitempty"`
@@ -149,12 +141,7 @@ func (ecm *EnhancedConfigManager) ValidateEnhancedConfig(config *EnhancedConfig)
 		keySet[keyword.Key] = true
 	}
 	
-	// 验证注释追踪配置
-	if config.CommentTracking != nil {
-		if err := ecm.validateCommentTracking(config.CommentTracking); err != nil {
-			return fmt.Errorf("注释追踪配置无效: %w", err)
-		}
-	}
+
 	
 	// 验证处理配置
 	if config.ProcessingConfig != nil {
@@ -166,18 +153,7 @@ func (ecm *EnhancedConfigManager) ValidateEnhancedConfig(config *EnhancedConfig)
 	return nil
 }
 
-// validateCommentTracking 验证注释追踪配置
-func (ecm *EnhancedConfigManager) validateCommentTracking(ct *CommentTracking) error {
-	if ct.CommentFormat == "" {
-		return fmt.Errorf("注释格式不能为空")
-	}
-	
-	if ct.MaxCommentHistory < 1 || ct.MaxCommentHistory > 100 {
-		return fmt.Errorf("注释历史记录数量必须在1-100之间")
-	}
-	
-	return nil
-}
+
 
 // validateProcessingConfig 验证处理配置
 func (ecm *EnhancedConfigManager) validateProcessingConfig(pc *ProcessingConfig) error {
@@ -193,16 +169,7 @@ func (ecm *EnhancedConfigManager) migrateFromV1ToV2(config *EnhancedConfig) erro
 	// 设置版本号
 	config.Version = "2.0"
 	
-	// 如果没有注释追踪配置，添加默认配置
-	if config.CommentTracking == nil {
-		config.CommentTracking = &CommentTracking{
-			EnableCommentTracking:   false, // 默认禁用以保持兼容性
-			CleanupOrphanedComments: false,
-			CommentFormat:          "DOCX_REPLACER_ORIGINAL",
-			MaxCommentHistory:      10,
-			AutoBackup:             true,
-		}
-	}
+
 	
 	// 如果没有处理配置，添加默认配置
 	if config.ProcessingConfig == nil {
@@ -233,16 +200,7 @@ func (ecm *EnhancedConfigManager) setDefaultValues(config *EnhancedConfig) {
 		config.Version = "2.0"
 	}
 	
-	// 设置注释追踪默认值
-	if config.CommentTracking == nil {
-		config.CommentTracking = &CommentTracking{
-			EnableCommentTracking:   false,
-			CleanupOrphanedComments: false,
-			CommentFormat:          "DOCX_REPLACER_ORIGINAL",
-			MaxCommentHistory:      10,
-			AutoBackup:             true,
-		}
-	}
+
 	
 	// 设置处理配置默认值
 	if config.ProcessingConfig == nil {

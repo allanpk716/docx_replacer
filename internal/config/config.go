@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Keyword 表示一个关键词配置项
@@ -111,8 +112,13 @@ func (cm *configManager) GetKeywordMap(config *Config) map[string]string {
 
 	keywordMap := make(map[string]string)
 	for _, keyword := range config.Keywords {
-		// 将 key 转换为 #key# 格式
-		formattedKey := fmt.Sprintf("#%s#", keyword.Key)
+		// 检查 key 是否已经包含 # 号，如果已经包含则直接使用，否则添加 # 号
+		var formattedKey string
+		if strings.HasPrefix(keyword.Key, "#") && strings.HasSuffix(keyword.Key, "#") {
+			formattedKey = keyword.Key
+		} else {
+			formattedKey = fmt.Sprintf("#%s#", keyword.Key)
+		}
 		keywordMap[formattedKey] = keyword.Value
 	}
 

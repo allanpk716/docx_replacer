@@ -25,7 +25,7 @@ func (ecm *EnhancedConfigManager) SaveConfig(config *EnhancedConfig, filePath st
 	}
 	
 	// 创建备份（如果启用）
-	if config.CommentTracking != nil && config.CommentTracking.AutoBackup {
+	if config.ProcessingConfig != nil && config.ProcessingConfig.BackupOriginal {
 		if err := ecm.createBackup(filePath); err != nil {
 			fmt.Printf("创建备份失败: %v\n", err)
 		}
@@ -94,8 +94,13 @@ func (ecm *EnhancedConfigManager) GetEnabledKeywords(config *EnhancedConfig) map
 		}
 		
 		if enabled {
-			// 将 key 转换为 #key# 格式
-			formattedKey := fmt.Sprintf("#%s#", keyword.Key)
+			// 检查 key 是否已经包含 # 号，如果已经包含则直接使用，否则添加 # 号
+			var formattedKey string
+			if strings.HasPrefix(keyword.Key, "#") && strings.HasSuffix(keyword.Key, "#") {
+				formattedKey = keyword.Key
+			} else {
+				formattedKey = fmt.Sprintf("#%s#", keyword.Key)
+			}
 			keywordMap[formattedKey] = keyword.Value
 		}
 	}
@@ -181,8 +186,7 @@ func (ecm *EnhancedConfigManager) GenerateTemplate(templateType string) (*Enhanc
 		return ecm.generateBasicTemplate(), nil
 	case "advanced":
 		return ecm.generateAdvancedTemplate(), nil
-	case "comment_tracking":
-		return ecm.generateCommentTrackingTemplate(), nil
+
 	default:
 		return nil, fmt.Errorf("未知的模板类型: %s", templateType)
 	}
@@ -202,13 +206,7 @@ func (ecm *EnhancedConfigManager) generateBasicTemplate() *EnhancedConfig {
 			{Key: "公司名称", Value: "示例公司", Enabled: &enabled, Category: "基础信息"},
 			{Key: "版本号", Value: "v1.0", Enabled: &enabled, Category: "版本信息"},
 		},
-		CommentTracking: &CommentTracking{
-			EnableCommentTracking:   false,
-			CleanupOrphanedComments: false,
-			CommentFormat:          "DOCX_REPLACER_ORIGINAL",
-			MaxCommentHistory:      10,
-			AutoBackup:             true,
-		},
+
 		ProcessingConfig: &ProcessingConfig{
 			EnableDetailedLogging: false,
 			MaxConcurrentFiles:   1,
@@ -227,18 +225,6 @@ func (ecm *EnhancedConfigManager) generateAdvancedTemplate() *EnhancedConfig {
 	config.ProcessingConfig.EnableDetailedLogging = true
 	config.ProcessingConfig.MaxConcurrentFiles = 3
 	config.ProcessingConfig.BackupOriginal = true
-	
-	return config
-}
-
-// generateCommentTrackingTemplate 生成注释追踪模板
-func (ecm *EnhancedConfigManager) generateCommentTrackingTemplate() *EnhancedConfig {
-	config := ecm.generateBasicTemplate()
-	
-	// 启用注释追踪功能
-	config.CommentTracking.EnableCommentTracking = true
-	config.CommentTracking.CleanupOrphanedComments = true
-	config.ProcessingConfig.EnableDetailedLogging = true
 	
 	return config
 }

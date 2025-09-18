@@ -163,9 +163,12 @@ func (cpm *CustomPropertyManager) updateHistoryProperty(props *CustomProperties,
 		return fmt.Errorf("序列化替换历史失败: %v", err)
 	}
 
+	fmt.Printf("[DEBUG] updateHistoryProperty: 序列化历史记录，长度=%d, 记录数=%d\n", len(historyJSON), len(history.Records))
+
 	// 查找并更新现有属性
 	for i, prop := range props.Properties {
 		if prop.Name == "DocxReplacerHistory" {
+			fmt.Printf("[DEBUG] updateHistoryProperty: 更新现有历史属性\n")
 			props.Properties[i].Value = string(historyJSON)
 			return nil
 		}
@@ -173,6 +176,7 @@ func (cpm *CustomPropertyManager) updateHistoryProperty(props *CustomProperties,
 
 	// 如果不存在，添加新属性
 	newPID := cpm.getNextPID(props)
+	fmt.Printf("[DEBUG] updateHistoryProperty: 添加新历史属性，PID=%d\n", newPID)
 	newProperty := CustomProperty{
 		FmtID: "{D5CDD505-2E9C-101B-9397-08002B2CF9AE}",
 		PID:   fmt.Sprintf("%d", newPID),
@@ -180,6 +184,7 @@ func (cpm *CustomPropertyManager) updateHistoryProperty(props *CustomProperties,
 		Value: string(historyJSON),
 	}
 	props.Properties = append(props.Properties, newProperty)
+	fmt.Printf("[DEBUG] updateHistoryProperty: 属性添加完成，当前属性总数=%d\n", len(props.Properties))
 
 	return nil
 }
@@ -238,6 +243,22 @@ func (cpm *CustomPropertyManager) GetReplacementByKeyword(props *CustomPropertie
 
 	for _, record := range history.Records {
 		if record.Keyword == keyword {
+			return &record, nil
+		}
+	}
+
+	return nil, nil // 未找到记录
+}
+
+// GetReplacementByOriginal 根据原始关键词获取替换记录
+func (cpm *CustomPropertyManager) GetReplacementByOriginal(props *CustomProperties, original string) (*ReplacementRecord, error) {
+	history, err := cpm.GetReplacementHistory(props)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range history.Records {
+		if record.Original == original {
 			return &record, nil
 		}
 	}

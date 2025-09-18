@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -19,7 +18,7 @@ import (
 
 func main() {
 	// 设置日志级别
-	log.SetFlags(log.LstdFlags)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
 	fmt.Printf("=== %s v%s ===\n", cmd.AppName, cmd.AppVersion)
 	fmt.Println("欢迎使用 DOCX 关键词替换工具！")
@@ -31,6 +30,8 @@ func main() {
 	flag.StringVar(&inputPath, "input", "", "输入文件或目录路径")
 	flag.StringVar(&outputPath, "output", "", "输出文件或目录路径")
 	flag.Parse()
+
+	fmt.Printf("[MAIN DEBUG] 开始处理文件: %s\n", inputPath)
 
 	// 如果没有提供命令行参数，使用交互式模式
 	if configFile == "" {
@@ -51,15 +52,9 @@ func main() {
 		log.Fatalf("加载配置文件失败: %v", err)
 	}
 	
-	// 加载或创建独立的注释追踪配置文件
-	if err := loadOrCreateCommentTrackingConfig(configFile, enhancedCfg); err != nil {
-		log.Fatalf("处理注释追踪配置失败: %v", err)
-	}
-
 	fmt.Printf("✓ 成功加载配置文件 (项目: %s, 关键词数量: %d)\n", enhancedCfg.ProjectName, len(enhancedCfg.Keywords))
-	if enhancedCfg.CommentTracking != nil && enhancedCfg.CommentTracking.EnableCommentTracking {
-		fmt.Println("✓ 注释追踪功能已启用")
-	}
+	// 显示自定义属性追踪状态
+	fmt.Println("✓ 已启用自定义属性追踪功能")
 	fmt.Println()
 
 	// 获取启用的关键词映射
@@ -352,63 +347,4 @@ func findDocxFiles(dir string) ([]string, error) {
 	})
 
 	return docxFiles, err
-}
-
-
-
-// loadOrCreateCommentTrackingConfig 加载或创建注释追踪配置文件
-func loadOrCreateCommentTrackingConfig(configFilePath string, enhancedCfg *config.EnhancedConfig) error {
-	// 获取配置文件所在目录
-	configDir := filepath.Dir(configFilePath)
-	commentConfigPath := filepath.Join(configDir, "docx-replacer-config.json")
-	
-	// 检查配置文件是否存在
-	if _, err := os.Stat(commentConfigPath); os.IsNotExist(err) {
-		// 文件不存在，创建默认配置
-		defaultConfig := map[string]interface{}{
-			"comment_tracking": map[string]interface{}{
-				"enable_comment_tracking":   true,
-				"comment_format":           "DOCX_REPLACER_ORIGINAL",
-				"max_comment_history":      10,
-				"cleanup_orphaned_comments": true,
-				"auto_backup":              true,
-			},
-		}
-		
-		data, err := json.MarshalIndent(defaultConfig, "", "  ")
-		if err != nil {
-			return fmt.Errorf("序列化默认配置失败: %w", err)
-		}
-		
-		if err := os.WriteFile(commentConfigPath, data, 0644); err != nil {
-			return fmt.Errorf("创建配置文件失败: %w", err)
-		}
-		
-		fmt.Printf("✓ 已创建默认注释追踪配置文件: %s\n", commentConfigPath)
-	} else if err != nil {
-		return fmt.Errorf("检查配置文件失败: %w", err)
-	}
-	
-	// 读取配置文件
-	data, err := os.ReadFile(commentConfigPath)
-	if err != nil {
-		return fmt.Errorf("读取配置文件失败: %w", err)
-	}
-	
-	// 解析配置
-	var commentConfig struct {
-		CommentTracking *config.CommentTracking `json:"comment_tracking"`
-	}
-	
-	if err := json.Unmarshal(data, &commentConfig); err != nil {
-		return fmt.Errorf("解析配置文件失败: %w", err)
-	}
-	
-	// 将配置应用到主配置中
-	if commentConfig.CommentTracking != nil {
-		enhancedCfg.CommentTracking = commentConfig.CommentTracking
-		fmt.Printf("✓ 已加载注释追踪配置文件: %s\n", commentConfigPath)
-	}
-	
-	return nil
 }

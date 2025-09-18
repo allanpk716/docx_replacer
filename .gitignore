@@ -21,3 +21,7 @@
 /temp_check_original
 /temp_debug
 /tests
+/cmd/docx-replacer/debug
+/cmd/docx-replacer/out*
+*.docx
+/*.zip

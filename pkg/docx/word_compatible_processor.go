@@ -9,14 +9,6 @@ import (
 	"strings"
 )
 
-// min 返回两个整数中的较小值
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
 // WordCompatibleProcessor Word兼容的处理器，确保生成的文档能在Word中正确显示
 type WordCompatibleProcessor struct {
 	filePath string
