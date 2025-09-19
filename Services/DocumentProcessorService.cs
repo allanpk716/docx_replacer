@@ -347,7 +347,7 @@ namespace DocuFiller.Services
             }
         }
 
-        public async Task<ValidationResult> ValidateTemplateAsync(string templatePath)
+        public Task<ValidationResult> ValidateTemplateAsync(string templatePath)
         {
             var result = new ValidationResult { IsValid = true };
 
@@ -357,7 +357,7 @@ namespace DocuFiller.Services
                 {
                     result.IsValid = false;
                     result.ErrorMessage = "模板文件不存在";
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 var extension = Path.GetExtension(templatePath).ToLowerInvariant();
@@ -366,7 +366,7 @@ namespace DocuFiller.Services
                 {
                     result.IsValid = false;
                     result.ErrorMessage = $"不支持的文件格式: {extension}，仅支持 .docx 和 .dotx 文件";
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 // 尝试打开文档验证格式
@@ -383,10 +383,10 @@ namespace DocuFiller.Services
                 result.ErrorMessage = $"验证模板文件时发生异常: {ex.Message}";
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
-        public async Task<List<ContentControlData>> GetContentControlsAsync(string templatePath)
+        public Task<List<ContentControlData>> GetContentControlsAsync(string templatePath)
         {
             var controls = new List<ContentControlData>();
 
@@ -394,7 +394,7 @@ namespace DocuFiller.Services
             {
                 using var document = WordprocessingDocument.Open(templatePath, false);
                 if (document.MainDocumentPart == null)
-                    return controls;
+                    return Task.FromResult(controls);
 
                 var contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>();
                 foreach (var control in contentControls)
@@ -419,7 +419,7 @@ namespace DocuFiller.Services
                 _logger.LogError(ex, $"获取内容控件信息失败: {templatePath}");
             }
 
-            return controls;
+            return Task.FromResult(controls);
         }
 
         public void CancelProcessing()

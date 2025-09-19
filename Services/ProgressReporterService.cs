@@ -15,10 +15,10 @@ namespace DocuFiller.Services
         private int _totalItems;
         private bool _isCompleted;
         private bool _hasError;
-        private string _errorMessage;
-        private string _currentMessage;
+        private string _errorMessage = string.Empty;
+        private string _currentMessage = string.Empty;
 
-        public event EventHandler<ProgressEventArgs> ProgressUpdated;
+        public event EventHandler<ProgressEventArgs>? ProgressUpdated;
 
         public ProgressReporterService(ILogger<ProgressReporterService> logger)
         {
