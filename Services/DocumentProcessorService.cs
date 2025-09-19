@@ -103,14 +103,11 @@ namespace DocuFiller.Services
                     var data = dataList[i];
                     var templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
                     var templateExtension = Path.GetExtension(request.TemplateFilePath);
-                    var outputFileName = $"{templateFileName}_{i + 1:D3}{templateExtension}";
                     
-                    if (!string.IsNullOrWhiteSpace(request.OutputFileNamePattern))
-                    {
-                        outputFileName = request.OutputFileNamePattern.Replace("{index}", (i + 1).ToString("D3")) + templateExtension;
-                    }
-
+                    // 生成输出文件名 - 使用新的时间戳格式
+                    var outputFileName = GenerateOutputFileNameWithTimestamp(templateFileName);
                     var outputPath = Path.Combine(request.OutputDirectory, outputFileName);
+                    _logger.LogDebug($"生成输出文件名: {outputFileName}");
 
                     _progressReporter.ReportProgress(i + 1, dataList.Count, 
                         $"正在处理第 {i + 1} 个文档", outputFileName);
@@ -218,6 +215,7 @@ namespace DocuFiller.Services
 
                 var value = data[tag]?.ToString() ?? string.Empty;
                 _logger.LogDebug($"找到匹配数据: '{tag}' -> '{value}'");
+                _logger.LogDebug($"原始值包含换行符: {value.Contains("\n")}");
                 
                 // 尝试多种方式查找内容容器
                 var content = control.Descendants<SdtContentRun>().FirstOrDefault() ?? 
@@ -237,9 +235,28 @@ namespace DocuFiller.Services
                     if (textElements.Any())
                     {
                         _logger.LogDebug($"找到 {textElements.Count} 个文本元素，直接替换文本内容");
-                        foreach (var textElement in textElements)
+                        // 清除现有文本元素
+                        var parentRuns = textElements.Select(t => t.Parent).OfType<Run>().Distinct().ToList();
+                        foreach (var run in parentRuns)
                         {
-                            textElement.Text = value;
+                            run.RemoveAllChildren();
+                        }
+                        
+                        // 添加格式化的新内容
+                        if (parentRuns.Any())
+                        {
+                            var firstRun = parentRuns.First();
+                            var formattedElements = CreateFormattedTextElements(value);
+                            foreach (var element in formattedElements)
+                            {
+                                firstRun.AppendChild(element);
+                            }
+                            
+                            // 移除其他多余的Run元素
+                            for (int i = 1; i < parentRuns.Count; i++)
+                            {
+                                parentRuns[i].Remove();
+                            }
                         }
                         _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' 的文本为 '{value}'");
                         return;
@@ -258,21 +275,27 @@ namespace DocuFiller.Services
                     // 添加新内容
                     if (control is SdtBlock || content is SdtContentBlock || content is SdtContentCell)
                     {
-                        var paragraph = new Paragraph(new Run(new Text(value)));
+                        var paragraph = CreateParagraphWithFormattedText(value);
                         content.AppendChild(paragraph);
                         _logger.LogDebug($"作为块级元素添加内容: '{value}'");
                     }
                     else if (control is SdtRun || content is SdtContentRun)
                     {
-                        var run = new Run(new Text(value));
-                        content.AppendChild(run);
+                        var runs = CreateFormattedRuns(value);
+                        foreach (var run in runs)
+                        {
+                            content.AppendChild(run);
+                        }
                         _logger.LogDebug($"作为行内元素添加内容: '{value}'");
                     }
                     else
                     {
                         // 通用处理方式
-                        var run = new Run(new Text(value));
-                        content.AppendChild(run);
+                        var runs = CreateFormattedRuns(value);
+                        foreach (var run in runs)
+                        {
+                            content.AppendChild(run);
+                        }
                         _logger.LogDebug($"使用通用方式添加内容: '{value}'");
                     }
                     
@@ -382,6 +405,121 @@ namespace DocuFiller.Services
         private void OnProgressUpdated(object? sender, ProgressEventArgs e)
         {
             ProgressUpdated?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// 创建带格式的段落，支持换行符和红色文本
+        /// </summary>
+        private Paragraph CreateParagraphWithFormattedText(string text)
+        {
+            var paragraph = new Paragraph();
+            var runs = CreateFormattedRuns(text);
+            foreach (var run in runs)
+            {
+                paragraph.AppendChild(run);
+            }
+            return paragraph;
+        }
+
+        /// <summary>
+        /// 创建格式化的Run元素列表，处理换行符并设置红色
+        /// </summary>
+        private List<Run> CreateFormattedRuns(string text)
+        {
+            var runs = new List<Run>();
+            
+            if (string.IsNullOrEmpty(text))
+            {
+                return runs;
+            }
+
+            // 按换行符分割文本
+            var lines = text.Split(new[] { "\n" }, StringSplitOptions.None);
+            _logger.LogDebug($"文本分割为 {lines.Length} 行");
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                
+                // 创建带红色格式的Run
+                var run = new Run();
+                
+                // 设置文本颜色为红色
+                var runProperties = new RunProperties();
+                var color = new Color() { Val = "FF0000" }; // 红色
+                runProperties.AppendChild(color);
+                run.AppendChild(runProperties);
+                
+                // 添加文本内容
+                var text_element = new Text(line);
+                run.AppendChild(text_element);
+                runs.Add(run);
+                
+                // 如果不是最后一行，添加换行符
+                if (i < lines.Length - 1)
+                {
+                    var breakRun = new Run(new Break());
+                    runs.Add(breakRun);
+                    _logger.LogDebug($"添加换行符在第 {i + 1} 行后");
+                }
+            }
+            
+            _logger.LogDebug($"创建了 {runs.Count} 个Run元素");
+            return runs;
+        }
+
+        /// <summary>
+        /// 创建格式化的文本元素列表，用于直接替换Text元素
+        /// </summary>
+        private List<OpenXmlElement> CreateFormattedTextElements(string text)
+        {
+            var elements = new List<OpenXmlElement>();
+            
+            if (string.IsNullOrEmpty(text))
+            {
+                return elements;
+            }
+
+            // 按换行符分割文本
+            var lines = text.Split(new[] { "\n" }, StringSplitOptions.None);
+            _logger.LogDebug($"文本分割为 {lines.Length} 行");
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i];
+                
+                // 设置文本颜色为红色
+                var runProperties = new RunProperties();
+                var color = new Color() { Val = "FF0000" }; // 红色
+                runProperties.AppendChild(color);
+                elements.Add(runProperties);
+                
+                // 添加文本内容
+                var textElement = new Text(line);
+                elements.Add(textElement);
+                
+                // 如果不是最后一行，添加换行符
+                if (i < lines.Length - 1)
+                {
+                    elements.Add(new Break());
+                    _logger.LogDebug($"添加换行符在第 {i + 1} 行后");
+                }
+            }
+            
+            _logger.LogDebug($"创建了 {elements.Count} 个文本元素");
+            return elements;
+        }
+
+        /// <summary>
+        /// 生成带时间戳的输出文件名
+        /// 格式：原文件名 -- 替换 --年月日时分秒.docx
+        /// </summary>
+        private string GenerateOutputFileNameWithTimestamp(string originalFileName)
+        {
+            var timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+            var outputFileName = $"{originalFileName} -- 替换 --{timestamp}.docx";
+            _logger.LogDebug($"生成时间戳文件名: {outputFileName}");
+            return outputFileName;
         }
     }
 }
