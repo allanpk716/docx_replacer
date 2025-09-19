@@ -39,10 +39,6 @@ namespace DocuFiller.ViewModels
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
         public ObservableCollection<ContentControlData> ContentControls { get; } = new();
-        public ObservableCollection<NamingPatternOption> NamingPatterns { get; } = new();
-        
-        // 选中的命名模式
-        private NamingPatternOption _namingPattern;
         
         public MainWindowViewModel(
             ILogger<MainWindowViewModel> logger,
@@ -58,7 +54,6 @@ namespace DocuFiller.ViewModels
             _progressReporter = progressReporter;
             
             InitializeCommands();
-            InitializeNamingPatterns();
             SubscribeToProgressEvents();
             
             // 设置默认输出目录
@@ -142,12 +137,6 @@ namespace DocuFiller.ViewModels
             set => SetProperty(ref _dataStatistics, value);
         }
         
-        public NamingPatternOption NamingPattern
-        {
-            get => _namingPattern;
-            set => SetProperty(ref _namingPattern, value);
-        }
-        
         public bool CanStartProcess => !IsProcessing && !string.IsNullOrEmpty(TemplatePath) && !string.IsNullOrEmpty(DataPath);
         public bool CanCancelProcess => IsProcessing;
         
@@ -180,15 +169,7 @@ namespace DocuFiller.ViewModels
             ExitCommand = new RelayCommand(ExitApplication);
         }
         
-        private void InitializeNamingPatterns()
-        {
-            NamingPatterns.Add(new NamingPatternOption { Pattern = "{index}", Description = "序号 (1, 2, 3...)" });
-            NamingPatterns.Add(new NamingPatternOption { Pattern = "{index:000}", Description = "序号补零 (001, 002, 003...)" });
-            NamingPatterns.Add(new NamingPatternOption { Pattern = "{timestamp}", Description = "时间戳" });
-            NamingPatterns.Add(new NamingPatternOption { Pattern = "{field:name}", Description = "使用字段值 (需指定字段名)" });
-            
-            NamingPattern = NamingPatterns.First();
-        }
+
         
         private void SubscribeToProgressEvents()
         {
@@ -331,7 +312,7 @@ namespace DocuFiller.ViewModels
                     TemplateFilePath = TemplatePath,
                     DataFilePath = DataPath,
                     OutputDirectory = OutputDirectory,
-                    OutputFileNamePattern = NamingPattern?.Pattern ?? "{index}"
+                    OutputFileNamePattern = "{timestamp}"
                 };
                 
                 var result = await _documentProcessor.ProcessDocumentsAsync(request);
@@ -455,10 +436,5 @@ namespace DocuFiller.ViewModels
         #endregion
     }
 
-    // 命名模式选项
-    public class NamingPatternOption
-    {
-        public string Pattern { get; set; }
-        public string Description { get; set; }
-    }
+
 }

@@ -11,7 +11,6 @@ using DocuFiller.Models;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Logging;
-using System.IO.Compression;
 
 namespace DocuFiller.Services
 {
@@ -178,7 +177,7 @@ namespace DocuFiller.Services
                 var contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>().ToList();
                 foreach (var control in contentControls)
                 {
-                    ProcessContentControl(control, data);
+                    ProcessContentControl(control, data, document);
                 }
 
                 // 保存文档
@@ -192,7 +191,7 @@ namespace DocuFiller.Services
             }
         }
 
-        private void ProcessContentControl(SdtElement control, Dictionary<string, object> data)
+        private void ProcessContentControl(SdtElement control, Dictionary<string, object> data, WordprocessingDocument document)
         {
             try
             {
@@ -216,6 +215,16 @@ namespace DocuFiller.Services
                 var value = data[tag]?.ToString() ?? string.Empty;
                 _logger.LogDebug($"找到匹配数据: '{tag}' -> '{value}'");
                 _logger.LogDebug($"原始值包含换行符: {value.Contains("\n")}");
+                
+                // 记录替换前的旧值用于批注
+                var oldValue = string.Empty;
+                var existingTextElements = control.Descendants<Text>().ToList();
+                if (existingTextElements.Any())
+                {
+                    oldValue = string.Join("", existingTextElements.Select(t => t.Text));
+                }
+                
+                // 处理标记功能已集成到批注中，无需单独添加
                 
                 // 尝试多种方式查找内容容器
                 var content = control.Descendants<SdtContentRun>().FirstOrDefault() ?? 
@@ -257,6 +266,11 @@ namespace DocuFiller.Services
                             {
                                 parentRuns[i].Remove();
                             }
+                            
+                            // 为替换成功的Run添加批注
+                            var currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
+                            var commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{value}";
+                            AddCommentToElement(document, firstRun, commentText, "DocuFiller系统", tag);
                         }
                         _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' 的文本为 '{value}'");
                         return;
@@ -273,10 +287,12 @@ namespace DocuFiller.Services
                     _logger.LogDebug($"清除了 {childCount} 个子元素");
 
                     // 添加新内容
+                    Run targetRun = null;
                     if (control is SdtBlock || content is SdtContentBlock || content is SdtContentCell)
                     {
                         var paragraph = CreateParagraphWithFormattedText(value);
                         content.AppendChild(paragraph);
+                        targetRun = paragraph.Descendants<Run>().FirstOrDefault();
                         _logger.LogDebug($"作为块级元素添加内容: '{value}'");
                     }
                     else if (control is SdtRun || content is SdtContentRun)
@@ -286,6 +302,7 @@ namespace DocuFiller.Services
                         {
                             content.AppendChild(run);
                         }
+                        targetRun = runs.FirstOrDefault();
                         _logger.LogDebug($"作为行内元素添加内容: '{value}'");
                     }
                     else
@@ -296,7 +313,16 @@ namespace DocuFiller.Services
                         {
                             content.AppendChild(run);
                         }
+                        targetRun = runs.FirstOrDefault();
                         _logger.LogDebug($"使用通用方式添加内容: '{value}'");
+                    }
+                    
+                    // 为替换成功的Run添加批注
+                    if (targetRun != null)
+                    {
+                        var currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
+                        var commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{value}";
+                        AddCommentToElement(document, targetRun, commentText, "DocuFiller系统", tag);
                     }
                     
                     _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' 为 '{value}'");
@@ -521,5 +547,88 @@ namespace DocuFiller.Services
             _logger.LogDebug($"生成时间戳文件名: {outputFileName}");
             return outputFileName;
         }
-    }
-}
+
+        /// <summary>
+        /// 为Run元素添加批注（按照OpenXML标准实现）
+        /// </summary>
+        private void AddCommentToElement(WordprocessingDocument document, Run targetRun, string commentText, string author, string tag)
+        {
+            try
+            {
+                _logger.LogDebug($"开始为Run元素添加批注，标签: '{tag}'");
+                
+                // 1. 准备批注环境 (Get or Create comments part)
+                WordprocessingCommentsPart commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
+                if (commentsPart == null)
+                {
+                    _logger.LogDebug("创建新的批注部分");
+                    commentsPart = document.MainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
+                    commentsPart.Comments = new Comments();
+                }
+                
+                // 2. 生成唯一ID (Find the next available ID)
+                string id = "0";
+                if (commentsPart.Comments.HasChildren)
+                {
+                    // ID必须是唯一的数字字符串。我们找到当前最大的ID并加1。
+                    var maxId = commentsPart.Comments.Descendants<Comment>()
+                        .Select(c => int.TryParse(c.Id?.Value, out var commentId) ? commentId : 0)
+                        .DefaultIfEmpty(0)
+                        .Max();
+                    id = (maxId + 1).ToString();
+                }
+                else
+                {
+                    id = "1";
+                }
+                _logger.LogDebug($"生成批注ID: {id}");
+                
+                // 3. 创建批注内容
+                Paragraph p = new Paragraph(new Run(new Text(commentText)));
+                Comment comment = new Comment()
+                {
+                    Id = id,
+                    Author = author,
+                    Date = DateTime.Now,
+                    Initials = author.Length >= 2 ? author.Substring(0, 2) : author // 可选
+                };
+                comment.Append(p);
+                
+                // 将新批注添加到 comments.xml
+                commentsPart.Comments.Append(comment);
+                commentsPart.Comments.Save();
+                _logger.LogDebug($"批注已添加到comments.xml，ID: {id}");
+                
+                // 4 & 5. 在正文中标记范围和添加引用
+                // 在被批注的元素前后插入范围标记
+                targetRun.InsertBeforeSelf(new CommentRangeStart() { Id = id });
+                targetRun.InsertAfterSelf(new CommentRangeEnd() { Id = id });
+                
+                // 在被批注的元素（Run）中添加引用标记
+                targetRun.Append(new CommentReference() { Id = id });
+                
+                _logger.LogInformation($"✓ 成功为Run元素添加批注，标签: '{tag}'，ID: {id}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"为Run元素添加批注时发生异常，标签: '{tag}': {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 生成唯一的批注ID（已整合到AddCommentToElement方法中）
+        /// </summary>
+        private int GenerateCommentId(Comments comments)
+        {
+            var existingIds = comments.Elements<Comment>()
+                .Select(c => int.TryParse(c.Id?.Value, out var id) ? id : 0)
+                .ToList();
+            
+            return existingIds.Any() ? existingIds.Max() + 1 : 1;
+        }
+
+        // 旧的批注方法已被AddCommentToElement替代，此方法已删除
+
+        // AddProcessingMarkToControl方法已删除，处理标记功能已集成到批注中
+     }
+ }
