@@ -59,5 +59,25 @@ namespace DocuFiller.Models
         /// 是否只读
         /// </summary>
         public bool IsReadOnly { get; set; }
+
+        /// <summary>
+        /// 相对于基础目录的路径
+        /// </summary>
+        public string RelativePath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 文件所在目录路径
+        /// </summary>
+        public string DirectoryPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 文件的相对目录路径
+        /// </summary>
+        public string RelativeDirectoryPath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 是否为docx文件
+        /// </summary>
+        public bool IsDocxFile => Extension.Equals(".docx", StringComparison.OrdinalIgnoreCase);
     }
 }

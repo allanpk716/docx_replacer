@@ -93,10 +93,16 @@ namespace DocuFiller.Services
                 // 批量处理文档
                 for (int i = 0; i < dataList.Count; i++)
                 {
-                    if (_cancellationTokenSource.Token.IsCancellationRequested)
+                    if (_cancellationTokenSource?.Token.IsCancellationRequested == true)
                     {
+                        _logger.LogDebug("检测到取消请求，停止批量处理");
                         result.AddWarning("处理被用户取消");
                         break;
+                    }
+                    
+                    if (_cancellationTokenSource == null)
+                    {
+                        _logger.LogDebug("警告：_cancellationTokenSource为null，无法检查取消状态");
                     }
 
                     var data = dataList[i];
@@ -353,8 +359,50 @@ namespace DocuFiller.Services
 
             try
             {
-                if (!_fileService.FileExists(templatePath))
+                // 添加详细的调试信息
+                _logger.LogInformation($"[调试] 开始验证模板文件");
+                _logger.LogInformation($"[调试] 接收到的模板文件路径: '{templatePath}'");
+                
+                // 检查路径是否为空或null
+                if (string.IsNullOrEmpty(templatePath))
                 {
+                    _logger.LogError($"[调试] 模板文件路径为空或null");
+                    result.IsValid = false;
+                    result.ErrorMessage = "模板文件路径为空";
+                    return Task.FromResult(result);
+                }
+                
+                // 输出绝对路径
+                var absolutePath = Path.GetFullPath(templatePath);
+                _logger.LogInformation($"[调试] 模板文件绝对路径: '{absolutePath}'");
+                
+                // 检查文件是否存在
+                var fileExists = _fileService.FileExists(templatePath);
+                _logger.LogInformation($"[调试] 文件是否存在: {fileExists}");
+                
+                if (!fileExists)
+                {
+                    // 输出当前工作目录
+                    var currentDirectory = Directory.GetCurrentDirectory();
+                    _logger.LogError($"[调试] 当前工作目录: '{currentDirectory}'");
+                    
+                    // 输出文件所在目录的内容（如果目录存在）
+                    var directoryPath = Path.GetDirectoryName(absolutePath);
+                    if (!string.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
+                    {
+                        _logger.LogError($"[调试] 文件所在目录: '{directoryPath}'");
+                        var files = Directory.GetFiles(directoryPath);
+                        _logger.LogError($"[调试] 目录中的文件数量: {files.Length}");
+                        foreach (var file in files.Take(10)) // 只显示前10个文件
+                        {
+                            _logger.LogError($"[调试] 目录中的文件: '{Path.GetFileName(file)}'");
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogError($"[调试] 文件所在目录不存在: '{directoryPath}'");
+                    }
+                    
                     result.IsValid = false;
                     result.ErrorMessage = "模板文件不存在";
                     return Task.FromResult(result);
@@ -630,5 +678,173 @@ namespace DocuFiller.Services
         // 旧的批注方法已被AddCommentToElement替代，此方法已删除
 
         // AddProcessingMarkToControl方法已删除，处理标记功能已集成到批注中
+
+        /// <summary>
+        /// 批量处理文件夹中的模板文件
+        /// </summary>
+        /// <param name="request">文件夹处理请求</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        public async Task<ProcessResult> ProcessFolderAsync(FolderProcessRequest request, CancellationToken cancellationToken = default)
+        {
+            var result = new ProcessResult { IsSuccess = true };
+            var processedFiles = new List<string>();
+            var failedFiles = new List<string>();
+
+            try
+            {
+                _logger.LogInformation($"开始批量处理文件夹: {request.TemplateFolderPath}");
+                _logger.LogInformation($"数据文件: {request.DataFilePath}");
+                _logger.LogInformation($"输出目录: {request.OutputDirectory}");
+                _logger.LogInformation($"模板文件数量: {request.TemplateFiles.Count}");
+
+                // 验证输入参数
+                if (request.TemplateFiles == null || !request.TemplateFiles.Any())
+                {
+                    result.IsSuccess = false;
+                    result.ErrorMessage = "没有找到要处理的模板文件";
+                    return result;
+                }
+
+                if (!_fileService.FileExists(request.DataFilePath))
+                {
+                    result.IsSuccess = false;
+                    result.ErrorMessage = "数据文件不存在";
+                    return result;
+                }
+
+                // 解析数据文件
+                var dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
+                if (dataList == null || !dataList.Any())
+                {
+                    result.IsSuccess = false;
+                    result.ErrorMessage = "数据文件为空或格式不正确";
+                    return result;
+                }
+
+                // 创建时间戳输出文件夹
+                var timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+                var inputFolderName = Path.GetFileName(request.TemplateFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                var timestampFolderName = $"{inputFolderName}_{timestamp}";
+                var timestampOutputDir = Path.Combine(request.OutputDirectory, timestampFolderName);
+                
+                if (!_fileService.DirectoryExists(timestampOutputDir))
+                {
+                    Directory.CreateDirectory(timestampOutputDir);
+                    _logger.LogInformation($"创建时间戳输出目录: {timestampOutputDir}");
+                }
+
+                var totalOperations = request.TemplateFiles.Count * dataList.Count();
+                var currentOperation = 0;
+
+                // 处理每个模板文件
+                foreach (var templateFile in request.TemplateFiles)
+                {
+                    try
+                    {
+                        _logger.LogInformation($"处理模板文件: {templateFile.Name}");
+
+                        // 验证模板文件
+                        var validationResult = await ValidateTemplateAsync(templateFile.FullPath);
+                        if (!validationResult.IsValid)
+                        {
+                            _logger.LogWarning($"模板文件验证失败: {templateFile.Name} - {validationResult.ErrorMessage}");
+                            failedFiles.Add($"{templateFile.Name}: {validationResult.ErrorMessage}");
+                            continue;
+                        }
+
+                        // 在时间戳文件夹中创建与原始结构对应的子目录
+                        var relativeDir = string.IsNullOrEmpty(templateFile.RelativeDirectoryPath) ? "" : templateFile.RelativeDirectoryPath;
+                        var outputSubDir = string.IsNullOrEmpty(relativeDir) ? timestampOutputDir : Path.Combine(timestampOutputDir, relativeDir);
+                        
+                        if (!string.IsNullOrEmpty(relativeDir) && !_fileService.DirectoryExists(outputSubDir))
+                        {
+                            Directory.CreateDirectory(outputSubDir);
+                            _logger.LogDebug($"创建子目录: {outputSubDir}");
+                        }
+
+                        // 为每条数据生成文档
+                        for (int i = 0; i < dataList.Count(); i++)
+                        {
+                            if (_cancellationTokenSource?.Token.IsCancellationRequested == true)
+                            {
+                                _logger.LogDebug("检测到取消请求，停止处理");
+                                result.IsSuccess = false;
+                                result.ErrorMessage = "操作已被取消";
+                                return result;
+                            }
+                            
+                            if (_cancellationTokenSource == null)
+                            {
+                                _logger.LogDebug("警告：_cancellationTokenSource为null，无法检查取消状态");
+                            }
+
+                            var data = dataList[i];
+                            currentOperation++;
+
+                            // 生成输出文件名 - 保持原始文件名
+                            var outputFileName = templateFile.Name;
+                            var outputPath = Path.Combine(outputSubDir, outputFileName);
+
+                            _logger.LogDebug($"处理第 {i + 1} 条数据，输出到: {outputPath}");
+
+                            // 处理单个文档
+                            var success = await ProcessSingleDocumentAsync(templateFile.FullPath, outputPath, data);
+                            
+                            if (success)
+                            {
+                                processedFiles.Add(outputPath);
+                                _logger.LogDebug($"✓ 成功处理: {outputFileName}");
+                            }
+                            else
+                            {
+                                failedFiles.Add($"{templateFile.Name} (第{i + 1}条数据): 处理失败");
+                                _logger.LogWarning($"✗ 处理失败: {outputFileName}");
+                            }
+
+                            // 更新进度
+                            var progress = (double)currentOperation / totalOperations * 100;
+                            ProgressUpdated?.Invoke(this, new ProgressEventArgs
+                            {
+                                ProgressPercentage = (int)progress,
+                                StatusMessage = $"正在处理 {templateFile.Name} (第{i + 1}/{dataList.Count()}条数据)",
+                                CurrentFileName = templateFile.Name
+                            });
+                        }
+
+                        _logger.LogInformation($"✓ 完成模板文件处理: {templateFile.Name}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"处理模板文件时发生异常: {templateFile.Name}");
+                        failedFiles.Add($"{templateFile.Name}: {ex.Message}");
+                    }
+                }
+
+                // 设置结果
+                result.ProcessedFiles = processedFiles;
+                result.FailedFiles = failedFiles;
+                result.OutputDirectory = timestampOutputDir;
+                result.TotalProcessed = processedFiles.Count;
+                result.TotalFailed = failedFiles.Count;
+
+                if (failedFiles.Any())
+                {
+                    result.IsSuccess = processedFiles.Any(); // 如果有成功的文件，仍然算作部分成功
+                    result.ErrorMessage = $"部分文件处理失败，成功: {processedFiles.Count}，失败: {failedFiles.Count}";
+                }
+
+                _logger.LogInformation($"批量处理完成 - 成功: {processedFiles.Count}，失败: {failedFiles.Count}");
+                _logger.LogInformation($"输出目录: {timestampOutputDir}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"批量处理文件夹时发生异常: {ex.Message}");
+                result.IsSuccess = false;
+                result.ErrorMessage = $"批量处理失败: {ex.Message}";
+            }
+
+            return result;
+        }
      }
  }

@@ -86,6 +86,8 @@ namespace DocuFiller
             services.AddSingleton<IDataParser, DataParserService>();
             services.AddSingleton<IProgressReporter, ProgressReporterService>();
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
+            services.AddSingleton<IFileScanner, FileScannerService>();
+            services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
             services.AddSingleton<OpenXmlDocumentHandler>();
             
             // 注册ViewModels

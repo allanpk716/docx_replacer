@@ -49,6 +49,36 @@ namespace DocuFiller.Models
         public int FailedRecords => TotalRecords - SuccessfulRecords;
 
         /// <summary>
+        /// 总处理数（兼容属性）
+        /// </summary>
+        public int TotalProcessed { get; set; }
+
+        /// <summary>
+        /// 总失败数（兼容属性）
+        /// </summary>
+        public int TotalFailed { get; set; }
+
+        /// <summary>
+        /// 错误消息（兼容属性）
+        /// </summary>
+        public string ErrorMessage { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 输出目录
+        /// </summary>
+        public string OutputDirectory { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 已处理的文件列表
+        /// </summary>
+        public List<string> ProcessedFiles { get; set; } = new List<string>();
+
+        /// <summary>
+        /// 失败的文件列表
+        /// </summary>
+        public List<string> FailedFiles { get; set; } = new List<string>();
+
+        /// <summary>
         /// 成功率
         /// </summary>
         public double SuccessRate => TotalRecords > 0 ? (double)SuccessfulRecords / TotalRecords * 100 : 0;

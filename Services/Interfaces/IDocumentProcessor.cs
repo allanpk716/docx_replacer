@@ -46,6 +46,14 @@ namespace DocuFiller.Services.Interfaces
         Task<System.Collections.Generic.List<ContentControlData>> GetContentControlsAsync(string templatePath);
 
         /// <summary>
+        /// 批量处理文件夹中的模板文件
+        /// </summary>
+        /// <param name="request">文件夹处理请求</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>处理结果</returns>
+        Task<ProcessResult> ProcessFolderAsync(FolderProcessRequest request, System.Threading.CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// 取消当前处理操作
         /// </summary>
         void CancelProcessing();

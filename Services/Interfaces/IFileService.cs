@@ -24,6 +24,13 @@ namespace DocuFiller.Services.Interfaces
         bool EnsureDirectoryExists(string directoryPath);
 
         /// <summary>
+        /// 验证目录是否存在
+        /// </summary>
+        /// <param name="directoryPath">目录路径</param>
+        /// <returns>是否存在</returns>
+        bool DirectoryExists(string directoryPath);
+
+        /// <summary>
         /// 获取文件大小
         /// </summary>
         /// <param name="filePath">文件路径</param>

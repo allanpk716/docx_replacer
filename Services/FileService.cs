@@ -30,6 +30,11 @@ namespace DocuFiller.Services
             }
         }
 
+        public bool DirectoryExists(string directoryPath)
+        {
+            return Directory.Exists(directoryPath);
+        }
+
         public long GetFileSize(string filePath)
         {
             var fileInfo = new System.IO.FileInfo(filePath);

@@ -5,10 +5,15 @@ graph TD
     A[WPF用户界面] --> B[业务逻辑层]
     B --> C[文档处理服务]
     B --> D[数据解析服务]
-    C --> E[DocumentFormat.OpenXml]
-    D --> F[Newtonsoft.Json]
-    E --> G[Word文档文件]
-    F --> H[JSON数据文件]
+    B --> E[文件扫描服务]
+    B --> F[目录管理服务]
+    C --> G[DocumentFormat.OpenXml]
+    D --> H[Newtonsoft.Json]
+    E --> I[System.IO]
+    F --> I
+    G --> J[Word文档文件]
+    H --> K[JSON数据文件]
+    I --> L[文件系统]
     
     subgraph "表示层"
         A
@@ -18,16 +23,20 @@ graph TD
         B
         C
         D
-    end
-    
-    subgraph "数据访问层"
         E
         F
     end
     
-    subgraph "外部文件"
+    subgraph "数据访问层"
         G
         H
+        I
+    end
+    
+    subgraph "外部资源"
+        J
+        K
+        L
     end
 ```
 
@@ -35,7 +44,9 @@ graph TD
 
 * Frontend: WPF (Windows Presentation Foundation) + .NET 8
 
-* Core Libraries: DocumentFormat.OpenXml\@3.0 + Newtonsoft.Json\@13.0
+* Core Libraries: DocumentFormat.OpenXml@3.0 + Newtonsoft.Json@13.0 + System.IO.FileSystem
+
+* UI Framework: WPF拖拽支持 + TreeView控件 + 异步处理
 
 * Build Tool: Visual Studio 2022 + MSBuild
 
@@ -63,8 +74,11 @@ graph TD
 public interface IDocumentProcessor
 {
     Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request);
-    event EventHandler<ProgressEventArgs> ProgressChanged;
-    event EventHandler<LogEventArgs> LogMessage;
+    Task<ProcessResult> ProcessFolderAsync(FolderProcessRequest request);
+    Task<ValidationResult> ValidateTemplateAsync(string templatePath);
+    Task<List<ContentControlData>> GetContentControlsAsync(string templatePath);
+    void CancelProcessing();
+    event EventHandler<ProgressEventArgs> ProgressUpdated;
 }
 ```
 
@@ -73,8 +87,32 @@ public interface IDocumentProcessor
 ```csharp
 public interface IDataParser
 {
-    Dictionary<string, string> ParseJsonData(string jsonFilePath);
+    Task<List<Dictionary<string, object>>> ParseJsonFileAsync(string jsonFilePath);
+    Task<DataStatistics> GetDataStatisticsAsync(string jsonFilePath);
+    Task<List<Dictionary<string, object>>> GetDataPreviewAsync(string jsonFilePath, int maxRecords);
     bool ValidateJsonFormat(string jsonContent);
+}
+```
+
+文件扫描服务接口
+
+```csharp
+public interface IFileScanner
+{
+    Task<List<FileInfo>> ScanDocxFilesAsync(string folderPath, bool recursive = true);
+    Task<FolderStructure> GetFolderStructureAsync(string folderPath);
+    bool IsValidDocxFile(string filePath);
+}
+```
+
+目录管理服务接口
+
+```csharp
+public interface IDirectoryManager
+{
+    string CreateTimestampFolder(string basePath);
+    Task<bool> PreserveFolderStructureAsync(string sourcePath, string targetPath, List<FileInfo> files);
+    string GetRelativePath(string basePath, string fullPath);
 }
 ```
 
@@ -85,11 +123,25 @@ public interface IDataParser
 ```csharp
 public class ProcessRequest
 {
-    public List<string> WordFilePaths { get; set; }
-    public string JsonFilePath { get; set; }
+    public string TemplateFilePath { get; set; }
+    public string DataFilePath { get; set; }
     public string OutputDirectory { get; set; }
-    public OutputNamingRule NamingRule { get; set; }
-    public bool OverwriteOriginal { get; set; }
+    public string OutputFileNamePattern { get; set; }
+    public bool OverwriteExisting { get; set; }
+}
+```
+
+文件夹处理请求对象
+
+```csharp
+public class FolderProcessRequest
+{
+    public string SourceFolderPath { get; set; }
+    public string DataFilePath { get; set; }
+    public string OutputDirectory { get; set; }
+    public bool PreserveStructure { get; set; }
+    public bool CreateTimestampFolder { get; set; }
+    public bool RecursiveScan { get; set; }
 }
 ```
 
@@ -98,11 +150,44 @@ public class ProcessRequest
 ```csharp
 public class ProcessResult
 {
-    public bool Success { get; set; }
-    public int ProcessedFiles { get; set; }
-    public int FailedFiles { get; set; }
-    public List<string> ErrorMessages { get; set; }
-    public List<string> OutputFilePaths { get; set; }
+    public bool IsSuccess { get; set; }
+    public int TotalRecords { get; set; }
+    public int SuccessfulRecords { get; set; }
+    public int FailedRecords { get; set; }
+    public List<string> Errors { get; set; }
+    public List<string> Warnings { get; set; }
+    public List<string> GeneratedFiles { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+    public TimeSpan Duration { get; set; }
+    public string Message { get; set; }
+}
+```
+
+文件信息对象
+
+```csharp
+public class FileInfo
+{
+    public string FullPath { get; set; }
+    public string RelativePath { get; set; }
+    public string FileName { get; set; }
+    public long FileSize { get; set; }
+    public DateTime LastModified { get; set; }
+    public bool IsValid { get; set; }
+}
+```
+
+文件夹结构对象
+
+```csharp
+public class FolderStructure
+{
+    public string RootPath { get; set; }
+    public List<FileInfo> DocxFiles { get; set; }
+    public Dictionary<string, List<FileInfo>> FolderFiles { get; set; }
+    public int TotalFiles { get; set; }
+    public long TotalSize { get; set; }
 }
 ```
 
@@ -111,10 +196,13 @@ public class ProcessResult
 ```csharp
 public class ProgressEventArgs : EventArgs
 {
-    public int CurrentFile { get; set; }
-    public int TotalFiles { get; set; }
+    public int CurrentItem { get; set; }
+    public int TotalItems { get; set; }
+    public string StatusMessage { get; set; }
     public string CurrentFileName { get; set; }
     public double ProgressPercentage { get; set; }
+    public bool IsCompleted { get; set; }
+    public bool HasError { get; set; }
 }
 ```
 
@@ -153,37 +241,79 @@ graph TD
 
 ```mermaid
 erDiagram
+    FOLDER_STRUCTURE ||--o{ FILE_INFO : contains
+    FILE_INFO ||--|| WORD_TEMPLATE : represents
+    JSON_DATA ||--o{ DATA_RECORD : contains
+    WORD_TEMPLATE ||--o{ CONTENT_CONTROL : contains
+    DATA_RECORD ||--|| GENERATED_DOCUMENT : generates
+    CONTENT_CONTROL ||--|| REPLACEMENT_VALUE : maps_to
+    FOLDER_STRUCTURE ||--|| OUTPUT_STRUCTURE : mirrors
+
+    FOLDER_STRUCTURE {
+        string root_path
+        int total_files
+        long total_size
+        datetime scanned_at
+        bool recursive_scan
+    }
+    
+    FILE_INFO {
+        string full_path
+        string relative_path
+        string file_name
+        long file_size
+        datetime last_modified
+        bool is_valid
+    }
+    
     JSON_DATA {
-        string project_name
-        array keywords
-    }
-    
-    KEYWORD_ITEM {
-        string key
-        string value
-        string source_file
-    }
-    
-    WORD_DOCUMENT {
         string file_path
-        array content_controls
+        string encoding
+        int record_count
+        datetime created_at
+    }
+    
+    DATA_RECORD {
+        int id
+        string json_content
+        int index
+    }
+    
+    WORD_TEMPLATE {
+        string file_path
+        string file_name
+        long file_size
+        datetime modified_at
+        int control_count
     }
     
     CONTENT_CONTROL {
-        string tag
-        string content
-        string id
+        string tag_name
+        string control_type
+        string default_value
+        bool is_required
     }
     
-    PROCESS_LOG {
-        datetime timestamp
-        string level
-        string message
+    GENERATED_DOCUMENT {
+        string output_path
         string file_name
+        string relative_path
+        datetime created_at
+        bool is_success
     }
     
-    JSON_DATA ||--o{ KEYWORD_ITEM : contains
-    WORD_DOCUMENT ||--o{ CONTENT_CONTROL : contains
+    OUTPUT_STRUCTURE {
+        string timestamp_folder
+        string base_output_path
+        bool preserve_structure
+        datetime created_at
+    }
+    
+    REPLACEMENT_VALUE {
+        string tag_name
+        string value
+        string data_type
+    }
 ```
 
 ### 6.2 Data Definition Language
