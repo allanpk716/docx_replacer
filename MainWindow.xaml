@@ -4,11 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="DocuFiller - Word文档批量填充工具" Height="700" Width="1000"
-        MinHeight="600" MinWidth="800"
+        Title="DocuFiller - Word文档批量填充工具" Height="900" Width="1400"
+        MinHeight="800" MinWidth="1200"
         WindowStartupLocation="CenterScreen">
     
-    <Grid Margin="10">
+    <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -18,27 +18,29 @@
         
         <!-- 标题栏 -->
         <TextBlock Grid.Row="0" Text="Word文档批量填充工具" 
-                   FontSize="24" FontWeight="Bold" 
+                   FontSize="28" FontWeight="Bold" 
                    HorizontalAlignment="Center" 
-                   Margin="0,0,0,20" 
+                   Margin="0,0,0,25" 
                    Foreground="#2C3E50"/>
         
         <!-- 主要内容区域 -->
-        <TabControl Grid.Row="1" Margin="0,0,0,10">
+        <TabControl Grid.Row="1" Margin="0,0,0,10" FontSize="16">
             
             <!-- 文件设置选项卡 -->
-            <TabItem Header="文件设置" FontSize="14">
-                <Grid Margin="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+            <TabItem Header="文件设置" FontSize="16">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                              HorizontalScrollBarVisibility="Disabled"
+                              Margin="5">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
                     
                     <!-- 模板文件选择 -->
-                    <GroupBox Grid.Row="0" Header="模板文件/文件夹" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15">
-                        <Grid Margin="10">
+                    <GroupBox Grid.Row="0" Header="模板文件/文件夹" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
+                        <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -55,12 +57,12 @@
                                 <TextBox Grid.Column="0" x:Name="TemplatePathTextBox" 
                                          Style="{StaticResource TextBoxStyle}"
                                          Text="{Binding TemplatePath, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="True" Margin="0,0,10,0"/>
+                                         IsReadOnly="True" Margin="0,0,15,0" FontSize="14"/>
                                 
                                 <Button Grid.Column="1" Content="浏览文件..." 
                                         Style="{StaticResource PrimaryButton}"
                                         Command="{Binding BrowseTemplateCommand}"
-                                        Width="90" Margin="0,0,10,0"/>
+                                        Width="90" Height="40" FontSize="14" Margin="0,0,10,0"/>
                                 
                                 <Button Grid.Column="2" Content="验证" 
                                         Style="{StaticResource ProcessButton}"
@@ -106,8 +108,8 @@
                     </GroupBox>
                     
                     <!-- 数据文件选择 -->
-                    <GroupBox Grid.Row="0" Header="数据文件" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15">
-                        <Grid Margin="10">
+                    <GroupBox Grid.Row="1" Header="数据文件" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
+                        <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -125,12 +127,12 @@
                                          Style="{StaticResource TextBoxStyle}"
                                          Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
                                          IsReadOnly="True" 
-                                         Margin="0,0,10,0"/>
+                                         Margin="0,0,15,0" FontSize="14"/>
 
                                 <Button Grid.Column="1" Content="浏览..." 
                                         Style="{StaticResource PrimaryButton}"
                                         Command="{Binding BrowseDataCommand}"
-                                        Width="80" Margin="0,0,10,0"/>
+                                        Width="90" Height="40" FontSize="14" Margin="0,0,10,0"/>
 
                                 <Button Grid.Column="2" Content="预览" 
                                         Style="{StaticResource ProcessButton}"
@@ -172,8 +174,8 @@
                     </GroupBox>
                     
                     <!-- 输出设置 -->
-                    <GroupBox Grid.Row="2" Header="输出设置" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15">
-                        <Grid Margin="10">
+                    <GroupBox Grid.Row="2" Header="输出设置" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10" FontSize="16">
+                        <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
@@ -194,35 +196,38 @@
                                 <TextBox Grid.Column="1" 
                                          Style="{StaticResource TextBoxStyle}"
                                          Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="True" Margin="0,0,10,0"/>
+                                         IsReadOnly="True" Margin="0,0,15,0" FontSize="14"/>
                                 
                                 <Button Grid.Column="2" Content="浏览..." 
                                         Style="{StaticResource PrimaryButton}"
                                         Command="{Binding BrowseOutputCommand}"
-                                        Width="80"/>
+                                        Width="90" Height="40" FontSize="14"/>
                             </Grid>
                             
 
                         </Grid>
                     </GroupBox>
                     
-                    <!-- 文件信息显示 -->
-                    <GroupBox Grid.Row="3" Header="文件信息" Style="{StaticResource GroupBoxStyle}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="10">
+                    <!-- 文件信息显示 - 已隐藏以节省空间 -->
+                    <!--
+                    <GroupBox Grid.Row="3" Header="文件信息" Style="{StaticResource GroupBoxStyle}" Height="150" FontSize="16">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="15">
                             <StackPanel>
                                 <TextBlock Text="{Binding FileInfoText}" 
                                            TextWrapping="Wrap" 
                                            FontFamily="Consolas" 
-                                           FontSize="12" 
+                                           FontSize="14" 
                                            Foreground="#34495E"/>
                             </StackPanel>
                         </ScrollViewer>
                     </GroupBox>
-                </Grid>
+                    -->
+                    </Grid>
+                </ScrollViewer>
             </TabItem>
             
             <!-- 数据预览选项卡 -->
-            <TabItem Header="数据预览" FontSize="14">
+            <TabItem Header="数据预览" FontSize="16">
                 <Grid Margin="10">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -230,8 +235,8 @@
                     </Grid.RowDefinitions>
                     
                     <!-- 数据统计信息 -->
-                    <GroupBox Grid.Row="0" Header="数据统计" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15">
-                        <Grid Margin="10">
+                    <GroupBox Grid.Row="0" Header="数据统计" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,20" FontSize="16">
+                        <Grid Margin="15">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
@@ -240,17 +245,17 @@
                             </Grid.ColumnDefinitions>
                             
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="总记录数" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                <TextBlock Text="总记录数" FontWeight="Medium" HorizontalAlignment="Center" FontSize="16"/>
                                 <TextBlock Text="{Binding DataStatistics.TotalRecords}" 
-                                           FontSize="18" FontWeight="Bold" 
+                                           FontSize="20" FontWeight="Bold" 
                                            HorizontalAlignment="Center" 
                                            Foreground="#3498DB"/>
                             </StackPanel>
                             
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="字段数量" FontWeight="Medium" HorizontalAlignment="Center"/>
+                                <TextBlock Text="字段数量" FontWeight="Medium" HorizontalAlignment="Center" FontSize="16"/>
                                 <TextBlock Text="{Binding DataStatistics.FieldCount}" 
-                                           FontSize="18" FontWeight="Bold" 
+                                           FontSize="20" FontWeight="Bold" 
                                            HorizontalAlignment="Center" 
                                            Foreground="#27AE60"/>
                             </StackPanel>
@@ -274,7 +279,7 @@
                     </GroupBox>
                     
                     <!-- 数据预览表格 -->
-                    <GroupBox Grid.Row="1" Header="数据预览" Style="{StaticResource GroupBoxStyle}">
+                    <GroupBox Grid.Row="1" Header="数据预览" Style="{StaticResource GroupBoxStyle}" FontSize="16">
                         <DataGrid x:Name="PreviewDataGrid" 
                                   ItemsSource="{Binding PreviewData}"
                                   AutoGenerateColumns="True"
@@ -287,7 +292,9 @@
                                   CanUserResizeColumns="True"
                                   CanUserSortColumns="True"
                                   AlternatingRowBackground="#F8F9FA"
-                                  Margin="10">
+                                  Margin="15"
+                                  FontSize="14"
+                                  RowHeight="28">
                             <DataGrid.ColumnHeaderStyle>
                                 <Style TargetType="DataGridColumnHeader">
                                     <Setter Property="Background" Value="#34495E"/>
@@ -303,8 +310,8 @@
             </TabItem>
             
             <!-- 内容控件选项卡 -->
-            <TabItem Header="内容控件" FontSize="14">
-                <GroupBox Header="模板内容控件" Style="{StaticResource GroupBoxStyle}" Margin="10">
+            <TabItem Header="内容控件" FontSize="16">
+                <GroupBox Header="模板内容控件" Style="{StaticResource GroupBoxStyle}" Margin="10" FontSize="16">
                     <DataGrid x:Name="ContentControlsDataGrid" 
                               ItemsSource="{Binding ContentControls}"
                               AutoGenerateColumns="False"
@@ -314,7 +321,9 @@
                               CanUserAddRows="False"
                               CanUserDeleteRows="False"
                               AlternatingRowBackground="#F8F9FA"
-                              Margin="10">
+                              Margin="15"
+                              FontSize="14"
+                              RowHeight="28">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="标签" Binding="{Binding Tag}" Width="150"/>
                             <DataGridTextColumn Header="标题" Binding="{Binding Title}" Width="200"/>
@@ -336,8 +345,8 @@
         </TabControl>
         
         <!-- 进度显示区域 -->
-        <GroupBox Grid.Row="2" Header="处理进度" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10">
-            <Grid Margin="10">
+        <GroupBox Grid.Row="2" Header="处理进度" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10" FontSize="16">
+            <Grid Margin="15">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -351,18 +360,18 @@
                     
                     <TextBlock Grid.Column="0" 
                                Text="{Binding ProgressMessage}" 
-                               VerticalAlignment="Center"/>
+                               VerticalAlignment="Center" FontSize="14"/>
                     
                     <TextBlock Grid.Column="1" 
                                Text="{Binding ProgressText}" 
                                VerticalAlignment="Center" 
-                               FontWeight="Bold"/>
+                               FontWeight="Bold" FontSize="14"/>
                 </Grid>
                 
                 <ProgressBar Grid.Row="1" 
                              Value="{Binding ProgressPercentage}" 
                              Maximum="100" 
-                             Height="20" 
+                             Height="25" 
                              Background="#ECF0F1" 
                              Foreground="#3498DB"/>
             </Grid>
@@ -380,17 +389,17 @@
             <Button Grid.Column="1" Content="开始处理" 
                     Style="{StaticResource PrimaryButton}"
                     Command="{Binding StartProcessCommand}"
-                    Width="100" Margin="0,0,10,0"/>
+                    Width="120" Height="45" FontSize="16" Margin="0,0,15,0"/>
             
             <Button Grid.Column="2" Content="取消处理" 
                     Style="{StaticResource ProcessButton}"
                     Command="{Binding CancelProcessCommand}"
-                    Width="100" Margin="0,0,10,0"/>
+                    Width="120" Height="45" FontSize="16" Margin="0,0,15,0"/>
             
             <Button Grid.Column="3" Content="退出" 
                     Style="{StaticResource ProcessButton}"
                     Command="{Binding ExitCommand}"
-                    Width="80"/>
+                    Width="100" Height="45" FontSize="16"/>
         </Grid>
     </Grid>
 </Window>
