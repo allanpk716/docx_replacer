@@ -219,7 +219,7 @@ namespace DocuFiller.Models
             return Value.Substring(0, maxLength - 3) + "...";
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -645,8 +645,8 @@ namespace DocuFiller.Services
                 comment.Append(p);
 
                 // 将新批注添加到 comments.xml
-                commentsPart.Comments.Append(comment);
-                commentsPart.Comments.Save();
+                commentsPart.Comments?.Append(comment);
+                commentsPart.Comments?.Save();
                 _logger.LogDebug($"批注已添加到comments.xml，ID: {id}");
 
                 // 4 & 5. 在正文中标记范围和添加引用

@@ -25,8 +25,8 @@ namespace DocuFiller.ViewModels
         private readonly ILogger<JsonEditorViewModel> _logger;
 
         // 私有字段
-        private JsonProjectModel _currentProject;
-        private JsonKeywordItem _selectedKeyword;
+        private JsonProjectModel? _currentProject;
+        private JsonKeywordItem? _selectedKeyword;
         private string _jsonPreview = string.Empty;
         private string _statusMessage = "就绪";
         private bool _hasUnsavedChanges = false;
@@ -67,7 +67,7 @@ namespace DocuFiller.ViewModels
 
         #region 属性
 
-        public JsonProjectModel CurrentProject
+        public JsonProjectModel? CurrentProject
         {
             get => _currentProject;
             set
@@ -310,13 +310,16 @@ namespace DocuFiller.ViewModels
             if (result == MessageBoxResult.Yes)
             {
                 var keywordToDelete = SelectedKeyword;
-                CurrentProject.RemoveKeyword(keywordToDelete);
-                Keywords.Remove(keywordToDelete);
-                FilteredKeywords.Remove(keywordToDelete);
+                if (keywordToDelete != null)
+                {
+                    CurrentProject?.RemoveKeyword(keywordToDelete);
+                    Keywords.Remove(keywordToDelete);
+                    FilteredKeywords.Remove(keywordToDelete);
 
-                UpdateJsonPreview();
-                MarkAsChanged();
-                StatusMessage = $"已删除关键词: {keywordToDelete.Key}";
+                    UpdateJsonPreview();
+                    MarkAsChanged();
+                    StatusMessage = $"已删除关键词: {keywordToDelete.Key}";
+                }
             }
         }
 
@@ -328,7 +331,7 @@ namespace DocuFiller.ViewModels
             if (index > 0)
             {
                 Keywords.Move(index, index - 1);
-                CurrentProject.Keywords.Move(index, index - 1);
+                CurrentProject?.Keywords.Move(index, index - 1);
                 FilterKeywords();
                 UpdateJsonPreview();
                 MarkAsChanged();
@@ -343,7 +346,7 @@ namespace DocuFiller.ViewModels
             if (index < Keywords.Count - 1)
             {
                 Keywords.Move(index, index + 1);
-                CurrentProject.Keywords.Move(index, index + 1);
+                CurrentProject?.Keywords.Move(index, index + 1);
                 FilterKeywords();
                 UpdateJsonPreview();
                 MarkAsChanged();
@@ -354,7 +357,7 @@ namespace DocuFiller.ViewModels
         {
             _logger.LogInformation("[调试] 验证所有关键词");
 
-            var projectValidation = _jsonEditorService.ValidateProject(CurrentProject);
+            var projectValidation = CurrentProject != null ? _jsonEditorService.ValidateProject(CurrentProject) : new ValidationResult { IsValid = false, Errors = { "项目为空" } };
             var keywordValidation = _validationService.ValidateKeywordList(Keywords);
 
             var combinedResult = new ValidationResult { IsValid = projectValidation.IsValid && keywordValidation.IsValid };
@@ -386,7 +389,7 @@ namespace DocuFiller.ViewModels
             {
                 try
                 {
-                    var jsonContent = _jsonEditorService.FormatJsonString(CurrentProject);
+                    var jsonContent = _jsonEditorService.FormatJsonString(CurrentProject!);
                     await File.WriteAllTextAsync(saveFileDialog.FileName, jsonContent);
                     StatusMessage = "JSON文件导出成功";
                 }
@@ -469,6 +472,12 @@ namespace DocuFiller.ViewModels
                 IsLoading = true;
                 StatusMessage = "正在保存项目...";
 
+                if (CurrentProject == null)
+                {
+                    StatusMessage = "项目为空，无法保存";
+                    return false;
+                }
+
                 var success = await _jsonEditorService.SaveProjectAsync(CurrentProject, filePath);
                 if (success)
                 {
@@ -518,7 +527,7 @@ namespace DocuFiller.ViewModels
         {
             if (e.PropertyName == nameof(JsonProjectModel.HasUnsavedChanges))
             {
-                HasUnsavedChanges = CurrentProject.HasUnsavedChanges;
+                HasUnsavedChanges = CurrentProject?.HasUnsavedChanges ?? false;
             }
             else if (e.PropertyName == nameof(JsonProjectModel.ProjectName))
             {
@@ -548,7 +557,7 @@ namespace DocuFiller.ViewModels
         {
             try
             {
-                JsonPreview = _jsonEditorService.FormatJsonString(CurrentProject);
+                JsonPreview = CurrentProject != null ? _jsonEditorService.FormatJsonString(CurrentProject) : "{}"; // 空项目显示空JSON
             }
             catch (Exception ex)
             {

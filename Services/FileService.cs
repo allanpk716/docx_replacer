@@ -97,11 +97,11 @@ namespace DocuFiller.Services
         public ValidationResult ValidateFileExtension(string filePath, List<string> allowedExtensions)
         {
             var extension = Path.GetExtension(filePath)?.ToLowerInvariant();
-            var isValid = allowedExtensions.Contains(extension);
+            var isValid = extension != null && allowedExtensions.Contains(extension);
             return new ValidationResult
             {
                 IsValid = isValid,
-                ErrorMessage = isValid ? null : $"不支持的文件扩展名: {extension}"
+                ErrorMessage = isValid ? null : $"不支持的文件扩展名: {extension ?? "未知"}"
             };
         }
 

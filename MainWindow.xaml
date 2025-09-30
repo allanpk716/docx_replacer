@@ -17,11 +17,23 @@
         </Grid.RowDefinitions>
         
         <!-- 标题栏 -->
-        <TextBlock Grid.Row="0" Text="Word文档批量填充工具" 
-                   FontSize="28" FontWeight="Bold" 
-                   HorizontalAlignment="Center" 
-                   Margin="0,0,0,25" 
-                   Foreground="#2C3E50"/>
+        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,25">
+            <TextBlock Text="Word文档批量填充工具" 
+                       FontSize="28" FontWeight="Bold" 
+                       HorizontalAlignment="Center" 
+                       Margin="0,0,0,10" 
+                       Foreground="#2C3E50"/>
+            
+            <!-- 关键词编辑器超链接 -->
+            <TextBlock HorizontalAlignment="Center">
+                <Hyperlink x:Name="KeywordEditorHyperlink" 
+                           Click="KeywordEditorHyperlink_Click"
+                           Foreground="#3498DB"
+                           TextDecorations="Underline">
+                    <Run Text="点击跳转至：关键词编辑器" FontSize="16" FontWeight="Medium"/>
+                </Hyperlink>
+            </TextBlock>
+        </StackPanel>
         
         <!-- 主要内容区域 -->
         <TabControl Grid.Row="1" Margin="0,0,0,10" FontSize="16">

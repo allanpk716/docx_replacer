@@ -164,7 +164,7 @@ namespace DocuFiller.Utils
             _lock = lockObject;
         }
         
-        public IDisposable BeginScope<TState>(TState state)
+        public IDisposable? BeginScope<TState>(TState state)
         {
             return null;
         }

@@ -270,7 +270,7 @@ namespace DocuFiller.Services
                 }
 
                 // 设置内容控件的值
-                SetContentControlValue(control, value.ToString());
+                SetContentControlValue(control, value?.ToString() ?? string.Empty);
                 _logger.LogDebug($"设置内容控件 '{tag}' 的值: {value}");
                 return true;
             }
@@ -334,7 +334,7 @@ namespace DocuFiller.Services
         /// <summary>
         /// 查找匹配的数据值
         /// </summary>
-        private object FindMatchingValue(string tag, Dictionary<string, object> data)
+        private object? FindMatchingValue(string tag, Dictionary<string, object> data)
         {
             // 直接匹配
             if (data.ContainsKey(tag))
@@ -357,7 +357,7 @@ namespace DocuFiller.Services
         /// <summary>
         /// 提取内容控件信息
         /// </summary>
-        private ContentControlData ExtractContentControlInfo(SdtElement control)
+        private ContentControlData? ExtractContentControlInfo(SdtElement control)
         {
             try
             {

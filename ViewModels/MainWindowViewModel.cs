@@ -25,7 +25,7 @@ namespace DocuFiller.ViewModels
         private readonly IFileScanner _fileScanner;
         private readonly IDirectoryManager _directoryManager;
         private readonly ILogger<MainWindowViewModel> _logger;
-        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationTokenSource? _cancellationTokenSource;
         
         // 私有字段
         private string _templatePath = string.Empty;
@@ -39,11 +39,11 @@ namespace DocuFiller.ViewModels
         private DataStatistics _dataStatistics = new();
         
         // 文件夹拖拽相关属性
-        private string _templateFolderPath;
+        private string? _templateFolderPath;
         private bool _isFolderMode;
         private bool _isFolderDragOver;
-        private FolderStructure _folderStructure;
-        private string _foundDocxFilesCount;
+        private FolderStructure? _folderStructure;
+        private string? _foundDocxFilesCount;
         
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
@@ -240,7 +240,7 @@ namespace DocuFiller.ViewModels
             _progressReporter.ProgressUpdated += OnProgressUpdated;
         }
         
-        private void OnProgressUpdated(object sender, ProgressEventArgs e)
+        private void OnProgressUpdated(object? sender, ProgressEventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>
             {

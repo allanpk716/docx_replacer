@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using System.IO;
 using System.Linq;
+using System.Diagnostics;
 
 namespace DocuFiller
 {
@@ -20,6 +21,29 @@ namespace DocuFiller
             // 从依赖注入容器获取ViewModel
             var app = (App)Application.Current;
             DataContext = app.ServiceProvider.GetRequiredService<MainWindowViewModel>();
+        }
+        
+        /// <summary>
+        /// 关键词编辑器超链接点击事件
+        /// </summary>
+        private void KeywordEditorHyperlink_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            try
+            {
+                string url = "http://192.168.200.23:32200/";
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 打开关键词编辑器: {url}");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"无法打开关键词编辑器：{ex.Message}", "错误", 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+                System.Diagnostics.Debug.WriteLine($"[DEBUG] 打开关键词编辑器失败: {ex.Message}");
+            }
         }
         
         /// <summary>

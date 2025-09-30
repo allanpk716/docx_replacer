@@ -28,7 +28,7 @@ namespace DocuFiller.Views
             Loaded += OnWindowLoaded;
         }
         
-        private void OnViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
             // 处理ViewModel属性变化
             if (e.PropertyName == nameof(JsonEditorViewModel.HasUnsavedChanges))
