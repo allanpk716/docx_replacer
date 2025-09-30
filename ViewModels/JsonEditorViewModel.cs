@@ -79,7 +79,7 @@ namespace DocuFiller.ViewModels
             }
         }
 
-        public JsonKeywordItem SelectedKeyword
+        public JsonKeywordItem? SelectedKeyword
         {
             get => _selectedKeyword;
             set
@@ -165,19 +165,19 @@ namespace DocuFiller.ViewModels
 
         #region 命令
 
-        public ICommand NewProjectCommand { get; private set; }
-        public ICommand OpenProjectCommand { get; private set; }
-        public ICommand SaveProjectCommand { get; private set; }
-        public ICommand SaveAsProjectCommand { get; private set; }
-        public ICommand AddKeywordCommand { get; private set; }
-        public ICommand EditKeywordCommand { get; private set; }
-        public ICommand DeleteKeywordCommand { get; private set; }
-        public ICommand MoveUpCommand { get; private set; }
-        public ICommand MoveDownCommand { get; private set; }
-        public ICommand ValidateAllCommand { get; private set; }
-        public ICommand ClearSearchCommand { get; private set; }
-        public ICommand ExportJsonCommand { get; private set; }
-        public ICommand ImportJsonCommand { get; private set; }
+        public ICommand NewProjectCommand { get; private set; } = null!;
+        public ICommand OpenProjectCommand { get; private set; } = null!;
+        public ICommand SaveProjectCommand { get; private set; } = null!;
+        public ICommand SaveAsProjectCommand { get; private set; } = null!;
+        public ICommand AddKeywordCommand { get; private set; } = null!;
+        public ICommand EditKeywordCommand { get; private set; } = null!;
+        public ICommand DeleteKeywordCommand { get; private set; } = null!;
+        public ICommand MoveUpCommand { get; private set; } = null!;
+        public ICommand MoveDownCommand { get; private set; } = null!;
+        public ICommand ValidateAllCommand { get; private set; } = null!;
+        public ICommand ClearSearchCommand { get; private set; } = null!;
+        public ICommand ExportJsonCommand { get; private set; } = null!;
+        public ICommand ImportJsonCommand { get; private set; } = null!;
         
         // SaveCommand 属性，指向 SaveProjectCommand
         public ICommand SaveCommand => SaveProjectCommand;
@@ -281,7 +281,7 @@ namespace DocuFiller.ViewModels
                 SourceFile = "示例文件.docx"
             };
 
-            CurrentProject.AddKeyword(newKeyword);
+            CurrentProject?.AddKeyword(newKeyword);
             Keywords.Add(newKeyword);
             FilteredKeywords.Add(newKeyword);
             SelectedKeyword = newKeyword;
@@ -607,14 +607,14 @@ namespace DocuFiller.ViewModels
 
         #region INotifyPropertyChanged
 
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (Equals(field, value)) return false;
             field = value;

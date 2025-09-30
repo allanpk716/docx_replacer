@@ -152,7 +152,7 @@ namespace DocuFiller.ViewModels
         }
         
         // 文件夹拖拽相关属性
-        public string TemplateFolderPath
+        public string? TemplateFolderPath
         {
             get => _templateFolderPath;
             set
@@ -176,13 +176,13 @@ namespace DocuFiller.ViewModels
             set => SetProperty(ref _isFolderDragOver, value);
         }
         
-        public FolderStructure FolderStructure
+        public FolderStructure? FolderStructure
         {
             get => _folderStructure;
             set => SetProperty(ref _folderStructure, value);
         }
         
-        public string FoundDocxFilesCount
+        public string? FoundDocxFilesCount
         {
             get => _foundDocxFilesCount;
             set => SetProperty(ref _foundDocxFilesCount, value);
@@ -198,19 +198,19 @@ namespace DocuFiller.ViewModels
         
         #region 命令
         
-        public ICommand BrowseTemplateCommand { get; private set; }
-        public ICommand BrowseDataCommand { get; private set; }
-        public ICommand BrowseOutputCommand { get; private set; }
-        public ICommand ValidateTemplateCommand { get; private set; }
-        public ICommand PreviewDataCommand { get; private set; }
-        public ICommand StartProcessCommand { get; private set; }
-        public ICommand CancelProcessCommand { get; private set; }
-        public ICommand ExitCommand { get; private set; }
+        public ICommand BrowseTemplateCommand { get; private set; } = null!;
+        public ICommand BrowseDataCommand { get; private set; } = null!;
+        public ICommand BrowseOutputCommand { get; private set; } = null!;
+        public ICommand ValidateTemplateCommand { get; private set; } = null!;
+        public ICommand PreviewDataCommand { get; private set; } = null!;
+        public ICommand StartProcessCommand { get; private set; } = null!;
+        public ICommand CancelProcessCommand { get; private set; } = null!;
+        public ICommand ExitCommand { get; private set; } = null!;
         
         // 文件夹拖拽相关命令
-        public ICommand SwitchToSingleModeCommand { get; private set; }
-        public ICommand SwitchToFolderModeCommand { get; private set; }
-        public ICommand ProcessFolderCommand { get; private set; }
+        public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
+        public ICommand SwitchToFolderModeCommand { get; private set; } = null!;
+        public ICommand ProcessFolderCommand { get; private set; } = null!;
         
         #endregion
         
@@ -628,7 +628,7 @@ namespace DocuFiller.ViewModels
                 
                 var request = new FolderProcessRequest
                 {
-                    TemplateFolderPath = TemplateFolderPath,
+                    TemplateFolderPath = TemplateFolderPath ?? string.Empty,
                     DataFilePath = DataPath,
                     OutputDirectory = OutputDirectory,
                     PreserveDirectoryStructure = true,
@@ -682,14 +682,14 @@ namespace DocuFiller.ViewModels
         
         #region INotifyPropertyChanged
         
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
         
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
         
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {
             if (EqualityComparer<T>.Default.Equals(field, value))
                 return false;

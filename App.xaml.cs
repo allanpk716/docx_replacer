@@ -15,8 +15,8 @@ namespace DocuFiller
     /// </summary>
     public partial class App : Application
     {
-        private ServiceProvider _serviceProvider;
-        private ILogger<App> _logger;
+        private ServiceProvider _serviceProvider = null!;
+        private ILogger<App> _logger = null!;
         
         /// <summary>
         /// 获取服务提供程序
@@ -184,7 +184,7 @@ namespace DocuFiller
         /// </summary>
         /// <typeparam name="T">服务类型</typeparam>
         /// <returns>服务实例</returns>
-        public T GetService<T>()
+        public T GetService<T>() where T : notnull
         {
             return _serviceProvider.GetRequiredService<T>();
         }

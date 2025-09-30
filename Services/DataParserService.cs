@@ -26,7 +26,7 @@ namespace DocuFiller.Services
             _fileService = fileService;
         }
 
-        public async Task<List<Dictionary<string, object>>> ParseJsonFileAsync(string filePath)
+        public Task<List<Dictionary<string, object>>> ParseJsonFileAsync(string filePath)
         {
             try
             {
@@ -35,16 +35,16 @@ namespace DocuFiller.Services
                 if (!_fileService.FileExists(filePath))
                 {
                     _logger.LogError($"JSON文件不存在: {filePath}");
-                    return new List<Dictionary<string, object>>();
+                    return Task.FromResult(new List<Dictionary<string, object>>());
                 }
 
                 var jsonContent = _fileService.ReadAllText(filePath);
-                return ParseJsonString(jsonContent);
+                return Task.FromResult(ParseJsonString(jsonContent));
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"解析JSON文件失败: {filePath}");
-                return new List<Dictionary<string, object>>();
+                return Task.FromResult(new List<Dictionary<string, object>>());
             }
         }
 
@@ -93,7 +93,7 @@ namespace DocuFiller.Services
             }
         }
 
-        public async Task<ValidationResult> ValidateJsonFileAsync(string filePath)
+        public Task<ValidationResult> ValidateJsonFileAsync(string filePath)
         {
             var result = new ValidationResult { IsValid = true };
 
@@ -103,7 +103,7 @@ namespace DocuFiller.Services
                 {
                     result.IsValid = false;
                     result.ErrorMessage = "JSON文件不存在";
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 // 验证文件扩展名
@@ -112,11 +112,11 @@ namespace DocuFiller.Services
                 {
                     result.IsValid = false;
                     result.ErrorMessage = $"不支持的文件格式: {extension}，仅支持 .json 格式";
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 var jsonContent = _fileService.ReadAllText(filePath);
-                return ValidateJsonString(jsonContent);
+                return Task.FromResult(ValidateJsonString(jsonContent));
             }
             catch (Exception ex)
             {
@@ -125,7 +125,7 @@ namespace DocuFiller.Services
                 _logger.LogError(ex, $"验证JSON文件失败: {filePath}");
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
         public ValidationResult ValidateJsonString(string jsonContent)
@@ -233,7 +233,7 @@ namespace DocuFiller.Services
                         var nonNullValues = fieldValues.Where(v => v != null && !string.IsNullOrWhiteSpace(v.ToString())).ToList();
                         if (nonNullValues.Any())
                         {
-                            var firstValue = nonNullValues.First();
+                        var firstValue = nonNullValues.First()!;
                             statistics.FieldTypes[field] = GetValueType(firstValue);
                         }
                         else

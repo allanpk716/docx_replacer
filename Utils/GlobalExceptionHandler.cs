@@ -13,7 +13,7 @@ namespace DocuFiller.Utils
     /// </summary>
     public static class GlobalExceptionHandler
     {
-        private static ILogger<App> _logger;
+        private static ILogger<App> _logger = null!;
         private static readonly string LogDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "DocuFiller", "Logs");
@@ -43,7 +43,7 @@ namespace DocuFiller.Utils
             var exception = e.ExceptionObject as Exception;
             LogException(exception, "应用程序域未处理异常");
             
-            if (e.IsTerminating)
+            if (e.IsTerminating && exception != null)
             {
                 ShowCriticalErrorDialog(exception);
             }
@@ -66,7 +66,7 @@ namespace DocuFiller.Utils
         /// <summary>
         /// 处理任务未观察异常
         /// </summary>
-        private static void OnUnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+        private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
         {
             LogException(e.Exception, "任务未观察异常");
             
@@ -79,7 +79,7 @@ namespace DocuFiller.Utils
         /// </summary>
         /// <param name="exception">异常对象</param>
         /// <param name="context">异常上下文</param>
-        public static void LogException(Exception exception, string context = "")
+        public static void LogException(Exception? exception, string context = "")
         {
             if (exception == null) return;
             
@@ -168,7 +168,7 @@ namespace DocuFiller.Utils
         /// <summary>
         /// 显示严重错误对话框
         /// </summary>
-        private static void ShowCriticalErrorDialog(Exception exception)
+        private static void ShowCriticalErrorDialog(Exception? exception)
         {
             try
             {

@@ -176,11 +176,11 @@ namespace DocuFiller.Services
             }
         }
 
-        public void IncrementProgress(string message = null)
+        public void IncrementProgress(string? message = null)
         {
             try
             {
-                ReportProgress(_currentIndex + 1, _totalItems, message);
+                ReportProgress(_currentIndex + 1, _totalItems, message ?? string.Empty);
             }
             catch (Exception ex)
             {

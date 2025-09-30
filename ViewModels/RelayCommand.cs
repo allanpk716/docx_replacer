@@ -9,14 +9,14 @@ namespace DocuFiller.ViewModels
     public class RelayCommand : ICommand
     {
         private readonly Action _execute;
-        private readonly Func<bool> _canExecute;
+        private readonly Func<bool>? _canExecute;
         
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="execute">执行的操作</param>
         /// <param name="canExecute">是否可以执行的判断</param>
-        public RelayCommand(Action execute, Func<bool> canExecute = null)
+        public RelayCommand(Action execute, Func<bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
@@ -27,7 +27,7 @@ namespace DocuFiller.ViewModels
         /// </summary>
         /// <param name="parameter">命令参数</param>
         /// <returns>是否可以执行</returns>
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             return _canExecute?.Invoke() ?? true;
         }
@@ -36,7 +36,7 @@ namespace DocuFiller.ViewModels
         /// 执行命令
         /// </summary>
         /// <param name="parameter">命令参数</param>
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
             _execute();
         }
@@ -44,7 +44,7 @@ namespace DocuFiller.ViewModels
         /// <summary>
         /// 可执行状态改变事件
         /// </summary>
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
@@ -66,14 +66,14 @@ namespace DocuFiller.ViewModels
     public class RelayCommand<T> : ICommand
     {
         private readonly Action<T> _execute;
-        private readonly Func<T, bool> _canExecute;
+        private readonly Func<T, bool>? _canExecute;
         
         /// <summary>
         /// 构造函数
         /// </summary>
         /// <param name="execute">执行的操作</param>
         /// <param name="canExecute">是否可以执行的判断</param>
-        public RelayCommand(Action<T> execute, Func<T, bool> canExecute = null)
+        public RelayCommand(Action<T> execute, Func<T, bool>? canExecute = null)
         {
             _execute = execute ?? throw new ArgumentNullException(nameof(execute));
             _canExecute = canExecute;
@@ -84,8 +84,9 @@ namespace DocuFiller.ViewModels
         /// </summary>
         /// <param name="parameter">命令参数</param>
         /// <returns>是否可以执行</returns>
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
+            if (parameter == null) return _canExecute?.Invoke(default!) ?? true;
             return _canExecute?.Invoke((T)parameter) ?? true;
         }
         
@@ -93,15 +94,22 @@ namespace DocuFiller.ViewModels
         /// 执行命令
         /// </summary>
         /// <param name="parameter">命令参数</param>
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
-            _execute((T)parameter);
+            if (parameter == null)
+            {
+                _execute(default!);
+            }
+            else
+            {
+                _execute((T)parameter);
+            }
         }
         
         /// <summary>
         /// 可执行状态改变事件
         /// </summary>
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }

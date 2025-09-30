@@ -16,6 +16,12 @@ class Program
         var serviceProvider = services.BuildServiceProvider();
         var scanner = serviceProvider.GetService<FileScannerService>();
         
+        if (scanner == null)
+        {
+            Console.WriteLine("无法获取FileScannerService服务");
+            return;
+        }
+        
         string testPath = @"C:\WorkSpace\Go2Hell\src\github.com\allanpk716\docx_replacer\test_data";
         
         Console.WriteLine($"测试扫描路径: {testPath}");

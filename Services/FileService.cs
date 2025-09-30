@@ -101,7 +101,7 @@ namespace DocuFiller.Services
             return new ValidationResult
             {
                 IsValid = isValid,
-                ErrorMessage = isValid ? null : $"不支持的文件扩展名: {extension ?? "未知"}"
+                ErrorMessage = isValid ? string.Empty : $"不支持的文件扩展名: {extension ?? "未知"}"
             };
         }
 

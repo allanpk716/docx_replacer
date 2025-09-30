@@ -164,7 +164,7 @@ namespace DocuFiller.Utils
             _lock = lockObject;
         }
         
-        public IDisposable? BeginScope<TState>(TState state)
+        public IDisposable? BeginScope<TState>(TState state) where TState : notnull
         {
             return null;
         }
@@ -174,7 +174,7 @@ namespace DocuFiller.Utils
             return logLevel != LogLevel.None;
         }
         
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
         {
             if (!IsEnabled(logLevel))
                 return;

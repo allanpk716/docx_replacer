@@ -71,6 +71,6 @@ namespace DocuFiller.Services.Interfaces
         /// </summary>
         /// <param name="filePath">文件路径</param>
         /// <returns>文件信息</returns>
-        Task<DocuFiller.Models.FileInfo> GetFileInfoAsync(string filePath);
+        Task<DocuFiller.Models.FileInfo?> GetFileInfoAsync(string filePath);
     }
 }

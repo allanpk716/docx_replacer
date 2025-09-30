@@ -608,6 +608,12 @@ namespace DocuFiller.Services
                 _logger.LogDebug($"开始为Run元素添加批注，标签: '{tag}'");
 
                 // 1. 准备批注环境 (Get or Create comments part)
+                if (document.MainDocumentPart == null)
+                {
+                    _logger.LogError("文档主体部分为空，无法添加批注");
+                    return;
+                }
+                
                 WordprocessingCommentsPart? commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
                 if (commentsPart == null)
                 {
