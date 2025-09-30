@@ -67,7 +67,7 @@ namespace DocuFiller.Models
         /// 验证请求参数
         /// </summary>
         /// <returns>验证结果</returns>
-        public ValidationResult Validate()
+        public Utils.ValidationResult Validate()
         {
             var errors = new List<string>();
 
@@ -86,7 +86,7 @@ namespace DocuFiller.Models
             if (!System.IO.File.Exists(DataFilePath))
                 errors.Add("数据文件不存在");
 
-            var result = new ValidationResult { IsValid = errors.Count == 0 };
+            var result = new Utils.ValidationResult { IsValid = errors.Count == 0 };
             foreach (var error in errors)
             {
                 result.AddError(error);

@@ -8,6 +8,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.Extensions.Logging;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
+using DocuFiller.Utils;
 
 namespace DocuFiller.Services
 {
@@ -397,7 +398,7 @@ namespace DocuFiller.Services
                 var contentBlock = control.GetFirstChild<SdtContentBlock>();
                 var contentRun = control.GetFirstChild<SdtContentRun>();
                 
-                OpenXmlElement content = contentBlock ?? (OpenXmlElement)contentRun;
+                OpenXmlElement? content = contentBlock ?? (OpenXmlElement?)contentRun;
                 if (content == null) return string.Empty;
 
                 var texts = content.Descendants<Text>().Select(t => t.Text).ToList();

@@ -310,7 +310,7 @@ namespace DocuFiller.ViewModels
                 ProgressMessage = "验证模板文件...";
                 
                 var result = await _documentProcessor.ValidateTemplateAsync(TemplatePath);
-                if (result.IsSuccess)
+                if (result.IsValid)
                 {
                     var controls = await _documentProcessor.GetContentControlsAsync(TemplatePath);
                     

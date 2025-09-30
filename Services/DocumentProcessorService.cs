@@ -8,8 +8,8 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocuFiller.Models;
-using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
+using DocuFiller.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.Services
@@ -17,7 +17,7 @@ namespace DocuFiller.Services
     /// <summary>
     /// 文档处理服务实现
     /// </summary>
-    public class DocumentProcessorService : IDocumentProcessor
+    public class DocumentProcessorService : IDocumentProcessor, IDisposable
     {
         private readonly ILogger<DocumentProcessorService> _logger;
         private readonly IDataParser _dataParser;
@@ -42,7 +42,7 @@ namespace DocuFiller.Services
 
         public async Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request)
         {
-            var result = new ProcessResult
+            ProcessResult result = new ProcessResult
             {
                 StartTime = DateTime.Now
             };
@@ -54,14 +54,14 @@ namespace DocuFiller.Services
                 // 验证请求参数
                 if (!request.IsValid())
                 {
-                    var errors = request.GetValidationErrors();
+                    List<string> errors = request.GetValidationErrors();
                     result.Errors.AddRange(errors);
                     result.Message = "请求参数验证失败";
                     return result;
                 }
 
                 // 验证模板文件
-                var templateValidation = await ValidateTemplateAsync(request.TemplateFilePath);
+                ValidationResult templateValidation = await ValidateTemplateAsync(request.TemplateFilePath);
                 if (!templateValidation.IsValid)
                 {
                     result.AddError($"模板文件验证失败: {templateValidation.ErrorMessage}");
@@ -69,7 +69,7 @@ namespace DocuFiller.Services
                 }
 
                 // 解析数据文件
-                var dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
+                List<Dictionary<string, object>> dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
                 if (dataList == null || !dataList.Any())
                 {
                     result.AddError("数据文件为空或解析失败");
@@ -82,7 +82,7 @@ namespace DocuFiller.Services
                 // 确保输出目录存在
                 try
                 {
-                    _fileService.EnsureDirectoryExists(request.OutputDirectory);
+                    _ = _fileService.EnsureDirectoryExists(request.OutputDirectory);
                 }
                 catch (Exception ex)
                 {
@@ -99,27 +99,27 @@ namespace DocuFiller.Services
                         result.AddWarning("处理被用户取消");
                         break;
                     }
-                    
+
                     if (_cancellationTokenSource == null)
                     {
                         _logger.LogDebug("警告：_cancellationTokenSource为null，无法检查取消状态");
                     }
 
-                    var data = dataList[i];
-                    var templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
-                    var templateExtension = Path.GetExtension(request.TemplateFilePath);
-                    
+                    Dictionary<string, object> data = dataList[i];
+                    string templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
+                    string templateExtension = Path.GetExtension(request.TemplateFilePath);
+
                     // 生成输出文件名 - 使用新的时间戳格式
-                    var outputFileName = GenerateOutputFileNameWithTimestamp(templateFileName);
-                    var outputPath = Path.Combine(request.OutputDirectory, outputFileName);
+                    string outputFileName = GenerateOutputFileNameWithTimestamp(templateFileName);
+                    string outputPath = Path.Combine(request.OutputDirectory, outputFileName);
                     _logger.LogDebug($"生成输出文件名: {outputFileName}");
 
-                    _progressReporter.ReportProgress(i + 1, dataList.Count, 
+                    _progressReporter.ReportProgress(i + 1, dataList.Count,
                         $"正在处理第 {i + 1} 个文档", outputFileName);
 
                     try
                     {
-                        var success = await ProcessSingleDocumentAsync(
+                        bool success = await ProcessSingleDocumentAsync(
                             request.TemplateFilePath, outputPath, data);
 
                         if (success)
@@ -140,7 +140,7 @@ namespace DocuFiller.Services
                     }
                 }
 
-                _progressReporter.ReportCompleted(dataList.Count, 
+                _progressReporter.ReportCompleted(dataList.Count,
                     $"处理完成，成功: {result.SuccessfulRecords}，失败: {result.FailedRecords}");
 
                 result.IsSuccess = result.SuccessfulRecords > 0;
@@ -163,16 +163,16 @@ namespace DocuFiller.Services
             return result;
         }
 
-        public async Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath, 
+        public async Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath,
             Dictionary<string, object> data)
         {
             try
             {
                 // 复制模板文件到输出路径
-                await _fileService.CopyFileAsync(templatePath, outputPath, true);
+                _ = await _fileService.CopyFileAsync(templatePath, outputPath, true);
 
                 // 打开并处理文档
-                using var document = WordprocessingDocument.Open(outputPath, true);
+                using WordprocessingDocument document = WordprocessingDocument.Open(outputPath, true);
                 if (document.MainDocumentPart == null)
                 {
                     _logger.LogError($"无法打开文档的主要部分: {outputPath}");
@@ -180,8 +180,8 @@ namespace DocuFiller.Services
                 }
 
                 // 处理内容控件
-                var contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>().ToList();
-                foreach (var control in contentControls)
+                List<SdtElement> contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>().ToList();
+                foreach (SdtElement? control in contentControls)
                 {
                     ProcessContentControl(control, data, document);
                 }
@@ -201,9 +201,9 @@ namespace DocuFiller.Services
         {
             try
             {
-                var properties = control.SdtProperties;
-                var tag = properties?.GetFirstChild<Tag>()?.Val?.Value;
-                
+                SdtProperties? properties = control.SdtProperties;
+                string? tag = properties?.GetFirstChild<Tag>()?.Val?.Value;
+
                 _logger.LogDebug($"处理内容控件 - 标签: '{tag}'");
 
                 if (string.IsNullOrWhiteSpace(tag))
@@ -211,71 +211,71 @@ namespace DocuFiller.Services
                     _logger.LogWarning("内容控件标签为空，跳过处理");
                     return;
                 }
-                
+
                 if (!data.ContainsKey(tag))
                 {
                     _logger.LogWarning($"数据中未找到标签 '{tag}' 对应的值，跳过处理");
                     return;
                 }
 
-                var value = data[tag]?.ToString() ?? string.Empty;
+                string value = data[tag]?.ToString() ?? string.Empty;
                 _logger.LogDebug($"找到匹配数据: '{tag}' -> '{value}'");
                 _logger.LogDebug($"原始值包含换行符: {value.Contains("\n")}");
-                
+
                 // 记录替换前的旧值用于批注
-                var oldValue = string.Empty;
-                var existingTextElements = control.Descendants<Text>().ToList();
+                string oldValue = string.Empty;
+                List<Text> existingTextElements = control.Descendants<Text>().ToList();
                 if (existingTextElements.Any())
                 {
-                    oldValue = string.Join("", existingTextElements.Select(t => t.Text));
+                    oldValue = string.Join("", existingTextElements.Select(static t => t.Text));
                 }
-                
+
                 // 处理标记功能已集成到批注中，无需单独添加
-                
+
                 // 尝试多种方式查找内容容器
-                var content = control.Descendants<SdtContentRun>().FirstOrDefault() ?? 
+                OpenXmlElement? content = control.Descendants<SdtContentRun>().FirstOrDefault() ??
                              control.Descendants<SdtContentBlock>().FirstOrDefault() as OpenXmlElement;
-                
+
                 // 如果没找到标准内容容器，尝试查找其他可能的容器
                 if (content == null)
                 {
                     content = control.Descendants<SdtContentCell>().FirstOrDefault();
                     _logger.LogDebug("尝试查找 SdtContentCell 容器");
                 }
-                
+
                 if (content == null)
                 {
                     // 尝试直接查找文本容器
-                    var textElements = control.Descendants<Text>().ToList();
+                    List<Text> textElements = control.Descendants<Text>().ToList();
                     if (textElements.Any())
                     {
                         _logger.LogDebug($"找到 {textElements.Count} 个文本元素，直接替换文本内容");
                         // 清除现有文本元素
-                        var parentRuns = textElements.Select(t => t.Parent).OfType<Run>().Distinct().ToList();
-                        foreach (var run in parentRuns)
+                        List<Run> parentRuns = textElements.Select(static t => t.Parent).OfType<Run>().Distinct().ToList();
+                        foreach (Run? run in parentRuns)
                         {
                             run.RemoveAllChildren();
                         }
-                        
+
                         // 添加格式化的新内容
                         if (parentRuns.Any())
                         {
-                            var firstRun = parentRuns.First();
-                            var formattedElements = CreateFormattedTextElements(value);
-                            foreach (var element in formattedElements)
+                            Run firstRun = parentRuns.First();
+                            List<OpenXmlElement> formattedElements = CreateFormattedTextElements(value);
+                            foreach (OpenXmlElement element in formattedElements)
                             {
-                                firstRun.AppendChild(element);
+                                _ = firstRun.AppendChild(element);
                             }
-                            
+
                             // 移除其他多余的Run元素
                             for (int i = 1; i < parentRuns.Count; i++)
                             {
                                 parentRuns[i].Remove();
                             }
-                            
+
                             // 为替换成功的Run添加批注
-                            var currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
-                            var commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{value}";
+                            string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
+                            string commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{value}";
                             AddCommentToElement(document, firstRun, commentText, "DocuFiller系统", tag);
                         }
                         _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' 的文本为 '{value}'");
@@ -286,27 +286,27 @@ namespace DocuFiller.Services
                 if (content != null)
                 {
                     _logger.LogDebug($"找到内容容器，类型: {content.GetType().Name}");
-                    
+
                     // 清除现有内容
-                    var childCount = content.ChildElements.Count;
+                    int childCount = content.ChildElements.Count;
                     content.RemoveAllChildren();
                     _logger.LogDebug($"清除了 {childCount} 个子元素");
 
                     // 添加新内容
-                    Run targetRun = null;
+                    Run? targetRun = null;
                     if (control is SdtBlock || content is SdtContentBlock || content is SdtContentCell)
                     {
-                        var paragraph = CreateParagraphWithFormattedText(value);
-                        content.AppendChild(paragraph);
+                        Paragraph paragraph = CreateParagraphWithFormattedText(value);
+                        _ = content.AppendChild(paragraph);
                         targetRun = paragraph.Descendants<Run>().FirstOrDefault();
                         _logger.LogDebug($"作为块级元素添加内容: '{value}'");
                     }
                     else if (control is SdtRun || content is SdtContentRun)
                     {
-                        var runs = CreateFormattedRuns(value);
-                        foreach (var run in runs)
+                        List<Run> runs = CreateFormattedRuns(value);
+                        foreach (Run run in runs)
                         {
-                            content.AppendChild(run);
+                            _ = content.AppendChild(run);
                         }
                         targetRun = runs.FirstOrDefault();
                         _logger.LogDebug($"作为行内元素添加内容: '{value}'");
@@ -314,34 +314,34 @@ namespace DocuFiller.Services
                     else
                     {
                         // 通用处理方式
-                        var runs = CreateFormattedRuns(value);
-                        foreach (var run in runs)
+                        List<Run> runs = CreateFormattedRuns(value);
+                        foreach (Run run in runs)
                         {
-                            content.AppendChild(run);
+                            _ = content.AppendChild(run);
                         }
                         targetRun = runs.FirstOrDefault();
                         _logger.LogDebug($"使用通用方式添加内容: '{value}'");
                     }
-                    
+
                     // 为替换成功的Run添加批注
                     if (targetRun != null)
                     {
-                        var currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
-                        var commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{value}";
+                        string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
+                        string commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{value}";
                         AddCommentToElement(document, targetRun, commentText, "DocuFiller系统", tag);
                     }
-                    
+
                     _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' 为 '{value}'");
                 }
                 else
                 {
                     _logger.LogError($"未找到内容控件 '{tag}' 的任何内容容器");
-                    
+
                     // 输出控件结构信息用于调试
                     _logger.LogDebug($"内容控件结构调试信息:");
                     _logger.LogDebug($"  控件类型: {control.GetType().Name}");
                     _logger.LogDebug($"  子元素数量: {control.ChildElements.Count}");
-                    foreach (var child in control.ChildElements)
+                    foreach (OpenXmlElement child in control.ChildElements)
                     {
                         _logger.LogDebug($"    子元素: {child.GetType().Name}");
                     }
@@ -355,14 +355,14 @@ namespace DocuFiller.Services
 
         public Task<ValidationResult> ValidateTemplateAsync(string templatePath)
         {
-            var result = new ValidationResult { IsValid = true };
+            ValidationResult result = new ValidationResult { IsValid = true };
 
             try
             {
                 // 添加详细的调试信息
                 _logger.LogInformation($"[调试] 开始验证模板文件");
                 _logger.LogInformation($"[调试] 接收到的模板文件路径: '{templatePath}'");
-                
+
                 // 检查路径是否为空或null
                 if (string.IsNullOrEmpty(templatePath))
                 {
@@ -371,29 +371,29 @@ namespace DocuFiller.Services
                     result.ErrorMessage = "模板文件路径为空";
                     return Task.FromResult(result);
                 }
-                
+
                 // 输出绝对路径
-                var absolutePath = Path.GetFullPath(templatePath);
+                string absolutePath = Path.GetFullPath(templatePath);
                 _logger.LogInformation($"[调试] 模板文件绝对路径: '{absolutePath}'");
-                
+
                 // 检查文件是否存在
-                var fileExists = _fileService.FileExists(templatePath);
+                bool fileExists = _fileService.FileExists(templatePath);
                 _logger.LogInformation($"[调试] 文件是否存在: {fileExists}");
-                
+
                 if (!fileExists)
                 {
                     // 输出当前工作目录
-                    var currentDirectory = Directory.GetCurrentDirectory();
+                    string currentDirectory = Directory.GetCurrentDirectory();
                     _logger.LogError($"[调试] 当前工作目录: '{currentDirectory}'");
-                    
+
                     // 输出文件所在目录的内容（如果目录存在）
-                    var directoryPath = Path.GetDirectoryName(absolutePath);
+                    string? directoryPath = Path.GetDirectoryName(absolutePath);
                     if (!string.IsNullOrEmpty(directoryPath) && Directory.Exists(directoryPath))
                     {
                         _logger.LogError($"[调试] 文件所在目录: '{directoryPath}'");
-                        var files = Directory.GetFiles(directoryPath);
+                        string[] files = Directory.GetFiles(directoryPath);
                         _logger.LogError($"[调试] 目录中的文件数量: {files.Length}");
-                        foreach (var file in files.Take(10)) // 只显示前10个文件
+                        foreach (string? file in files.Take(10)) // 只显示前10个文件
                         {
                             _logger.LogError($"[调试] 目录中的文件: '{Path.GetFileName(file)}'");
                         }
@@ -402,14 +402,14 @@ namespace DocuFiller.Services
                     {
                         _logger.LogError($"[调试] 文件所在目录不存在: '{directoryPath}'");
                     }
-                    
+
                     result.IsValid = false;
                     result.ErrorMessage = "模板文件不存在";
                     return Task.FromResult(result);
                 }
 
-                var extension = Path.GetExtension(templatePath).ToLowerInvariant();
-                var allowedExtensions = new List<string> { ".docx", ".dotx" };
+                string extension = Path.GetExtension(templatePath).ToLowerInvariant();
+                List<string> allowedExtensions = new List<string> { ".docx", ".dotx" };
                 if (!allowedExtensions.Contains(extension))
                 {
                     result.IsValid = false;
@@ -418,7 +418,7 @@ namespace DocuFiller.Services
                 }
 
                 // 尝试打开文档验证格式
-                using var document = WordprocessingDocument.Open(templatePath, false);
+                using WordprocessingDocument document = WordprocessingDocument.Open(templatePath, false);
                 if (document.MainDocumentPart == null)
                 {
                     result.IsValid = false;
@@ -436,20 +436,22 @@ namespace DocuFiller.Services
 
         public Task<List<ContentControlData>> GetContentControlsAsync(string templatePath)
         {
-            var controls = new List<ContentControlData>();
+            List<ContentControlData> controls = new List<ContentControlData>();
 
             try
             {
-                using var document = WordprocessingDocument.Open(templatePath, false);
+                using WordprocessingDocument document = WordprocessingDocument.Open(templatePath, false);
                 if (document.MainDocumentPart == null)
-                    return Task.FromResult(controls);
-
-                var contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>();
-                foreach (var control in contentControls)
                 {
-                    var properties = control.SdtProperties;
-                    var tag = properties?.GetFirstChild<Tag>()?.Val?.Value ?? string.Empty;
-                    var alias = properties?.GetFirstChild<SdtAlias>()?.Val?.Value ?? string.Empty;
+                    return Task.FromResult(controls);
+                }
+
+                IEnumerable<SdtElement> contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>();
+                foreach (SdtElement control in contentControls)
+                {
+                    SdtProperties? properties = control.SdtProperties;
+                    string tag = properties?.GetFirstChild<Tag>()?.Val?.Value ?? string.Empty;
+                    string alias = properties?.GetFirstChild<SdtAlias>()?.Val?.Value ?? string.Empty;
 
                     if (!string.IsNullOrWhiteSpace(tag))
                     {
@@ -486,11 +488,11 @@ namespace DocuFiller.Services
         /// </summary>
         private Paragraph CreateParagraphWithFormattedText(string text)
         {
-            var paragraph = new Paragraph();
-            var runs = CreateFormattedRuns(text);
-            foreach (var run in runs)
+            Paragraph paragraph = new Paragraph();
+            List<Run> runs = CreateFormattedRuns(text);
+            foreach (Run run in runs)
             {
-                paragraph.AppendChild(run);
+                _ = paragraph.AppendChild(run);
             }
             return paragraph;
         }
@@ -500,44 +502,44 @@ namespace DocuFiller.Services
         /// </summary>
         private List<Run> CreateFormattedRuns(string text)
         {
-            var runs = new List<Run>();
-            
+            List<Run> runs = new List<Run>();
+
             if (string.IsNullOrEmpty(text))
             {
                 return runs;
             }
 
             // 按换行符分割文本
-            var lines = text.Split(new[] { "\n" }, StringSplitOptions.None);
+            string[] lines = text.Split(["\n"], StringSplitOptions.None);
             _logger.LogDebug($"文本分割为 {lines.Length} 行");
 
             for (int i = 0; i < lines.Length; i++)
             {
-                var line = lines[i];
-                
+                string line = lines[i];
+
                 // 创建带红色格式的Run
-                var run = new Run();
-                
+                Run run = new Run();
+
                 // 设置文本颜色为红色
-                var runProperties = new RunProperties();
-                var color = new Color() { Val = "FF0000" }; // 红色
-                runProperties.AppendChild(color);
-                run.AppendChild(runProperties);
-                
+                RunProperties runProperties = new RunProperties();
+                Color color = new Color() { Val = "FF0000" }; // 红色
+                _ = runProperties.AppendChild(color);
+                _ = run.AppendChild(runProperties);
+
                 // 添加文本内容
-                var text_element = new Text(line);
-                run.AppendChild(text_element);
+                Text text_element = new Text(line);
+                _ = run.AppendChild(text_element);
                 runs.Add(run);
-                
+
                 // 如果不是最后一行，添加换行符
                 if (i < lines.Length - 1)
                 {
-                    var breakRun = new Run(new Break());
+                    Run breakRun = new Run(new Break());
                     runs.Add(breakRun);
                     _logger.LogDebug($"添加换行符在第 {i + 1} 行后");
                 }
             }
-            
+
             _logger.LogDebug($"创建了 {runs.Count} 个Run元素");
             return runs;
         }
@@ -547,31 +549,31 @@ namespace DocuFiller.Services
         /// </summary>
         private List<OpenXmlElement> CreateFormattedTextElements(string text)
         {
-            var elements = new List<OpenXmlElement>();
-            
+            List<OpenXmlElement> elements = new List<OpenXmlElement>();
+
             if (string.IsNullOrEmpty(text))
             {
                 return elements;
             }
 
             // 按换行符分割文本
-            var lines = text.Split(new[] { "\n" }, StringSplitOptions.None);
+            string[] lines = text.Split(["\n"], StringSplitOptions.None);
             _logger.LogDebug($"文本分割为 {lines.Length} 行");
 
             for (int i = 0; i < lines.Length; i++)
             {
-                var line = lines[i];
-                
+                string line = lines[i];
+
                 // 设置文本颜色为红色
-                var runProperties = new RunProperties();
-                var color = new Color() { Val = "FF0000" }; // 红色
-                runProperties.AppendChild(color);
+                RunProperties runProperties = new RunProperties();
+                Color color = new Color() { Val = "FF0000" }; // 红色
+                _ = runProperties.AppendChild(color);
                 elements.Add(runProperties);
-                
+
                 // 添加文本内容
-                var textElement = new Text(line);
+                Text textElement = new Text(line);
                 elements.Add(textElement);
-                
+
                 // 如果不是最后一行，添加换行符
                 if (i < lines.Length - 1)
                 {
@@ -579,7 +581,7 @@ namespace DocuFiller.Services
                     _logger.LogDebug($"添加换行符在第 {i + 1} 行后");
                 }
             }
-            
+
             _logger.LogDebug($"创建了 {elements.Count} 个文本元素");
             return elements;
         }
@@ -590,8 +592,8 @@ namespace DocuFiller.Services
         /// </summary>
         private string GenerateOutputFileNameWithTimestamp(string originalFileName)
         {
-            var timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
-            var outputFileName = $"{originalFileName} -- 替换 --{timestamp}.docx";
+            string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+            string outputFileName = $"{originalFileName} -- 替换 --{timestamp}.docx";
             _logger.LogDebug($"生成时间戳文件名: {outputFileName}");
             return outputFileName;
         }
@@ -604,23 +606,23 @@ namespace DocuFiller.Services
             try
             {
                 _logger.LogDebug($"开始为Run元素添加批注，标签: '{tag}'");
-                
+
                 // 1. 准备批注环境 (Get or Create comments part)
-                WordprocessingCommentsPart commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
+                WordprocessingCommentsPart? commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
                 if (commentsPart == null)
                 {
                     _logger.LogDebug("创建新的批注部分");
                     commentsPart = document.MainDocumentPart.AddNewPart<WordprocessingCommentsPart>();
                     commentsPart.Comments = new Comments();
                 }
-                
+
                 // 2. 生成唯一ID (Find the next available ID)
                 string id = "0";
-                if (commentsPart.Comments.HasChildren)
+                if (commentsPart.Comments != null && commentsPart.Comments.HasChildren)
                 {
                     // ID必须是唯一的数字字符串。我们找到当前最大的ID并加1。
-                    var maxId = commentsPart.Comments.Descendants<Comment>()
-                        .Select(c => int.TryParse(c.Id?.Value, out var commentId) ? commentId : 0)
+                    int maxId = commentsPart.Comments.Descendants<Comment>()
+                        .Select(static c => int.TryParse(c.Id?.Value, out int commentId) ? commentId : 0)
                         .DefaultIfEmpty(0)
                         .Max();
                     id = (maxId + 1).ToString();
@@ -630,31 +632,31 @@ namespace DocuFiller.Services
                     id = "1";
                 }
                 _logger.LogDebug($"生成批注ID: {id}");
-                
+
                 // 3. 创建批注内容
-                Paragraph p = new Paragraph(new Run(new Text(commentText)));
-                Comment comment = new Comment()
+                Paragraph p = new(new Run(new Text(commentText)));
+                Comment comment = new()
                 {
                     Id = id,
                     Author = author,
                     Date = DateTime.Now,
-                    Initials = author.Length >= 2 ? author.Substring(0, 2) : author // 可选
+                    Initials = author.Length >= 2 ? author[..2] : author // 可选
                 };
                 comment.Append(p);
-                
+
                 // 将新批注添加到 comments.xml
                 commentsPart.Comments.Append(comment);
                 commentsPart.Comments.Save();
                 _logger.LogDebug($"批注已添加到comments.xml，ID: {id}");
-                
+
                 // 4 & 5. 在正文中标记范围和添加引用
                 // 在被批注的元素前后插入范围标记
-                targetRun.InsertBeforeSelf(new CommentRangeStart() { Id = id });
-                targetRun.InsertAfterSelf(new CommentRangeEnd() { Id = id });
-                
+                _ = targetRun.InsertBeforeSelf(new CommentRangeStart() { Id = id });
+                _ = targetRun.InsertAfterSelf(new CommentRangeEnd() { Id = id });
+
                 // 在被批注的元素（Run）中添加引用标记
                 targetRun.Append(new CommentReference() { Id = id });
-                
+
                 _logger.LogInformation($"✓ 成功为Run元素添加批注，标签: '{tag}'，ID: {id}");
             }
             catch (Exception ex)
@@ -666,12 +668,12 @@ namespace DocuFiller.Services
         /// <summary>
         /// 生成唯一的批注ID（已整合到AddCommentToElement方法中）
         /// </summary>
-        private int GenerateCommentId(Comments comments)
+        private static int GenerateCommentId(Comments comments)
         {
-            var existingIds = comments.Elements<Comment>()
-                .Select(c => int.TryParse(c.Id?.Value, out var id) ? id : 0)
+            List<int> existingIds = comments.Elements<Comment>()
+                .Select(static c => int.TryParse(c.Id?.Value, out int id) ? id : 0)
                 .ToList();
-            
+
             return existingIds.Any() ? existingIds.Max() + 1 : 1;
         }
 
@@ -687,9 +689,9 @@ namespace DocuFiller.Services
         /// <returns>处理结果</returns>
         public async Task<ProcessResult> ProcessFolderAsync(FolderProcessRequest request, CancellationToken cancellationToken = default)
         {
-            var result = new ProcessResult { IsSuccess = true };
-            var processedFiles = new List<string>();
-            var failedFiles = new List<string>();
+            ProcessResult result = new ProcessResult { IsSuccess = true };
+            List<string> processedFiles = new List<string>();
+            List<string> failedFiles = new List<string>();
 
             try
             {
@@ -714,7 +716,7 @@ namespace DocuFiller.Services
                 }
 
                 // 解析数据文件
-                var dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
+                List<Dictionary<string, object>> dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
                 if (dataList == null || !dataList.Any())
                 {
                     result.IsSuccess = false;
@@ -723,29 +725,29 @@ namespace DocuFiller.Services
                 }
 
                 // 创建时间戳输出文件夹
-                var timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
-                var inputFolderName = Path.GetFileName(request.TemplateFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                var timestampFolderName = $"{inputFolderName}_{timestamp}";
-                var timestampOutputDir = Path.Combine(request.OutputDirectory, timestampFolderName);
-                
+                string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+                string inputFolderName = Path.GetFileName(request.TemplateFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                string timestampFolderName = $"{inputFolderName}_{timestamp}";
+                string timestampOutputDir = Path.Combine(request.OutputDirectory, timestampFolderName);
+
                 if (!_fileService.DirectoryExists(timestampOutputDir))
                 {
-                    Directory.CreateDirectory(timestampOutputDir);
+                    _ = Directory.CreateDirectory(timestampOutputDir);
                     _logger.LogInformation($"创建时间戳输出目录: {timestampOutputDir}");
                 }
 
-                var totalOperations = request.TemplateFiles.Count * dataList.Count();
-                var currentOperation = 0;
+                int totalOperations = request.TemplateFiles.Count * dataList.Count();
+                int currentOperation = 0;
 
                 // 处理每个模板文件
-                foreach (var templateFile in request.TemplateFiles)
+                foreach (Models.FileInfo templateFile in request.TemplateFiles)
                 {
                     try
                     {
                         _logger.LogInformation($"处理模板文件: {templateFile.Name}");
 
                         // 验证模板文件
-                        var validationResult = await ValidateTemplateAsync(templateFile.FullPath);
+                        ValidationResult validationResult = await ValidateTemplateAsync(templateFile.FullPath);
                         if (!validationResult.IsValid)
                         {
                             _logger.LogWarning($"模板文件验证失败: {templateFile.Name} - {validationResult.ErrorMessage}");
@@ -754,12 +756,12 @@ namespace DocuFiller.Services
                         }
 
                         // 在时间戳文件夹中创建与原始结构对应的子目录
-                        var relativeDir = string.IsNullOrEmpty(templateFile.RelativeDirectoryPath) ? "" : templateFile.RelativeDirectoryPath;
-                        var outputSubDir = string.IsNullOrEmpty(relativeDir) ? timestampOutputDir : Path.Combine(timestampOutputDir, relativeDir);
-                        
+                        string relativeDir = string.IsNullOrEmpty(templateFile.RelativeDirectoryPath) ? "" : templateFile.RelativeDirectoryPath;
+                        string outputSubDir = string.IsNullOrEmpty(relativeDir) ? timestampOutputDir : Path.Combine(timestampOutputDir, relativeDir);
+
                         if (!string.IsNullOrEmpty(relativeDir) && !_fileService.DirectoryExists(outputSubDir))
                         {
-                            Directory.CreateDirectory(outputSubDir);
+                            _ = Directory.CreateDirectory(outputSubDir);
                             _logger.LogDebug($"创建子目录: {outputSubDir}");
                         }
 
@@ -773,24 +775,24 @@ namespace DocuFiller.Services
                                 result.ErrorMessage = "操作已被取消";
                                 return result;
                             }
-                            
+
                             if (_cancellationTokenSource == null)
                             {
                                 _logger.LogDebug("警告：_cancellationTokenSource为null，无法检查取消状态");
                             }
 
-                            var data = dataList[i];
+                            Dictionary<string, object> data = dataList[i];
                             currentOperation++;
 
                             // 生成输出文件名 - 保持原始文件名
-                            var outputFileName = templateFile.Name;
-                            var outputPath = Path.Combine(outputSubDir, outputFileName);
+                            string outputFileName = templateFile.Name;
+                            string outputPath = Path.Combine(outputSubDir, outputFileName);
 
                             _logger.LogDebug($"处理第 {i + 1} 条数据，输出到: {outputPath}");
 
                             // 处理单个文档
-                            var success = await ProcessSingleDocumentAsync(templateFile.FullPath, outputPath, data);
-                            
+                            bool success = await ProcessSingleDocumentAsync(templateFile.FullPath, outputPath, data);
+
                             if (success)
                             {
                                 processedFiles.Add(outputPath);
@@ -803,7 +805,7 @@ namespace DocuFiller.Services
                             }
 
                             // 更新进度
-                            var progress = (double)currentOperation / totalOperations * 100;
+                            double progress = (double)currentOperation / totalOperations * 100;
                             ProgressUpdated?.Invoke(this, new ProgressEventArgs
                             {
                                 ProgressPercentage = (int)progress,
@@ -846,5 +848,10 @@ namespace DocuFiller.Services
 
             return result;
         }
-     }
- }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+}

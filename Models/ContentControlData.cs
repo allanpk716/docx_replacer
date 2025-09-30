@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using DocuFiller.Utils;
 
 namespace DocuFiller.Models
 {
@@ -69,8 +70,7 @@ namespace DocuFiller.Models
             // 检查必填项
             if (IsRequired && string.IsNullOrWhiteSpace(GetFillValue()))
             {
-                result.IsValid = false;
-                result.ErrorMessage = $"内容控件 '{Tag}' 是必填项，但未提供值";
+                result.AddError($"内容控件 '{Tag}' 是必填项，但未提供值");
                 return result;
             }
 
@@ -82,15 +82,13 @@ namespace DocuFiller.Models
                     var regex = new System.Text.RegularExpressions.Regex(ValidationPattern);
                     if (!regex.IsMatch(GetFillValue()))
                     {
-                        result.IsValid = false;
-                        result.ErrorMessage = $"内容控件 '{Tag}' 的值不符合验证规则";
+                        result.AddError($"内容控件 '{Tag}' 的值不符合验证规则");
                         return result;
                     }
                 }
                 catch (System.Exception ex)
                 {
-                    result.IsValid = false;
-                    result.ErrorMessage = $"内容控件 '{Tag}' 的验证规则无效: {ex.Message}";
+                    result.AddError($"内容控件 '{Tag}' 的验证规则无效: {ex.Message}");
                     return result;
                 }
             }
@@ -134,46 +132,5 @@ namespace DocuFiller.Models
         CheckBox
     }
 
-    /// <summary>
-    /// 验证结果
-    /// </summary>
-    public class ValidationResult
-    {
-        /// <summary>
-        /// 是否有效
-        /// </summary>
-        public bool IsValid { get; set; }
 
-        /// <summary>
-        /// 错误消息
-        /// </summary>
-        public string ErrorMessage { get; set; } = string.Empty;
-
-        /// <summary>
-        /// 错误列表
-        /// </summary>
-        public List<string> Errors { get; set; } = new List<string>();
-
-        /// <summary>
-        /// 是否成功（兼容属性）
-        /// </summary>
-        public bool IsSuccess => IsValid && !Errors.Any();
-
-        /// <summary>
-        /// 添加错误
-        /// </summary>
-        /// <param name="error">错误消息</param>
-        public void AddError(string error)
-        {
-            if (!string.IsNullOrWhiteSpace(error))
-            {
-                Errors.Add(error);
-                IsValid = false;
-                if (string.IsNullOrWhiteSpace(ErrorMessage))
-                {
-                    ErrorMessage = error;
-                }
-            }
-        }
-    }
 }

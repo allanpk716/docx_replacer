@@ -4,6 +4,7 @@ using System.IO;
 using System.Threading.Tasks;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Models;
+using DocuFiller.Utils;
 
 namespace DocuFiller.Services
 {

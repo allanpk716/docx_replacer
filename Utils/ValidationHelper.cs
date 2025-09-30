@@ -315,11 +315,29 @@ namespace DocuFiller.Utils
         public List<string> Errors { get; } = new List<string>();
         public List<string> Warnings { get; } = new List<string>();
         
+        /// <summary>
+        /// 错误消息（兼容属性）
+        /// </summary>
+        public string ErrorMessage 
+        { 
+            get => GetErrorMessage(); 
+            set 
+            { 
+                if (!string.IsNullOrWhiteSpace(value))
+                {
+                    Errors.Clear();
+                    Errors.Add(value);
+                    IsValid = false;
+                }
+            } 
+        }
+        
         public void AddError(string error)
         {
             if (!string.IsNullOrWhiteSpace(error))
             {
                 Errors.Add(error);
+                IsValid = false;
             }
         }
         
