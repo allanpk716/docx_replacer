@@ -101,55 +101,8 @@ namespace DocuFiller.Services
                     return result;
                 }
 
-                // 批量处理文档
-                for (int i = 0; i < dataList.Count; i++)
-                {
-                    if (_cancellationTokenSource?.Token.IsCancellationRequested == true)
-                    {
-                        _logger.LogDebug("检测到取消请求，停止批量处理");
-                        result.AddWarning("处理被用户取消");
-                        break;
-                    }
-
-                    if (_cancellationTokenSource == null)
-                    {
-                        _logger.LogDebug("警告：_cancellationTokenSource为null，无法检查取消状态");
-                    }
-
-                    Dictionary<string, object> data = dataList[i];
-                    string templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
-                    string templateExtension = Path.GetExtension(request.TemplateFilePath);
-
-                    // 生成输出文件名 - 使用新的时间戳格式
-                    string outputFileName = GenerateOutputFileNameWithTimestamp(templateFileName);
-                    string outputPath = Path.Combine(request.OutputDirectory, outputFileName);
-                    _logger.LogDebug($"生成输出文件名: {outputFileName}");
-
-                    _progressReporter.ReportProgress(i + 1, dataList.Count,
-                        $"正在处理第 {i + 1} 个文档", outputFileName);
-
-                    try
-                    {
-                        bool success = await ProcessSingleDocumentAsync(
-                            request.TemplateFilePath, outputPath, data);
-
-                        if (success)
-                        {
-                            result.SuccessfulRecords++;
-                            result.AddGeneratedFile(outputPath);
-                            _logger.LogDebug($"成功处理文档: {outputPath}");
-                        }
-                        else
-                        {
-                            result.AddError($"处理文档失败: {outputFileName}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        result.AddError($"处理文档 {outputFileName} 时发生异常: {ex.Message}");
-                        _logger.LogError(ex, $"处理文档异常: {outputFileName}");
-                    }
-                }
+                // 使用并行处理批量处理文档
+                await ProcessDocumentsInParallelAsync(request, dataList, result, _cancellationTokenSource.Token);
 
                 _progressReporter.ReportCompleted(dataList.Count,
                     $"处理完成，成功: {result.SuccessfulRecords}，失败: {result.FailedRecords}");
@@ -174,13 +127,96 @@ namespace DocuFiller.Services
             return result;
         }
 
+        /// <summary>
+        /// 并行处理文档
+        /// </summary>
+        private async Task ProcessDocumentsInParallelAsync(ProcessRequest request, List<Dictionary<string, object>> dataList, ProcessResult result, CancellationToken cancellationToken)
+        {
+            const int maxConcurrency = 4; // 限制并发数避免资源竞争
+            SemaphoreSlim semaphore = new(maxConcurrency, maxConcurrency);
+
+            try
+            {
+                var tasks = dataList.Select(async (data, index) =>
+                {
+                    await semaphore.WaitAsync(cancellationToken);
+                    try
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        string templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
+                        string outputFileName = GenerateOutputFileNameWithTimestamp(templateFileName);
+                        string outputPath = Path.Combine(request.OutputDirectory, outputFileName);
+
+                        _logger.LogDebug($"开始处理第 {index + 1} 个文档: {outputFileName}");
+
+                        // 更新进度
+                        _progressReporter.ReportProgress(index + 1, dataList.Count,
+                            $"正在处理第 {index + 1} 个文档", outputFileName);
+
+                        bool success = await ProcessSingleDocumentAsync(request.TemplateFilePath, outputPath, data, cancellationToken);
+
+                        lock (result) // 线程安全地更新结果
+                        {
+                            if (success)
+                            {
+                                result.SuccessfulRecords++;
+                                result.AddGeneratedFile(outputPath);
+                                _logger.LogDebug($"成功处理文档: {outputPath}");
+                            }
+                            else
+                            {
+                                result.AddError($"处理文档失败: {outputFileName}");
+                            }
+                        }
+
+                        return (index, success, outputPath);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.LogDebug($"处理第 {index + 1} 个文档被取消");
+                        throw;
+                    }
+                    catch (Exception ex)
+                    {
+                        lock (result)
+                        {
+                            string outputFileName = GenerateOutputFileNameWithTimestamp(Path.GetFileNameWithoutExtension(request.TemplateFilePath));
+                            result.AddError($"处理文档时发生异常: {ex.Message}");
+                        }
+                        _logger.LogError(ex, $"处理文档异常");
+                        return (index, false, string.Empty);
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                });
+
+                await Task.WhenAll(tasks);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("批量处理被用户取消");
+                result.AddWarning("处理被用户取消");
+            }
+            finally
+            {
+                semaphore.Dispose();
+            }
+        }
+
         public async Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath,
-            Dictionary<string, object> data)
+            Dictionary<string, object> data, CancellationToken cancellationToken = default)
         {
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // 复制模板文件到输出路径
                 _ = await _fileService.CopyFileAsync(templatePath, outputPath, true);
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // 打开并处理文档
                 using WordprocessingDocument document = WordprocessingDocument.Open(outputPath, true);
@@ -194,6 +230,7 @@ namespace DocuFiller.Services
                 List<SdtElement> contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>().ToList();
                 foreach (SdtElement? control in contentControls)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
                     _contentControlProcessor.ProcessContentControl(control, data, document);
                 }
 

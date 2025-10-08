@@ -16,7 +16,7 @@ namespace DocuFiller.Services.Interfaces
         /// <param name="folderPath">文件夹路径</param>
         /// <param name="includeSubfolders">是否包含子文件夹</param>
         /// <returns>文件信息列表</returns>
-        Task<List<FileInfo>> ScanDocxFilesAsync(string folderPath, bool includeSubfolders = true);
+        Task<List<Models.FileInfo>> ScanDocxFilesAsync(string folderPath, bool includeSubfolders = true);
 
         /// <summary>
         /// 验证文件夹路径是否有效

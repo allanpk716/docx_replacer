@@ -1,8 +1,11 @@
 using System;
 using System.Configuration;
 using System.Windows;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using DocuFiller.Configuration;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.ViewModels;
@@ -17,6 +20,7 @@ namespace DocuFiller
     {
         private ServiceProvider _serviceProvider = null!;
         private ILogger<App> _logger = null!;
+        private IConfiguration _configuration = null!;
         
         /// <summary>
         /// 获取服务提供程序
@@ -75,12 +79,23 @@ namespace DocuFiller
         private void ConfigureServices()
         {
             var services = new ServiceCollection();
-            
+
+            // 配置设置
+            BuildConfiguration();
+            services.AddSingleton(_configuration);
+
+            // 配置选项模式
+            services.Configure<AppSettings>(_configuration);
+            services.Configure<LoggingSettings>(_configuration.GetSection("Logging"));
+            services.Configure<FileProcessingSettings>(_configuration.GetSection("FileProcessing"));
+            services.Configure<PerformanceSettings>(_configuration.GetSection("Performance"));
+            services.Configure<UISettings>(_configuration.GetSection("UI"));
+
             // 配置日志记录
             var loggerFactory = LoggerConfiguration.CreateLoggerFactory();
             services.AddSingleton(loggerFactory);
             services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
-            
+
             // 注册服务接口和实现
             services.AddSingleton<IFileService, FileService>();
             services.AddSingleton<IDataParser, DataParserService>();
@@ -93,14 +108,34 @@ namespace DocuFiller
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
             services.AddSingleton<CommentManager>();
-            
+
             // 注册ViewModels
             services.AddTransient<MainWindowViewModel>();
-            
+
             // 注册主窗口
             services.AddTransient<MainWindow>();
-            
+
             _serviceProvider = services.BuildServiceProvider();
+        }
+
+        /// <summary>
+        /// 构建配置
+        /// </summary>
+        private void BuildConfiguration()
+        {
+            var builder = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production"}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables();
+
+            // 如果存在App.config，仍然支持它作为回退
+            if (System.IO.File.Exists("App.config"))
+            {
+                builder.AddXmlFile("App.config", optional: true, reloadOnChange: true);
+            }
+
+            _configuration = builder.Build();
         }
         
         /// <summary>
@@ -171,7 +206,7 @@ namespace DocuFiller
         {
             try
             {
-                var value = ConfigurationManager.AppSettings[key];
+                var value = System.Configuration.ConfigurationManager.AppSettings[key];
                 if (string.IsNullOrEmpty(value))
                     return defaultValue;
                     

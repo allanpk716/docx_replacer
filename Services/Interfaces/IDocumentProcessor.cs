@@ -28,9 +28,11 @@ namespace DocuFiller.Services.Interfaces
         /// <param name="templatePath">模板文件路径</param>
         /// <param name="outputPath">输出文件路径</param>
         /// <param name="data">填充数据</param>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>是否成功</returns>
-        Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath, 
-            System.Collections.Generic.Dictionary<string, object> data);
+        Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath,
+            System.Collections.Generic.Dictionary<string, object> data,
+            System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 验证模板文件
