@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocuFiller.Exceptions;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Utils;
@@ -23,7 +24,10 @@ namespace DocuFiller.Services
         private readonly IDataParser _dataParser;
         private readonly IFileService _fileService;
         private readonly IProgressReporter _progressReporter;
+        private readonly ContentControlProcessor _contentControlProcessor;
+        private readonly CommentManager _commentManager;
         private CancellationTokenSource? _cancellationTokenSource;
+        private bool _disposed = false;
 
         public event EventHandler<ProgressEventArgs>? ProgressUpdated;
 
@@ -31,17 +35,24 @@ namespace DocuFiller.Services
             ILogger<DocumentProcessorService> logger,
             IDataParser dataParser,
             IFileService fileService,
-            IProgressReporter progressReporter)
+            IProgressReporter progressReporter,
+            ContentControlProcessor contentControlProcessor,
+            CommentManager commentManager)
         {
-            _logger = logger;
-            _dataParser = dataParser;
-            _fileService = fileService;
-            _progressReporter = progressReporter;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
+            _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
+            _progressReporter = progressReporter ?? throw new ArgumentNullException(nameof(progressReporter));
+            _contentControlProcessor = contentControlProcessor ?? throw new ArgumentNullException(nameof(contentControlProcessor));
+            _commentManager = commentManager ?? throw new ArgumentNullException(nameof(commentManager));
+
             _progressReporter.ProgressUpdated += OnProgressUpdated;
         }
 
         public async Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request)
         {
+            ThrowIfDisposed();
+
             ProcessResult result = new ProcessResult
             {
                 StartTime = DateTime.Now
@@ -183,7 +194,7 @@ namespace DocuFiller.Services
                 List<SdtElement> contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>().ToList();
                 foreach (SdtElement? control in contentControls)
                 {
-                    ProcessContentControl(control, data, document);
+                    _contentControlProcessor.ProcessContentControl(control, data, document);
                 }
 
                 // 保存文档
@@ -857,7 +868,44 @@ namespace DocuFiller.Services
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // 释放托管资源
+                    _cancellationTokenSource?.Cancel();
+                    _cancellationTokenSource?.Dispose();
+                    _cancellationTokenSource = null;
+
+                    // 取消订阅事件
+                    if (_progressReporter != null)
+                    {
+                        _progressReporter.ProgressUpdated -= OnProgressUpdated;
+                    }
+                }
+
+                // 释放非托管资源
+                _disposed = true;
+            }
+        }
+
+        ~DocumentProcessorService()
+        {
+            Dispose(false);
+        }
+
+        private void ThrowIfDisposed()
+        {
+            if (_disposed)
+            {
+                throw new ObjectDisposedException(nameof(DocumentProcessorService));
+            }
         }
     }
 }

@@ -89,6 +89,10 @@ namespace DocuFiller
             services.AddSingleton<IFileScanner, FileScannerService>();
             services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
             services.AddSingleton<OpenXmlDocumentHandler>();
+
+            // 注册内部服务
+            services.AddSingleton<ContentControlProcessor>();
+            services.AddSingleton<CommentManager>();
             
             // 注册ViewModels
             services.AddTransient<MainWindowViewModel>();
