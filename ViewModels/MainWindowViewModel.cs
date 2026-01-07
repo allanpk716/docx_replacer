@@ -636,7 +636,11 @@ namespace DocuFiller.ViewModels
                 
                 // 更新模板文件列表
                 UpdateTemplateFilesList();
-                
+
+                // 设置输入源类型
+                InputSourceType = InputSourceType.Folder;
+                IsFolderMode = true;
+
                 ProgressMessage = $"找到 {folderStructure.TotalDocxCount} 个模板文件";
                 
                 _logger.LogInformation("文件夹扫描完成，找到 {Count} 个模板文件", folderStructure.TotalDocxCount);
