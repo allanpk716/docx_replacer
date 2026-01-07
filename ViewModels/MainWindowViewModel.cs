@@ -250,6 +250,7 @@ namespace DocuFiller.ViewModels
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
         public ICommand SwitchToFolderModeCommand { get; private set; } = null!;
         public ICommand ProcessFolderCommand { get; private set; } = null!;
+        public ICommand BrowseTemplateFolderCommand { get; private set; } = null!;
         
         #endregion
         
@@ -270,6 +271,7 @@ namespace DocuFiller.ViewModels
             SwitchToSingleModeCommand = new RelayCommand(() => IsFolderMode = false);
             SwitchToFolderModeCommand = new RelayCommand(() => IsFolderMode = true);
             ProcessFolderCommand = new RelayCommand(async () => await ProcessFolderAsync(), () => CanProcessFolder);
+            BrowseTemplateFolderCommand = new RelayCommand(BrowseTemplateFolder);
         }
         
 
@@ -753,6 +755,37 @@ namespace DocuFiller.ViewModels
                 len = len / 1024;
             }
             return $"{len:0.##} {sizes[order]}";
+        }
+
+        /// <summary>
+        /// 浏览并选择文件夹
+        /// </summary>
+        private void BrowseTemplateFolder()
+        {
+            // 使用 OpenFileDialog 作为临时方案，用户可以选择文件夹中的任意文件
+            var dialog = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "选择包含模板文件的文件夹（选择文件夹中的任意文件）",
+                Filter = "Word文档 (*.docx;*.dotx)|*.docx;*.dotx|所有文件 (*.*)|*.*",
+                CheckFileExists = true,
+                CheckPathExists = true,
+                Multiselect = false
+            };
+
+            var result = dialog.ShowDialog();
+            if (result == true && !string.IsNullOrEmpty(dialog.FileName))
+            {
+                // 获取文件所在目录
+                var directory = System.IO.Path.GetDirectoryName(dialog.FileName);
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    // 异步处理文件夹扫描
+                    Task.Run(async () =>
+                    {
+                        await HandleFolderDropAsync(directory);
+                    });
+                }
+            }
         }
 
         #endregion
