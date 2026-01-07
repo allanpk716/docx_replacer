@@ -44,6 +44,10 @@ namespace DocuFiller.ViewModels
         private bool _isFolderDragOver;
         private FolderStructure? _folderStructure;
         private string? _foundDocxFilesCount;
+
+        // 输入源类型相关
+        private InputSourceType _inputSourceType = InputSourceType.None;
+        private Models.FileInfo? _singleFileInfo;
         
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
@@ -186,6 +190,41 @@ namespace DocuFiller.ViewModels
         {
             get => _foundDocxFilesCount;
             set => SetProperty(ref _foundDocxFilesCount, value);
+        }
+
+        /// <summary>
+        /// 输入源类型
+        /// </summary>
+        public InputSourceType InputSourceType
+        {
+            get => _inputSourceType;
+            set
+            {
+                if (SetProperty(ref _inputSourceType, value))
+                {
+                    OnPropertyChanged(nameof(CanStartProcess));
+                    OnPropertyChanged(nameof(DisplayMode));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 显示模式（用于 UI 绑定）
+        /// </summary>
+        public string DisplayMode => InputSourceType switch
+        {
+            InputSourceType.SingleFile => "单文件模式",
+            InputSourceType.Folder => "文件夹模式（含子文件夹）",
+            _ => "未选择"
+        };
+
+        /// <summary>
+        /// 单个文件信息（当选择单个文件时使用）
+        /// </summary>
+        public Models.FileInfo? SingleFileInfo
+        {
+            get => _singleFileInfo;
+            set => SetProperty(ref _singleFileInfo, value);
         }
         
         public bool CanStartProcess => !IsProcessing && !string.IsNullOrEmpty(DataPath) && 
