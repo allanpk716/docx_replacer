@@ -227,9 +227,11 @@ namespace DocuFiller.ViewModels
             set => SetProperty(ref _singleFileInfo, value);
         }
         
-        public bool CanStartProcess => !IsProcessing && !string.IsNullOrEmpty(DataPath) && 
-            ((!IsFolderMode && !string.IsNullOrEmpty(TemplatePath)) || 
-             (IsFolderMode && FolderStructure != null && !FolderStructure.IsEmpty));
+        public bool CanStartProcess => !IsProcessing &&
+            !string.IsNullOrEmpty(DataPath) &&
+            InputSourceType != InputSourceType.None &&
+            ((InputSourceType == InputSourceType.SingleFile && SingleFileInfo != null) ||
+             (InputSourceType == InputSourceType.Folder && FolderStructure != null && !FolderStructure.IsEmpty));
         public bool CanCancelProcess => IsProcessing;
         public bool CanProcessFolder => !IsProcessing && IsFolderMode && FolderStructure != null && !FolderStructure.IsEmpty && !string.IsNullOrEmpty(DataPath);
         
