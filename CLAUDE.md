@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 开发规范 (Development Guidelines)
+
+- **语言**：使用中文回答问题和沟通
+- **开发环境**：项目在 Windows 系统上开发和运行
+- **BAT 脚本规范**：
+  - BAT 脚本文件中不要包含中文字符
+  - 修复脚本时优先在原脚本上修改，非必需情况不要创建新脚本
+- **图片处理**：使用 MCP/Agent 截图或图片识别能力时，提交前需确保图片尺寸小于 1000x1000 像素
+- **文档管理**：项目计划文件统一存放在 `docs\plans` 目录中
+
 ## Build and Development Commands
 
 ### Building the Project
