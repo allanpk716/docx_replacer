@@ -56,10 +56,21 @@
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            
+
+                            <!-- 输入方式选择按钮 -->
+                            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10" HorizontalAlignment="Left">
+                                <Button Content="浏览单文件" Command="{Binding BrowseTemplateCommand}"
+                                        Width="100" Height="30" Margin="0,0,10,0"
+                                        Style="{StaticResource PrimaryButton}"/>
+                                <Button Content="浏览文件夹" Command="{Binding BrowseTemplateFolderCommand}"
+                                        Width="100" Height="30"
+                                        Style="{StaticResource PrimaryButton}"/>
+                            </StackPanel>
+
                             <!-- 单文件模式 -->
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
+                            <Grid Grid.Row="1" Margin="0,0,0,10">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
@@ -83,7 +94,7 @@
                             </Grid>
                             
                             <!-- 文件拖拽区域 -->
-                            <Border Grid.Row="1" x:Name="TemplateDropBorder"
+                            <Border Grid.Row="2" x:Name="TemplateDropBorder"
                                     BorderBrush="#BDC3C7" BorderThickness="2"
                                     CornerRadius="4" Height="80"
                                     AllowDrop="True"
