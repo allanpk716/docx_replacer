@@ -529,7 +529,71 @@ namespace DocuFiller.ViewModels
         #endregion
         
         #region 文件夹拖拽处理方法
-        
+
+        /// <summary>
+        /// 处理单个文件拖拽
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        public async Task HandleSingleFileDropAsync(string filePath)
+        {
+            try
+            {
+                _logger.LogInformation("开始处理单个文件拖拽: {FilePath}", filePath);
+                ProgressMessage = "加载模板文件...";
+
+                if (!IsDocxFile(filePath))
+                {
+                    MessageBox.Show(
+                        "请选择 .docx 或 .dotx 格式的文件！",
+                        "文件格式错误",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                var fileInfo = new System.IO.FileInfo(filePath);
+                var docFileInfo = new Models.FileInfo
+                {
+                    Name = fileInfo.Name,
+                    FullPath = fileInfo.FullName,
+                    Size = fileInfo.Length,
+                    CreationTime = fileInfo.CreationTime,
+                    LastModified = fileInfo.LastWriteTime,
+                    Extension = fileInfo.Extension,
+                    IsReadOnly = fileInfo.IsReadOnly,
+                    DirectoryPath = fileInfo.DirectoryName ?? string.Empty,
+                    RelativePath = fileInfo.Name,
+                    RelativeDirectoryPath = string.Empty
+                };
+
+                SingleFileInfo = docFileInfo;
+                TemplatePath = filePath;
+                TemplateFolderPath = null;
+                FolderStructure = null;
+
+                TemplateFiles.Clear();
+                TemplateFiles.Add(docFileInfo);
+
+                InputSourceType = InputSourceType.SingleFile;
+                IsFolderMode = false;
+
+                ProgressMessage = $"已加载模板: {fileInfo.Name}";
+                FoundDocxFilesCount = "1";
+
+                _logger.LogInformation("单文件加载完成: {FilePath}", filePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理单文件拖拽时发生错误");
+                ProgressMessage = "文件加载失败";
+                MessageBox.Show(
+                    $"加载文件时发生错误：{ex.Message}",
+                    "错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
         /// <summary>
         /// 处理文件夹拖拽
         /// </summary>
@@ -786,6 +850,20 @@ namespace DocuFiller.ViewModels
                     });
                 }
             }
+        }
+
+        /// <summary>
+        /// 检查是否为 docx 文件
+        /// </summary>
+        /// <param name="filePath">文件路径</param>
+        /// <returns>是否为 docx 文件</returns>
+        private bool IsDocxFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension == ".docx" || extension == ".dotx";
         }
 
         #endregion
