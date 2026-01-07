@@ -247,66 +247,75 @@ namespace DocuFiller
         #endregion
         
         #region 文件夹拖拽事件处理
-        
+
         /// <summary>
-        /// 文件夹拖拽进入事件
+        /// 拖拽进入事件
         /// </summary>
-        private void TemplateFolderDropBorder_DragEnter(object sender, DragEventArgs e)
+        private void TemplateDropBorder_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length > 0 && Directory.Exists(files[0]))
+                if (files != null && files.Length > 0)
                 {
-                    e.Effects = DragDropEffects.Copy;
-                    // 添加视觉反馈
-                    if (sender is System.Windows.Controls.Border border)
+                    var path = files[0];
+                    bool isValid = false;
+                    string hintText = string.Empty;
+
+                    if (File.Exists(path) && IsDocxFile(path))
                     {
-                        border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3)); // 蓝色
-                        border.BorderThickness = new Thickness(3);
-                        border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3)); // 半透明蓝色
+                        isValid = true;
+                        hintText = $"可处理文件: {Path.GetFileName(path)}";
+                    }
+                    else if (Directory.Exists(path))
+                    {
+                        isValid = true;
+                        hintText = $"可处理文件夹: {Path.GetFileName(path)} (包含子文件夹)";
+                    }
+
+                    if (isValid)
+                    {
+                        e.Effects = DragDropEffects.Copy;
+                        UpdateBorderStyle(sender as System.Windows.Controls.Border, true);
+                        UpdateHintText(hintText);
+                    }
+                    else
+                    {
+                        e.Effects = DragDropEffects.None;
                     }
                 }
-                else
-                {
-                    e.Effects = DragDropEffects.None;
-                }
             }
-            else
-            {
-                e.Effects = DragDropEffects.None;
-            }
+            e.Handled = true;
         }
-        
+
         /// <summary>
-        /// 文件夹拖拽离开事件
+        /// 拖拽离开事件
         /// </summary>
-        private void TemplateFolderDropBorder_DragLeave(object sender, DragEventArgs e)
+        private void TemplateDropBorder_DragLeave(object sender, DragEventArgs e)
         {
-            // 恢复原始样式
-            if (sender is System.Windows.Controls.Border border)
-            {
-                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7)); // 原始灰色
-                border.BorderThickness = new Thickness(2);
-                border.Background = Brushes.Transparent;
-            }
+            RestoreBorderStyle(sender as System.Windows.Controls.Border);
+            UpdateHintText("拖拽单个 docx 文件或包含 docx 文件的文件夹到此处");
         }
-        
+
         /// <summary>
-        /// 文件夹拖拽悬停事件
+        /// 拖拽悬停事件
         /// </summary>
-        private void TemplateFolderDropBorder_DragOver(object sender, DragEventArgs e)
+        private void TemplateDropBorder_DragOver(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files != null && files.Length > 0 && Directory.Exists(files[0]))
+                if (files != null && files.Length > 0)
                 {
-                    e.Effects = DragDropEffects.Copy;
-                }
-                else
-                {
-                    e.Effects = DragDropEffects.None;
+                    var path = files[0];
+                    if ((File.Exists(path) && IsDocxFile(path)) || Directory.Exists(path))
+                    {
+                        e.Effects = DragDropEffects.Copy;
+                    }
+                    else
+                    {
+                        e.Effects = DragDropEffects.None;
+                    }
                 }
             }
             else
@@ -315,11 +324,11 @@ namespace DocuFiller
             }
             e.Handled = true;
         }
-        
+
         /// <summary>
-        /// 文件夹拖拽放置事件
+        /// 模板文件/文件夹拖拽放置事件（统一处理）
         /// </summary>
-        private async void TemplateFolderDropBorder_Drop(object sender, DragEventArgs e)
+        private async void TemplateDropBorder_Drop(object sender, DragEventArgs e)
         {
             try
             {
@@ -328,37 +337,45 @@ namespace DocuFiller
                     var files = (string[])e.Data.GetData(DataFormats.FileDrop);
                     if (files != null && files.Length > 0)
                     {
-                        var folderPath = files[0];
-                        if (Directory.Exists(folderPath))
+                        var path = files[0];
+
+                        if (DataContext is MainWindowViewModel viewModel)
                         {
-                            // 设置文件夹路径并扫描docx文件
-                            if (DataContext is MainWindowViewModel viewModel)
+                            // 判断是文件还是文件夹
+                            if (File.Exists(path) && IsDocxFile(path))
                             {
-                                await viewModel.HandleFolderDropAsync(folderPath);
+                                // 单个文件处理
+                                await viewModel.HandleSingleFileDropAsync(path);
                             }
-                        }
-                        else
-                        {
-                            MessageBox.Show("请拖拽文件夹！", "文件类型错误", 
-                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                            else if (Directory.Exists(path))
+                            {
+                                // 文件夹处理（包含子文件夹）
+                                await viewModel.HandleFolderDropAsync(path);
+                            }
+                            else
+                            {
+                                MessageBox.Show(
+                                    "请拖拽 .docx/.dotx 文件或包含 .docx 文件的文件夹！",
+                                    "文件类型错误",
+                                    MessageBoxButton.OK,
+                                    MessageBoxImage.Warning);
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"处理拖拽文件夹时发生错误：{ex.Message}", "错误", 
-                    MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(
+                    $"处理拖拽时发生错误：{ex.Message}",
+                    "错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
             }
             finally
             {
-                // 恢复原始样式
-                if (sender is System.Windows.Controls.Border border)
-                {
-                    border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
-                    border.BorderThickness = new Thickness(2);
-                    border.Background = Brushes.Transparent;
-                }
+                RestoreBorderStyle(sender as System.Windows.Controls.Border);
+                UpdateHintText("拖拽单个 docx 文件或包含 docx 文件的文件夹到此处");
             }
         }
         

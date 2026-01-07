@@ -82,20 +82,20 @@
                                         Width="60"/>
                             </Grid>
                             
-                            <!-- 文件夹拖拽区域 -->
-                            <Border Grid.Row="1" x:Name="TemplateFolderDropBorder" 
-                                    BorderBrush="#BDC3C7" BorderThickness="2" 
+                            <!-- 文件拖拽区域 -->
+                            <Border Grid.Row="1" x:Name="TemplateDropBorder"
+                                    BorderBrush="#BDC3C7" BorderThickness="2"
                                     CornerRadius="4" Height="80"
                                     AllowDrop="True"
-                                    Drop="TemplateFolderDropBorder_Drop"
-                                    DragEnter="TemplateFolderDropBorder_DragEnter"
-                                    DragLeave="TemplateFolderDropBorder_DragLeave"
-                                    DragOver="TemplateFolderDropBorder_DragOver">
+                                    Drop="TemplateDropBorder_Drop"
+                                    DragEnter="TemplateDropBorder_DragEnter"
+                                    DragLeave="TemplateDropBorder_DragLeave"
+                                    DragOver="TemplateDropBorder_DragOver">
                                 <Grid>
                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock x:Name="TemplateFolderDropHint" 
-                                                   Text="拖拽包含docx文件的文件夹到此处进行批量处理" 
-                                                   Foreground="#95A5A6" 
+                                        <TextBlock x:Name="TemplateDropHint"
+                                                   Text="拖拽单个 docx 文件或包含 docx 文件的文件夹到此处"
+                                                   Foreground="#95A5A6"
                                                    FontStyle="Italic"
                                                    HorizontalAlignment="Center"
                                                    TextWrapping="Wrap"
