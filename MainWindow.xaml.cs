@@ -363,5 +363,60 @@ namespace DocuFiller
         }
         
         #endregion
+
+        #region 辅助方法
+
+        /// <summary>
+        /// 检查是否为 docx 文件
+        /// </summary>
+        private bool IsDocxFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension == ".docx" || extension == ".dotx";
+        }
+
+        /// <summary>
+        /// 恢复边框样式
+        /// </summary>
+        private void RestoreBorderStyle(System.Windows.Controls.Border? border)
+        {
+            if (border != null)
+            {
+                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
+                border.BorderThickness = new Thickness(2);
+                border.Background = Brushes.Transparent;
+            }
+        }
+
+        /// <summary>
+        /// 更新边框样式
+        /// </summary>
+        private void UpdateBorderStyle(System.Windows.Controls.Border? border, bool isActive)
+        {
+            if (border != null && isActive)
+            {
+                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3));
+                border.BorderThickness = new Thickness(3);
+                border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3));
+            }
+        }
+
+        /// <summary>
+        /// 更新提示文本
+        /// </summary>
+        private void UpdateHintText(string text)
+        {
+            // 使用 FindName 查找元素，避免直接引用未定义的名称
+            var hintElement = FindName("TemplateDropHint") as System.Windows.Controls.TextBlock;
+            if (hintElement != null)
+            {
+                hintElement.Text = text;
+            }
+        }
+
+        #endregion
     }
 }
