@@ -108,6 +108,7 @@ namespace DocuFiller
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
             services.AddSingleton<CommentManager>();
+            services.AddSingleton<ITemplateCacheService, TemplateCacheService>();
 
             // 注册ViewModels
             services.AddTransient<MainWindowViewModel>();
