@@ -119,9 +119,25 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 获取或创建批注部分
+        /// 根据位置获取或创建批注部分
         /// </summary>
-        private WordprocessingCommentsPart GetOrCreateCommentsPart(MainDocumentPart mainDocumentPart)
+        private WordprocessingCommentsPart GetCommentsPartForLocation(
+            WordprocessingDocument document,
+            ContentControlLocation location)
+        {
+            return location switch
+            {
+                ContentControlLocation.Body => GetOrCreateMainCommentsPart(document.MainDocumentPart),
+                ContentControlLocation.Header => GetOrCreateMainCommentsPart(document.MainDocumentPart),
+                ContentControlLocation.Footer => GetOrCreateMainCommentsPart(document.MainDocumentPart),
+                _ => throw new ArgumentException($"不支持的位置: {location}")
+            };
+        }
+
+        /// <summary>
+        /// 获取或创建主文档的批注部分
+        /// </summary>
+        private WordprocessingCommentsPart GetOrCreateMainCommentsPart(MainDocumentPart mainDocumentPart)
         {
             WordprocessingCommentsPart? commentsPart = mainDocumentPart.WordprocessingCommentsPart;
 
