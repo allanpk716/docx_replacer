@@ -48,9 +48,9 @@ DocuFiller 现在支持替换 Word 文档中页眉和页脚里的内容控件。
 - "此字段（正文）于 [时间] 更新..."
 
 **批注存储**：
-- 页眉批注存储在对应的 `HeaderPart.WordprocessingCommentsPart`
-- 页脚批注存储在对应的 `FooterPart.WordprocessingCommentsPart`
-- 正文批注存储在 `MainDocumentPart.WordprocessingCommentsPart`
+- 所有批注（包括页眉、页脚、正文）都统一存储在 `MainDocumentPart.WordprocessingCommentsPart`
+- 这是由于 OpenXML SDK 的限制，不允许在 HeaderPart 或 FooterPart 上添加 WordprocessingCommentsPart
+- 批注引用（CommentRangeStart、CommentRangeEnd、CommentReference）添加到对应位置的 Run 元素上
 
 **批注 ID 管理**：
 - 所有批注（包括页眉页脚）共享全局唯一 ID 序列
