@@ -69,7 +69,13 @@ namespace DocuFiller.Services
         /// <summary>
         /// 为多个连续的Run元素添加批注范围
         /// </summary>
-        public void AddCommentToRunRange(WordprocessingDocument document, System.Collections.Generic.List<Run> targetRuns, string commentText, string author, string tag)
+        public void AddCommentToRunRange(
+            WordprocessingDocument document,
+            System.Collections.Generic.List<Run> targetRuns,
+            string commentText,
+            string author,
+            string tag,
+            ContentControlLocation location = ContentControlLocation.Body)
         {
             try
             {
@@ -89,7 +95,7 @@ namespace DocuFiller.Services
                 }
 
                 // 获取或创建批注部分
-                WordprocessingCommentsPart? commentsPart = GetOrCreateCommentsPart(document.MainDocumentPart);
+                WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location);
 
                 // 生成唯一ID
                 string commentId = GenerateCommentId(commentsPart);
