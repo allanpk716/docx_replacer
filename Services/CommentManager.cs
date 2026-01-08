@@ -46,7 +46,7 @@ namespace DocuFiller.Services
                 WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location);
 
                 // 生成唯一ID
-                string commentId = GenerateCommentId(commentsPart);
+                string commentId = GenerateCommentId(document);
 
                 // 创建批注内容
                 Comment comment = CreateComment(commentId, commentText, author);
@@ -98,7 +98,7 @@ namespace DocuFiller.Services
                 WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location);
 
                 // 生成唯一ID
-                string commentId = GenerateCommentId(commentsPart);
+                string commentId = GenerateCommentId(document);
 
                 // 创建批注内容
                 Comment comment = CreateComment(commentId, commentText, author);
@@ -152,23 +152,61 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 生成批注ID
+        /// 生成全局唯一的批注ID
         /// </summary>
-        private string GenerateCommentId(WordprocessingCommentsPart commentsPart)
+        private string GenerateCommentId(WordprocessingDocument document)
         {
-            string id = "1";
+            int maxId = 0;
 
-            if (commentsPart.Comments != null && commentsPart.Comments.HasChildren)
+            // 检查主文档的批注
+            if (document.MainDocumentPart?.WordprocessingCommentsPart?.Comments != null)
             {
-                // 找到当前最大的ID并加1
-                int maxId = commentsPart.Comments.Descendants<Comment>()
+                maxId = Math.Max(maxId, document.MainDocumentPart.WordprocessingCommentsPart.Comments.Descendants<Comment>()
                     .Select(c => int.TryParse(c.Id?.Value, out int commentId) ? commentId : 0)
                     .DefaultIfEmpty(0)
-                    .Max();
-                id = (maxId + 1).ToString();
+                    .Max());
             }
 
-            _logger.LogDebug($"生成批注ID: {id}");
+            // 检查所有页眉的批注
+            if (document.MainDocumentPart?.HeaderParts != null)
+            {
+                foreach (var headerPart in document.MainDocumentPart.HeaderParts)
+                {
+                    var headerCommentsParts = headerPart.GetPartsOfType<WordprocessingCommentsPart>();
+                    foreach (var commentsPart in headerCommentsParts)
+                    {
+                        if (commentsPart.Comments != null)
+                        {
+                            maxId = Math.Max(maxId, commentsPart.Comments.Descendants<Comment>()
+                                .Select(c => int.TryParse(c.Id?.Value, out int commentId) ? commentId : 0)
+                                .DefaultIfEmpty(0)
+                                .Max());
+                        }
+                    }
+                }
+            }
+
+            // 检查所有页脚的批注
+            if (document.MainDocumentPart?.FooterParts != null)
+            {
+                foreach (var footerPart in document.MainDocumentPart.FooterParts)
+                {
+                    var footerCommentsParts = footerPart.GetPartsOfType<WordprocessingCommentsPart>();
+                    foreach (var commentsPart in footerCommentsParts)
+                    {
+                        if (commentsPart.Comments != null)
+                        {
+                            maxId = Math.Max(maxId, commentsPart.Comments.Descendants<Comment>()
+                                .Select(c => int.TryParse(c.Id?.Value, out int commentId) ? commentId : 0)
+                                .DefaultIfEmpty(0)
+                                .Max());
+                        }
+                    }
+                }
+            }
+
+            string id = (maxId + 1).ToString();
+            _logger.LogDebug($"生成全局批注ID: {id}");
             return id;
         }
 
