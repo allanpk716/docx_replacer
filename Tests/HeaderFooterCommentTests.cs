@@ -259,6 +259,61 @@ namespace DocuFiller.Tests
             Assert.Equal("2", comments[1].Id?.Value);
         }
 
+        [Fact]
+        public void CommentsInDifferentParts_ShouldHaveUniqueIds()
+        {
+            // Arrange
+            string templatePath = Path.Combine(_testOutputDir, "template.docx");
+            CreateTestDocumentWithHeaderAndFooterAndBody(templatePath);
+
+            using var document = WordprocessingDocument.Open(templatePath, true);
+            var headerPart = document.MainDocumentPart!.HeaderParts.First();
+            var footerPart = document.MainDocumentPart.FooterParts.First();
+            var body = document.MainDocumentPart.Document.Body!;
+
+            var headerSdt = headerPart.Header!.Descendants<SdtBlock>().First();
+            var footerSdt = footerPart.Footer!.Descendants<SdtBlock>().First();
+            var bodySdt = body.Descendants<SdtBlock>().First();
+
+            var headerRun = headerSdt.Descendants<Run>().First();
+            var footerRun = footerSdt.Descendants<Run>().First();
+            var bodyRun = bodySdt.Descendants<Run>().First();
+
+            // Act
+            _commentManager.AddCommentToElement(document, headerRun, "页眉批注", "作者", "Tag1", ContentControlLocation.Header, headerSdt);
+            _commentManager.AddCommentToElement(document, footerRun, "页脚批注", "作者", "Tag2", ContentControlLocation.Footer, footerSdt);
+            _commentManager.AddCommentToElement(document, bodyRun, "正文批注", "作者", "Tag3", ContentControlLocation.Body, bodySdt);
+
+            // Assert - 验证所有批注 ID 全局唯一
+            var allCommentIds = new System.Collections.Generic.List<string>();
+
+            if (document.MainDocumentPart.WordprocessingCommentsPart?.Comments != null)
+            {
+                allCommentIds.AddRange(document.MainDocumentPart.WordprocessingCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!));
+            }
+
+            foreach (var header in document.MainDocumentPart.HeaderParts)
+            {
+                var headerCommentsPart = header.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+                if (headerCommentsPart?.Comments != null)
+                {
+                    allCommentIds.AddRange(headerCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!));
+                }
+            }
+
+            foreach (var footer in document.MainDocumentPart.FooterParts)
+            {
+                var footerCommentsPart = footer.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+                if (footerCommentsPart?.Comments != null)
+                {
+                    allCommentIds.AddRange(footerCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!));
+                }
+            }
+
+            Assert.Equal(3, allCommentIds.Count);
+            Assert.Equal(3, allCommentIds.Distinct().Count());
+        }
+
         private void CreateTestDocumentWithHeader(string path)
         {
             using var document = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
@@ -397,6 +452,32 @@ namespace DocuFiller.Tests
             existingComment.Append(new Paragraph(new Run(new Text("现有批注"))));
             commentsPart.Comments.Append(existingComment);
             commentsPart.Comments.Save();
+        }
+
+        private void CreateTestDocumentWithHeaderAndFooterAndBody(string path)
+        {
+            using var document = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+            var mainPart = document.AddMainDocumentPart();
+            mainPart.Document = new Document(new Body(
+                new SdtBlock(
+                    new SdtProperties(new Tag() { Val = "BodyField" }),
+                    new SdtContentBlock(new Paragraph(new Run(new Text("正文内容"))))
+                )
+            ));
+
+            // 添加页眉
+            var headerPart = mainPart.AddNewPart<HeaderPart>();
+            headerPart.Header = new Header(new SdtBlock(
+                new SdtProperties(new Tag() { Val = "HeaderField" }),
+                new SdtContentBlock(new Paragraph(new Run(new Text("页眉内容"))))
+            ));
+
+            // 添加页脚
+            var footerPart = mainPart.AddNewPart<FooterPart>();
+            footerPart.Footer = new Footer(new SdtBlock(
+                new SdtProperties(new Tag() { Val = "FooterField" }),
+                new SdtContentBlock(new Paragraph(new Run(new Text("页脚内容"))))
+            ));
         }
     }
 }
