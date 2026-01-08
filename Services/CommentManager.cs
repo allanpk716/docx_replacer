@@ -119,19 +119,110 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
+        /// 查找包含指定控件的页眉部分
+        /// </summary>
+        private HeaderPart? FindContainingHeaderPart(WordprocessingDocument document, SdtElement control)
+        {
+            if (document.MainDocumentPart?.HeaderParts == null)
+                return null;
+
+            foreach (var headerPart in document.MainDocumentPart.HeaderParts)
+            {
+                if (headerPart.Header != null && headerPart.Header.Descendants<SdtElement>().Contains(control))
+                    return headerPart;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 查找包含指定控件的页脚部分
+        /// </summary>
+        private FooterPart? FindContainingFooterPart(WordprocessingDocument document, SdtElement control)
+        {
+            if (document.MainDocumentPart?.FooterParts == null)
+                return null;
+
+            foreach (var footerPart in document.MainDocumentPart.FooterParts)
+            {
+                if (footerPart.Footer != null && footerPart.Footer.Descendants<SdtElement>().Contains(control))
+                    return footerPart;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// 获取或创建页眉/页脚的批注部分
+        /// </summary>
+        private WordprocessingCommentsPart GetOrCreateHeaderFooterCommentsPart(OpenXmlPart part)
+        {
+            WordprocessingCommentsPart? commentsPart = null;
+
+            if (part is HeaderPart headerPart)
+            {
+                var commentsParts = headerPart.GetPartsOfType<WordprocessingCommentsPart>().ToList();
+                commentsPart = commentsParts.FirstOrDefault();
+
+                if (commentsPart == null)
+                {
+                    _logger.LogDebug("创建页眉的批注部分");
+                    commentsPart = headerPart.AddNewPart<WordprocessingCommentsPart>();
+                    commentsPart.Comments = new Comments();
+                }
+            }
+            else if (part is FooterPart footerPart)
+            {
+                var commentsParts = footerPart.GetPartsOfType<WordprocessingCommentsPart>().ToList();
+                commentsPart = commentsParts.FirstOrDefault();
+
+                if (commentsPart == null)
+                {
+                    _logger.LogDebug("创建页脚的批注部分");
+                    commentsPart = footerPart.AddNewPart<WordprocessingCommentsPart>();
+                    commentsPart.Comments = new Comments();
+                }
+            }
+
+            return commentsPart ?? throw new InvalidOperationException("无法创建批注部分");
+        }
+
+        /// <summary>
         /// 根据位置获取或创建批注部分
         /// </summary>
         private WordprocessingCommentsPart GetCommentsPartForLocation(
             WordprocessingDocument document,
-            ContentControlLocation location)
+            ContentControlLocation location,
+            SdtElement? control = null)
         {
-            return location switch
+            if (location == ContentControlLocation.Body)
             {
-                ContentControlLocation.Body => GetOrCreateMainCommentsPart(document.MainDocumentPart),
-                ContentControlLocation.Header => GetOrCreateMainCommentsPart(document.MainDocumentPart),
-                ContentControlLocation.Footer => GetOrCreateMainCommentsPart(document.MainDocumentPart),
-                _ => throw new ArgumentException($"不支持的位置: {location}")
-            };
+                return GetOrCreateMainCommentsPart(document.MainDocumentPart!);
+            }
+            else if (location == ContentControlLocation.Header && control != null)
+            {
+                var headerPart = FindContainingHeaderPart(document, control);
+                if (headerPart == null)
+                {
+                    _logger.LogWarning("未找到包含控件的页眉部分，使用主文档批注部分");
+                    return GetOrCreateMainCommentsPart(document.MainDocumentPart!);
+                }
+                return GetOrCreateHeaderFooterCommentsPart(headerPart);
+            }
+            else if (location == ContentControlLocation.Footer && control != null)
+            {
+                var footerPart = FindContainingFooterPart(document, control);
+                if (footerPart == null)
+                {
+                    _logger.LogWarning("未找到包含控件的页脚部分，使用主文档批注部分");
+                    return GetOrCreateMainCommentsPart(document.MainDocumentPart!);
+                }
+                return GetOrCreateHeaderFooterCommentsPart(footerPart);
+            }
+            else
+            {
+                throw new ArgumentException($"不支持的位置: {location}");
+            }
         }
 
         /// <summary>
