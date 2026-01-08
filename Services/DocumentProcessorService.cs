@@ -226,13 +226,8 @@ namespace DocuFiller.Services
                     return false;
                 }
 
-                // 处理内容控件
-                List<SdtElement> contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>().ToList();
-                foreach (SdtElement? control in contentControls)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    _contentControlProcessor.ProcessContentControl(control, data, document);
-                }
+                // 处理文档中的所有内容控件（包括页眉页脚）
+                _contentControlProcessor.ProcessContentControlsInDocument(document, data, cancellationToken);
 
                 // 保存文档
                 document.MainDocumentPart.Document.Save();
