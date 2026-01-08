@@ -54,8 +54,15 @@ namespace DocuFiller.Services
                 // 处理内容替换
                 ProcessContentReplacement(control, value);
 
-                // 添加批注
-                AddProcessingComment(document, control, tag, value, oldValue, location);
+                // 添加批注(仅正文区域支持,页眉页脚不支持批注)
+                if (location == ContentControlLocation.Body)
+                {
+                    AddProcessingComment(document, control, tag, value, oldValue, location);
+                }
+                else
+                {
+                    _logger.LogDebug($"跳过批注添加(页眉页脚不支持批注功能),标签: '{tag}', 位置: {location}");
+                }
 
                 _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' ({location}) 为 '{value}'");
             }
@@ -311,12 +318,12 @@ namespace DocuFiller.Services
             if (targetRuns.Count == 1)
             {
                 // 单行文本：使用原有方法
-                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag, location, control);
+                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag);
             }
             else
             {
                 // 多行文本：使用新的范围批注方法
-                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag, location, control);
+                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag);
             }
         }
 

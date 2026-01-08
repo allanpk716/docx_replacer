@@ -13,6 +13,10 @@ using WordprocessingDocumentType = DocumentFormat.OpenXml.WordprocessingDocument
 
 namespace DocuFiller.Tests.Integration
 {
+    /// <summary>
+    /// 批注功能集成测试(仅正文区域)
+    /// 注意: 页眉页脚不支持批注功能,这是 OpenXML 的限制
+    /// </summary>
     public class HeaderFooterCommentIntegrationTests : IDisposable
     {
         private readonly string _testDir;
@@ -36,7 +40,7 @@ namespace DocuFiller.Tests.Integration
         }
 
         [Fact]
-        public async Task ProcessDocumentWithHeaderFooter_ShouldAddCommentsToAllParts()
+        public async Task ProcessDocumentWithHeaderFooter_ShouldAddCommentsOnlyToBody()
         {
             // Arrange
             string templatePath = Path.Combine(_testDir, "template.docx");
@@ -70,9 +74,17 @@ namespace DocuFiller.Tests.Integration
 
             using var document = WordprocessingDocument.Open(outputPath, false);
 
-            // 验证批注在主文档中
+            // 验证批注在主文档中(只有正文的批注,页眉页脚的批注被跳过)
             Assert.NotNull(document.MainDocumentPart.WordprocessingCommentsPart);
             Assert.True(document.MainDocumentPart.WordprocessingCommentsPart.Comments.Any());
+
+            // 验证只有正文的批注(应该只有1个批注)
+            var comments = document.MainDocumentPart.WordprocessingCommentsPart.Comments.OfType<Comment>().ToList();
+            Assert.Single(comments);
+
+            // 验证批注内容是正文的批注
+            var commentText = comments.First().GetFirstChild<Paragraph>()?.InnerText;
+            Assert.Contains("正文", commentText);
 
             // 验证所有批注 ID 唯一
             var allIds = document.MainDocumentPart.WordprocessingCommentsPart.Comments.OfType<Comment>().Select(c => c.Id!.Value!);
