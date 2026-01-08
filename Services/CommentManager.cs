@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using DocuFiller.Models;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -22,7 +23,13 @@ namespace DocuFiller.Services
         /// <summary>
         /// 为Run元素添加批注
         /// </summary>
-        public void AddCommentToElement(WordprocessingDocument document, Run targetRun, string commentText, string author, string tag)
+        public void AddCommentToElement(
+            WordprocessingDocument document,
+            Run targetRun,
+            string commentText,
+            string author,
+            string tag,
+            ContentControlLocation location = ContentControlLocation.Body)
         {
             try
             {
@@ -36,7 +43,7 @@ namespace DocuFiller.Services
                 }
 
                 // 获取或创建批注部分
-                WordprocessingCommentsPart? commentsPart = GetOrCreateCommentsPart(document.MainDocumentPart);
+                WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location);
 
                 // 生成唯一ID
                 string commentId = GenerateCommentId(commentsPart);
