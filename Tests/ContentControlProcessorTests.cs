@@ -254,6 +254,135 @@ namespace DocuFiller.Tests
             CleanupTestFile(testFilePath);
         }
 
+        [Fact]
+        public void AddProcessingComment_MultilineText_CoversAllLines()
+        {
+            // Arrange
+            var data = new Dictionary<string, object> { { "TestField", "Line1\nLine2\nLine3" } };
+            var testFilePath = Path.Combine(_testOutputPath, "test_multiline_comment.docx");
+
+            using (var document = WordprocessingDocument.Create(
+                testFilePath, WordprocessingDocumentType.Document))
+            {
+                var mainPart = document.AddMainDocumentPart();
+                mainPart.Document = new Document(new Body());
+
+                var sdtBlock = new SdtBlock();
+                var sdtProperties = new SdtProperties(new Tag { Val = "TestField" });
+                var sdtContent = new SdtContentBlock(new Paragraph(new Run(new Text("OldValue"))));
+                sdtBlock.Append(sdtProperties, sdtContent);
+                mainPart.Document.Body.Append(sdtBlock);
+                mainPart.Document.Save();
+
+                // Act
+                _processor.ProcessContentControl(
+                    sdtBlock, data, document, ContentControlLocation.Body);
+            }
+
+            // Assert - 验证批注覆盖所有行
+            using (var document = WordprocessingDocument.Open(testFilePath, false))
+            {
+                // 检查批注范围标记
+                var commentRangeStarts = document.MainDocumentPart?.Document.Body?.Descendants<CommentRangeStart>().ToList();
+                var commentRangeEnds = document.MainDocumentPart?.Document.Body?.Descendants<CommentRangeEnd>().ToList();
+                var commentReferences = document.MainDocumentPart?.Document.Body?.Descendants<CommentReference>().ToList();
+
+                Assert.NotNull(commentRangeStarts);
+                Assert.Single(commentRangeStarts);
+
+                Assert.NotNull(commentRangeEnds);
+                Assert.Single(commentRangeEnds);
+
+                Assert.NotNull(commentReferences);
+                Assert.Single(commentReferences);
+
+                // 验证批注ID匹配
+                Assert.Equal(commentRangeStarts[0].Id?.Value, commentRangeEnds[0].Id?.Value);
+                Assert.Equal(commentRangeStarts[0].Id?.Value, commentReferences[0].Id?.Value);
+            }
+
+            CleanupTestFile(testFilePath);
+        }
+
+        [Fact]
+        public void AddProcessingComment_SingleLineText_UsesOriginalMethod()
+        {
+            // Arrange
+            var data = new Dictionary<string, object> { { "TestField", "SingleLine" } };
+            var testFilePath = Path.Combine(_testOutputPath, "test_singleline_comment.docx");
+
+            using (var document = WordprocessingDocument.Create(
+                testFilePath, WordprocessingDocumentType.Document))
+            {
+                var mainPart = document.AddMainDocumentPart();
+                mainPart.Document = new Document(new Body());
+
+                var sdtBlock = new SdtBlock();
+                var sdtProperties = new SdtProperties(new Tag { Val = "TestField" });
+                var sdtContent = new SdtContentBlock(new Paragraph(new Run(new Text("OldValue"))));
+                sdtBlock.Append(sdtProperties, sdtContent);
+                mainPart.Document.Body.Append(sdtBlock);
+                mainPart.Document.Save();
+
+                // Act
+                _processor.ProcessContentControl(
+                    sdtBlock, data, document, ContentControlLocation.Body);
+            }
+
+            // Assert - 验证单行文本批注仍然正常工作
+            using (var document = WordprocessingDocument.Open(testFilePath, false))
+            {
+                var comments = document.MainDocumentPart?.WordprocessingCommentsPart?.Comments?.Descendants<Comment>().ToList();
+
+                Assert.NotNull(comments);
+                Assert.Single(comments);
+
+                // 验证批注范围标记也存在（单行也使用范围标记）
+                var commentRangeStarts = document.MainDocumentPart?.Document.Body?.Descendants<CommentRangeStart>().ToList();
+                var commentRangeEnds = document.MainDocumentPart?.Document.Body?.Descendants<CommentRangeEnd>().ToList();
+
+                Assert.NotNull(commentRangeStarts);
+                Assert.Single(commentRangeStarts);
+
+                Assert.NotNull(commentRangeEnds);
+                Assert.Single(commentRangeEnds);
+            }
+
+            CleanupTestFile(testFilePath);
+        }
+
+        [Fact]
+        public void FindAllTargetRuns_WithMultipleRuns_ReturnsAllRuns()
+        {
+            // Arrange
+            var testFilePath = Path.Combine(_testOutputPath, "test_find_all_runs.docx");
+
+            using (var document = WordprocessingDocument.Create(
+                testFilePath, WordprocessingDocumentType.Document))
+            {
+                var mainPart = document.AddMainDocumentPart();
+                mainPart.Document = new Document(new Body());
+
+                var paragraph = new Paragraph();
+                var run1 = new Run(new Text("Line1"));
+                var run2 = new Run(new Break());
+                var run3 = new Run(new Text("Line2"));
+
+                paragraph.Append(run1, run2, run3);
+
+                var sdtContent = new SdtContentBlock(paragraph);
+                var sdtBlock = new SdtBlock(sdtContent);
+
+                // Act
+                var runs = sdtBlock.Descendants<Run>().ToList();
+
+                // Assert
+                Assert.Equal(3, runs.Count);
+            }
+
+            CleanupTestFile(testFilePath);
+        }
+
         private void CleanupTestFile(string filePath)
         {
             try

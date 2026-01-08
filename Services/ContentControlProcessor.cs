@@ -289,18 +289,34 @@ namespace DocuFiller.Services
         /// </summary>
         private void AddProcessingComment(WordprocessingDocument document, SdtElement control, string tag, string newValue, string oldValue, ContentControlLocation location)
         {
-            Run? targetRun = FindTargetRun(control);
-            if (targetRun != null)
+            // 查找所有相关的Run元素
+            List<Run> targetRuns = FindAllTargetRuns(control);
+
+            if (targetRuns.Count == 0)
             {
-                string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
-                string locationText = location switch
-                {
-                    ContentControlLocation.Header => "页眉",
-                    ContentControlLocation.Footer => "页脚",
-                    _ => "正文"
-                };
-                string commentText = $"此字段（{locationText}）已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
-                _commentManager.AddCommentToElement(document, targetRun, commentText, "DocuFiller系统", tag);
+                _logger.LogWarning($"未找到目标Run元素，跳过批注添加，标签: '{tag}'");
+                return;
+            }
+
+            string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
+            string locationText = location switch
+            {
+                ContentControlLocation.Header => "页眉",
+                ContentControlLocation.Footer => "页脚",
+                _ => "正文"
+            };
+            string commentText = $"此字段（{locationText}）已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
+
+            // 根据Run数量选择批注方式
+            if (targetRuns.Count == 1)
+            {
+                // 单行文本：使用原有方法
+                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag);
+            }
+            else
+            {
+                // 多行文本：使用新的范围批注方法
+                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag);
             }
         }
 
@@ -325,6 +341,38 @@ namespace DocuFiller.Services
 
             // 直接从控件中查找Run
             return control.Descendants<Run>().FirstOrDefault();
+        }
+
+        /// <summary>
+        /// 查找内容控件中所有相关的Run元素
+        /// </summary>
+        private List<Run> FindAllTargetRuns(SdtElement control)
+        {
+            List<Run> runs = new List<Run>();
+
+            // 尝试从内容容器中查找Run
+            OpenXmlElement? content = FindContentContainer(control);
+            if (content != null)
+            {
+                if (content is SdtContentBlock || content is SdtContentCell)
+                {
+                    // 块级控件：获取段落中的所有Run
+                    runs = content.Descendants<Run>().ToList();
+                }
+                else if (content is SdtContentRun)
+                {
+                    // 行内控件：获取所有Run
+                    runs = content.Descendants<Run>().ToList();
+                }
+            }
+            else
+            {
+                // 直接从控件中查找Run
+                runs = control.Descendants<Run>().ToList();
+            }
+
+            _logger.LogDebug($"在内容控件中找到 {runs.Count} 个Run元素");
+            return runs;
         }
 
         /// <summary>
