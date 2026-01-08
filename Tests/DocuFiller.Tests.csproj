@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Services\ContentControlProcessor.cs" Link="Services\ContentControlProcessor.cs" />
+    <Compile Include="..\Services\CommentManager.cs" Link="Services\CommentManager.cs" />
+    <Compile Include="..\Models\ContentControlData.cs" Link="Models\ContentControlData.cs" />
+    <Compile Include="..\Models\ProcessRequest.cs" Link="Models\ProcessRequest.cs" />
+    <Compile Include="..\Models\ProcessResult.cs" Link="Models\ProcessResult.cs" />
+    <Compile Include="..\Models\ProgressEventArgs.cs" Link="Models\ProgressEventArgs.cs" />
+    <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Services\" />
+    <Folder Include="Models\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+
+</Project>
