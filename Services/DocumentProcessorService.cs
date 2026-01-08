@@ -333,8 +333,9 @@ namespace DocuFiller.Services
                     return Task.FromResult(controls);
                 }
 
-                IEnumerable<SdtElement> contentControls = document.MainDocumentPart.Document.Descendants<SdtElement>();
-                foreach (SdtElement control in contentControls)
+                // 处理文档主体
+                IEnumerable<SdtElement> bodyControls = document.MainDocumentPart.Document.Descendants<SdtElement>();
+                foreach (SdtElement control in bodyControls)
                 {
                     SdtProperties? properties = control.SdtProperties;
                     string tag = properties?.GetFirstChild<Tag>()?.Val?.Value ?? string.Empty;
@@ -346,8 +347,55 @@ namespace DocuFiller.Services
                         {
                             Tag = tag,
                             Title = alias,
-                            Type = ContentControlType.Text
+                            Type = ContentControlType.Text,
+                            Location = ContentControlLocation.Body
                         });
+                    }
+                }
+
+                // 处理页眉
+                foreach (var headerPart in document.MainDocumentPart.HeaderParts)
+                {
+                    IEnumerable<SdtElement> headerControls = headerPart.Header?.Descendants<SdtElement>() ?? Enumerable.Empty<SdtElement>();
+                    foreach (SdtElement control in headerControls)
+                    {
+                        SdtProperties? properties = control.SdtProperties;
+                        string tag = properties?.GetFirstChild<Tag>()?.Val?.Value ?? string.Empty;
+                        string alias = properties?.GetFirstChild<SdtAlias>()?.Val?.Value ?? string.Empty;
+
+                        if (!string.IsNullOrWhiteSpace(tag))
+                        {
+                            controls.Add(new ContentControlData
+                            {
+                                Tag = tag,
+                                Title = alias,
+                                Type = ContentControlType.Text,
+                                Location = ContentControlLocation.Header
+                            });
+                        }
+                    }
+                }
+
+                // 处理页脚
+                foreach (var footerPart in document.MainDocumentPart.FooterParts)
+                {
+                    IEnumerable<SdtElement> footerControls = footerPart.Footer?.Descendants<SdtElement>() ?? Enumerable.Empty<SdtElement>();
+                    foreach (SdtElement control in footerControls)
+                    {
+                        SdtProperties? properties = control.SdtProperties;
+                        string tag = properties?.GetFirstChild<Tag>()?.Val?.Value ?? string.Empty;
+                        string alias = properties?.GetFirstChild<SdtAlias>()?.Val?.Value ?? string.Empty;
+
+                        if (!string.IsNullOrWhiteSpace(tag))
+                        {
+                            controls.Add(new ContentControlData
+                            {
+                                Tag = tag,
+                                Title = alias,
+                                Type = ContentControlType.Text,
+                                Location = ContentControlLocation.Footer
+                            });
+                        }
                     }
                 }
             }
