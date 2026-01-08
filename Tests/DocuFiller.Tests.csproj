@@ -27,17 +27,21 @@
   <ItemGroup>
     <Compile Include="..\Services\ContentControlProcessor.cs" Link="Services\ContentControlProcessor.cs" />
     <Compile Include="..\Services\CommentManager.cs" Link="Services\CommentManager.cs" />
-    <Compile Include="..\Models\ContentControlData.cs" Link="Models\ContentControlData.cs" />
-    <Compile Include="..\Models\ProcessRequest.cs" Link="Models\ProcessRequest.cs" />
-    <Compile Include="..\Models\ProcessResult.cs" Link="Models\ProcessResult.cs" />
-    <Compile Include="..\Models\ProgressEventArgs.cs" Link="Models\ProgressEventArgs.cs" />
+    <Compile Include="..\Services\DocumentProcessorService.cs" Link="Services\DocumentProcessorService.cs" />
+    <Compile Include="..\Services\FileService.cs" Link="Services\FileService.cs" />
+    <Compile Include="..\Services\DataParserService.cs" Link="Services\DataParserService.cs" />
+    <Compile Include="..\Services\ProgressReporterService.cs" Link="Services\ProgressReporterService.cs" />
+    <Compile Include="..\Services\Interfaces\*.cs" Link="Services\Interfaces\%(Filename).cs" />
+    <Compile Include="..\Models\*.cs" Link="Models\%(Filename).cs" />
     <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
+    <Compile Include="..\Exceptions\*.cs" Link="Exceptions\%(Filename).cs" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Services\" />
     <Folder Include="Models\" />
     <Folder Include="Utils\" />
+    <Folder Include="Integration\" />
   </ItemGroup>
 
 </Project>
