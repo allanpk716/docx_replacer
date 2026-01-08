@@ -37,7 +37,7 @@ namespace DocuFiller.Tests
         }
 
         [Fact]
-        public void AddCommentToHeader_ShouldCreateHeaderCommentsPart()
+        public void AddCommentToHeader_ShouldCreateMainDocumentCommentsPart()
         {
             // Arrange
             string templatePath = Path.Combine(_testOutputDir, "template.docx");
@@ -59,15 +59,19 @@ namespace DocuFiller.Tests
                 ContentControlLocation.Header,
                 sdtBlock);
 
-            // Assert
-            var commentsPart = headerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+            // Assert - 所有批注都存储在主文档的批注部分中
+            var commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
             Assert.NotNull(commentsPart);
             Assert.Equal(1, commentsPart.Comments.Count());
             Assert.Equal("测试批注", commentsPart.Comments.First().GetFirstChild<Paragraph>()?.InnerText);
+
+            // 验证页眉中没有批注部分
+            var headerCommentsPart = headerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+            Assert.Null(headerCommentsPart);
         }
 
         [Fact]
-        public void AddCommentToFooter_ShouldCreateFooterCommentsPart()
+        public void AddCommentToFooter_ShouldCreateMainDocumentCommentsPart()
         {
             // Arrange
             string templatePath = Path.Combine(_testOutputDir, "template_with_footer.docx");
@@ -89,11 +93,15 @@ namespace DocuFiller.Tests
                 ContentControlLocation.Footer,
                 sdtBlock);
 
-            // Assert
-            var commentsPart = footerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+            // Assert - 所有批注都存储在主文档的批注部分中
+            var commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
             Assert.NotNull(commentsPart);
             Assert.Equal(1, commentsPart.Comments.Count());
             Assert.Equal("页脚测试批注", commentsPart.Comments.First().GetFirstChild<Paragraph>()?.InnerText);
+
+            // 验证页脚中没有批注部分
+            var footerCommentsPart = footerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+            Assert.Null(footerCommentsPart);
         }
 
         [Fact]
@@ -107,7 +115,18 @@ namespace DocuFiller.Tests
             var headerPart = document.MainDocumentPart!.HeaderParts.First();
             var header = headerPart.Header!;
             var sdtBlock = header.Descendants<SdtBlock>().First();
-            var run = sdtBlock.Descendants<Run>().First();
+            var runs = sdtBlock.Descendants<Run>().ToList();
+
+            // 确保有足够的Runs
+            if (runs.Count < 2)
+            {
+                // 添加第二个Run用于测试
+                var paragraph = sdtBlock.Descendants<Paragraph>().First();
+                paragraph.Append(new Run(new Text("第二个文本")));
+            }
+
+            var run = runs.First();
+            var run2 = sdtBlock.Descendants<Run>().ToList()[1];
 
             // Act - 添加第一个批注
             _commentManager.AddCommentToElement(
@@ -120,7 +139,6 @@ namespace DocuFiller.Tests
                 sdtBlock);
 
             // Act - 添加第二个批注
-            var run2 = sdtBlock.Descendants<Run>().ToList()[1];
             _commentManager.AddCommentToElement(
                 document,
                 run2,
@@ -130,8 +148,8 @@ namespace DocuFiller.Tests
                 ContentControlLocation.Header,
                 sdtBlock);
 
-            // Assert
-            var commentsPart = headerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+            // Assert - 所有批注都存储在主文档的批注部分中
+            var commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
             Assert.NotNull(commentsPart);
             Assert.Equal(2, commentsPart.Comments.Count());
 
@@ -141,7 +159,7 @@ namespace DocuFiller.Tests
         }
 
         [Fact]
-        public void AddCommentToHeaderAndFooter_ShouldCreateSeparateCommentsParts()
+        public void AddCommentToHeaderAndFooter_ShouldCreateMainDocumentCommentsPart()
         {
             // Arrange
             string templatePath = Path.Combine(_testOutputDir, "template_header_footer.docx");
@@ -177,18 +195,22 @@ namespace DocuFiller.Tests
                 ContentControlLocation.Footer,
                 footerSdt);
 
-            // Assert
+            // Assert - 所有批注都存储在主文档的批注部分中
+            var mainCommentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
+            Assert.NotNull(mainCommentsPart);
+            Assert.Equal(2, mainCommentsPart.Comments.Count());
+
+            // 验证页眉和页脚中没有批注部分
             var headerCommentsPart = headerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
             var footerCommentsPart = footerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
 
-            Assert.NotNull(headerCommentsPart);
-            Assert.NotNull(footerCommentsPart);
+            Assert.Null(headerCommentsPart);
+            Assert.Null(footerCommentsPart);
 
-            Assert.Equal(1, headerCommentsPart.Comments.Count());
-            Assert.Equal(1, footerCommentsPart.Comments.Count());
-
-            Assert.Equal("页眉批注", headerCommentsPart.Comments.First().GetFirstChild<Paragraph>()?.InnerText);
-            Assert.Equal("页脚批注", footerCommentsPart.Comments.First().GetFirstChild<Paragraph>()?.InnerText);
+            // 验证批注内容
+            var comments = mainCommentsPart.Comments.Descendants<Comment>().ToList();
+            Assert.Contains(comments, c => c.GetFirstChild<Paragraph>()?.InnerText == "页眉批注");
+            Assert.Contains(comments, c => c.GetFirstChild<Paragraph>()?.InnerText == "页脚批注");
         }
 
         [Fact]
@@ -214,13 +236,13 @@ namespace DocuFiller.Tests
                 ContentControlLocation.Header,
                 sdtBlock);
 
-            // Assert
-            var commentsPart = headerPart.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
+            // Assert - 所有批注都存储在主文档的批注部分中
+            var commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
             Assert.NotNull(commentsPart);
-            Assert.Equal(1, commentsPart.Comments.Count());
+            Assert.Single(commentsPart.Comments);
             Assert.Equal("多行页眉批注", commentsPart.Comments.First().GetFirstChild<Paragraph>()?.InnerText);
 
-            // 验证批注范围标记
+            // 验证批注范围标记在页眉中
             var commentRangeStarts = header.Descendants<CommentRangeStart>().ToList();
             var commentRangeEnds = header.Descendants<CommentRangeEnd>().ToList();
 
@@ -251,8 +273,9 @@ namespace DocuFiller.Tests
                 ContentControlLocation.Header,
                 sdtBlock);
 
-            // Assert - 新批注ID应该是2（因为已经存在ID为1的批注）
-            var commentsPart = headerPart.GetPartsOfType<WordprocessingCommentsPart>().First();
+            // Assert - 新批注ID应该是2（因为已经存在ID为1的批注在主文档中）
+            var commentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
+            Assert.NotNull(commentsPart);
             var comments = commentsPart.Comments.Descendants<Comment>().ToList();
             Assert.Equal(2, comments.Count);
             Assert.Equal("1", comments[0].Id?.Value);
@@ -284,34 +307,18 @@ namespace DocuFiller.Tests
             _commentManager.AddCommentToElement(document, footerRun, "页脚批注", "作者", "Tag2", ContentControlLocation.Footer, footerSdt);
             _commentManager.AddCommentToElement(document, bodyRun, "正文批注", "作者", "Tag3", ContentControlLocation.Body, bodySdt);
 
-            // Assert - 验证所有批注 ID 全局唯一
-            var allCommentIds = new System.Collections.Generic.List<string>();
+            // Assert - 验证所有批注都存储在主文档中且 ID 全局唯一
+            var mainCommentsPart = document.MainDocumentPart.WordprocessingCommentsPart;
+            Assert.NotNull(mainCommentsPart);
 
-            if (document.MainDocumentPart.WordprocessingCommentsPart?.Comments != null)
-            {
-                allCommentIds.AddRange(document.MainDocumentPart.WordprocessingCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!));
-            }
-
-            foreach (var header in document.MainDocumentPart.HeaderParts)
-            {
-                var headerCommentsPart = header.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
-                if (headerCommentsPart?.Comments != null)
-                {
-                    allCommentIds.AddRange(headerCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!));
-                }
-            }
-
-            foreach (var footer in document.MainDocumentPart.FooterParts)
-            {
-                var footerCommentsPart = footer.GetPartsOfType<WordprocessingCommentsPart>().FirstOrDefault();
-                if (footerCommentsPart?.Comments != null)
-                {
-                    allCommentIds.AddRange(footerCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!));
-                }
-            }
+            var allCommentIds = mainCommentsPart.Comments.Descendants<Comment>().Select(c => c.Id!.Value!).ToList();
 
             Assert.Equal(3, allCommentIds.Count);
             Assert.Equal(3, allCommentIds.Distinct().Count());
+
+            // 验证页眉和页脚中没有批注部分
+            Assert.Empty(headerPart.GetPartsOfType<WordprocessingCommentsPart>());
+            Assert.Empty(footerPart.GetPartsOfType<WordprocessingCommentsPart>());
         }
 
         private void CreateTestDocumentWithHeader(string path)
@@ -440,8 +447,8 @@ namespace DocuFiller.Tests
             header.Append(sdtBlock);
             headerPart.Header = header;
 
-            // 添加现有的批注
-            var commentsPart = headerPart.AddNewPart<WordprocessingCommentsPart>();
+            // 添加现有的批注到主文档（不是页眉）
+            var commentsPart = mainPart.AddNewPart<WordprocessingCommentsPart>();
             commentsPart.Comments = new Comments();
             var existingComment = new Comment()
             {
