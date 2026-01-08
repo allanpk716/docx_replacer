@@ -27,6 +27,7 @@ namespace DocuFiller.Tests.Integration
 
         public void Dispose()
         {
+            _loggerFactory?.Dispose();
             if (Directory.Exists(_testDir))
             {
                 try { Directory.Delete(_testDir, true); }
