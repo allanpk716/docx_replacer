@@ -30,6 +30,11 @@ namespace DocuFiller.Models
         public ContentControlType Type { get; set; } = ContentControlType.Text;
 
         /// <summary>
+        /// 内容控件所在位置
+        /// </summary>
+        public ContentControlLocation Location { get; set; } = ContentControlLocation.Body;
+
+        /// <summary>
         /// 是否为必填项
         /// </summary>
         public bool IsRequired { get; set; } = false;
@@ -95,6 +100,27 @@ namespace DocuFiller.Models
 
             return result;
         }
+    }
+
+    /// <summary>
+    /// 内容控件位置枚举
+    /// </summary>
+    public enum ContentControlLocation
+    {
+        /// <summary>
+        /// 文档主体
+        /// </summary>
+        Body,
+
+        /// <summary>
+        /// 页眉
+        /// </summary>
+        Header,
+
+        /// <summary>
+        /// 页脚
+        /// </summary>
+        Footer
     }
 
     /// <summary>
