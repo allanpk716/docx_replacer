@@ -29,7 +29,8 @@ namespace DocuFiller.Services
             string commentText,
             string author,
             string tag,
-            ContentControlLocation location = ContentControlLocation.Body)
+            ContentControlLocation location = ContentControlLocation.Body,
+            SdtElement? control = null)
         {
             try
             {
@@ -43,7 +44,7 @@ namespace DocuFiller.Services
                 }
 
                 // 获取或创建批注部分
-                WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location);
+                WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location, control);
 
                 // 生成唯一ID
                 string commentId = GenerateCommentId(document);
@@ -75,7 +76,8 @@ namespace DocuFiller.Services
             string commentText,
             string author,
             string tag,
-            ContentControlLocation location = ContentControlLocation.Body)
+            ContentControlLocation location = ContentControlLocation.Body,
+            SdtElement? control = null)
         {
             try
             {
@@ -95,7 +97,7 @@ namespace DocuFiller.Services
                 }
 
                 // 获取或创建批注部分
-                WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location);
+                WordprocessingCommentsPart? commentsPart = GetCommentsPartForLocation(document, location, control);
 
                 // 生成唯一ID
                 string commentId = GenerateCommentId(document);

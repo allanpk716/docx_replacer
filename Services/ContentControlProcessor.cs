@@ -311,12 +311,12 @@ namespace DocuFiller.Services
             if (targetRuns.Count == 1)
             {
                 // 单行文本：使用原有方法
-                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag, location);
+                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag, location, control);
             }
             else
             {
                 // 多行文本：使用新的范围批注方法
-                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag, location);
+                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag, location, control);
             }
         }
 
