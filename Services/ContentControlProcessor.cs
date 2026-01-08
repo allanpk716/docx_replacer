@@ -27,7 +27,7 @@ namespace DocuFiller.Services
         /// <summary>
         /// 处理单个内容控件
         /// </summary>
-        public void ProcessContentControl(SdtElement control, Dictionary<string, object> data, WordprocessingDocument document)
+        public void ProcessContentControl(SdtElement control, Dictionary<string, object> data, WordprocessingDocument document, ContentControlLocation location = ContentControlLocation.Body)
         {
             try
             {
@@ -56,15 +56,124 @@ namespace DocuFiller.Services
                 ProcessContentReplacement(control, value);
 
                 // 添加批注
-                AddProcessingComment(document, control, tag, value, oldValue);
+                AddProcessingComment(document, control, tag, value, oldValue, location);
 
-                _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' 为 '{value}'");
+                _logger.LogInformation($"✓ 成功替换内容控件 '{tag}' ({location}) 为 '{value}'");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"处理内容控件时发生异常: {ex.Message}");
                 throw;
             }
+        }
+
+        /// <summary>
+        /// 处理文档中的所有内容控件（包括页眉页脚）
+        /// </summary>
+        public void ProcessContentControlsInDocument(
+            WordprocessingDocument document,
+            Dictionary<string, object> data,
+            CancellationToken cancellationToken)
+        {
+            if (document.MainDocumentPart == null)
+            {
+                _logger.LogError("文档主体部分不存在");
+                return;
+            }
+
+            _logger.LogInformation("开始处理文档中的所有内容控件");
+
+            // 处理文档主体
+            ProcessControlsInPart(
+                document.MainDocumentPart.Document,
+                data,
+                document,
+                ContentControlLocation.Body,
+                cancellationToken);
+
+            // 处理所有页眉
+            foreach (var headerPart in document.MainDocumentPart.HeaderParts)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ProcessControlsInHeaderPart(headerPart, data, document, cancellationToken);
+            }
+
+            // 处理所有页脚
+            foreach (var footerPart in document.MainDocumentPart.FooterParts)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ProcessControlsInFooterPart(footerPart, data, document, cancellationToken);
+            }
+
+            _logger.LogInformation("文档内容控件处理完成");
+        }
+
+        /// <summary>
+        /// 处理文档部分中的内容控件
+        /// </summary>
+        private void ProcessControlsInPart(
+            OpenXmlPartRootElement partRoot,
+            Dictionary<string, object> data,
+            WordprocessingDocument document,
+            ContentControlLocation location,
+            CancellationToken cancellationToken)
+        {
+            var contentControls = partRoot.Descendants<SdtElement>().ToList();
+            _logger.LogDebug($"在 {location} 中找到 {contentControls.Count} 个内容控件");
+
+            foreach (var control in contentControls)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ProcessContentControl(control, data, document, location);
+            }
+        }
+
+        /// <summary>
+        /// 处理页眉中的内容控件
+        /// </summary>
+        private void ProcessControlsInHeaderPart(
+            HeaderPart headerPart,
+            Dictionary<string, object> data,
+            WordprocessingDocument document,
+            CancellationToken cancellationToken)
+        {
+            if (headerPart.Header == null)
+            {
+                _logger.LogDebug("页眉部分为空，跳过处理");
+                return;
+            }
+
+            _logger.LogDebug("开始处理页眉中的内容控件");
+            ProcessControlsInPart(
+                headerPart.Header,
+                data,
+                document,
+                ContentControlLocation.Header,
+                cancellationToken);
+        }
+
+        /// <summary>
+        /// 处理页脚中的内容控件
+        /// </summary>
+        private void ProcessControlsInFooterPart(
+            FooterPart footerPart,
+            Dictionary<string, object> data,
+            WordprocessingDocument document,
+            CancellationToken cancellationToken)
+        {
+            if (footerPart.Footer == null)
+            {
+                _logger.LogDebug("页脚部分为空，跳过处理");
+                return;
+            }
+
+            _logger.LogDebug("开始处理页脚中的内容控件");
+            ProcessControlsInPart(
+                footerPart.Footer,
+                data,
+                document,
+                ContentControlLocation.Footer,
+                cancellationToken);
         }
 
         /// <summary>
@@ -179,13 +288,19 @@ namespace DocuFiller.Services
         /// <summary>
         /// 添加处理批注
         /// </summary>
-        private void AddProcessingComment(WordprocessingDocument document, SdtElement control, string tag, string newValue, string oldValue)
+        private void AddProcessingComment(WordprocessingDocument document, SdtElement control, string tag, string newValue, string oldValue, ContentControlLocation location)
         {
             Run? targetRun = FindTargetRun(control);
             if (targetRun != null)
             {
                 string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
-                string commentText = $"此字段已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
+                string locationText = location switch
+                {
+                    ContentControlLocation.Header => "页眉",
+                    ContentControlLocation.Footer => "页脚",
+                    _ => "正文"
+                };
+                string commentText = $"此字段（{locationText}）已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
                 _commentManager.AddCommentToElement(document, targetRun, commentText, "DocuFiller系统", tag);
             }
         }
