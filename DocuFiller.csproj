@@ -96,6 +96,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 排除测试项目 -->
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- 嵌入资源 -->
     <Resource Include="Resources\**" />
   </ItemGroup>
