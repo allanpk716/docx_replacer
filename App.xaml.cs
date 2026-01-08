@@ -103,7 +103,6 @@ namespace DocuFiller
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
             services.AddSingleton<IFileScanner, FileScannerService>();
             services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
-            services.AddSingleton<OpenXmlDocumentHandler>();
 
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
