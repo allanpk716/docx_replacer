@@ -13,4 +13,12 @@
     <PackageReference Include="EPPlus" Version="7.5.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- 排除不需要的源代码文件 -->
+    <Compile Remove="Program.cs" />
+    <Compile Remove="TestFormattedSuperscript.cs" />
+    <Compile Remove="Services\WordWriterService.cs" />
+    <Compile Remove="Services\IWordWriter.cs" />
+  </ItemGroup>
+
 </Project>

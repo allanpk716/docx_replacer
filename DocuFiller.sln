@@ -5,6 +5,10 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocuFiller", "DocuFiller.csproj", "{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelToWordVerifier", "ExcelToWordVerifier\ExcelToWordVerifier.csproj", "{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFormattedSuperscript", "ExcelToWordVerifier\TestFormattedSuperscript.csproj", "{83453F17-A92F-46BA-93E7-A4CB9373051A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +19,14 @@ Global
 		{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -96,10 +96,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 排除测试项目 -->
+    <!-- 排除测试项目和工具项目 -->
     <Compile Remove="Tests\**" />
+    <Compile Remove="ExcelToWordVerifier\**" />
+    <Compile Remove="Tools\**" />
     <EmbeddedResource Remove="Tests\**" />
+    <EmbeddedResource Remove="ExcelToWordVerifier\**" />
+    <EmbeddedResource Remove="Tools\**" />
     <None Remove="Tests\**" />
+    <None Remove="ExcelToWordVerifier\**" />
+    <None Remove="Tools\**" />
   </ItemGroup>
 
   <ItemGroup>

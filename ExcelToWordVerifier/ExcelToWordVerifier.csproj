@@ -20,6 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- 排除其他程序的入口点文件 -->
+    <Compile Remove="TestFormattedSuperscript.cs" />
+    <Compile Remove="CreateFormattedExcel.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="TestFiles\*.xlsx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
