@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
@@ -30,6 +31,7 @@
     <Compile Include="..\Services\DocumentProcessorService.cs" Link="Services\DocumentProcessorService.cs" />
     <Compile Include="..\Services\FileService.cs" Link="Services\FileService.cs" />
     <Compile Include="..\Services\DataParserService.cs" Link="Services\DataParserService.cs" />
+    <Compile Include="..\Services\ExcelDataParserService.cs" Link="Services\ExcelDataParserService.cs" />
     <Compile Include="..\Services\ProgressReporterService.cs" Link="Services\ProgressReporterService.cs" />
     <Compile Include="..\Services\Interfaces\*.cs" Link="Services\Interfaces\%(Filename).cs" />
     <Compile Include="..\Models\*.cs" Link="Models\%(Filename).cs" />
