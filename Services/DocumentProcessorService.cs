@@ -598,13 +598,174 @@ namespace DocuFiller.Services
             return result;
         }
 
+        /// <summary>
+        /// 用格式化值填充内容控件
+        /// </summary>
+        private void FillContentControlWithFormattedValue(
+            ContentControlData control,
+            FormattedCellValue formattedValue,
+            WordprocessingDocument document)
+        {
+            // 获取内容控件的 SdtBlock 或 SdtRun
+            var sdtElement = FindContentControlElement(document, control.Tag);
+            if (sdtElement == null) return;
+
+            // 获取 SdtContent 部分
+            OpenXmlElement? sdtContent = sdtElement.Descendants<SdtContentBlock>().FirstOrDefault();
+            if (sdtContent == null)
+            {
+                sdtContent = sdtElement.Descendants<SdtContentRun>().FirstOrDefault();
+            }
+
+            if (sdtContent == null) return;
+
+            // 清空现有内容
+            sdtContent.RemoveAllChildren();
+
+            // 创建父容器（Paragraph 或 Run）
+            if (sdtContent is SdtContentBlock)
+            {
+                var paragraph = new Paragraph();
+                foreach (var fragment in formattedValue.Fragments)
+                {
+                    var run = CreateFormattedRun(fragment);
+                    paragraph.Append(run);
+                }
+                sdtContent.Append(paragraph);
+            }
+            else if (sdtContent is SdtContentRun)
+            {
+                foreach (var fragment in formattedValue.Fragments)
+                {
+                    var run = CreateFormattedRun(fragment);
+                    sdtContent.Append(run);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 创建带格式的 Run 元素
+        /// </summary>
+        private Run CreateFormattedRun(TextFragment fragment)
+        {
+            var run = new Run(new Text(fragment.Text));
+
+            // 设置上标或下标
+            if (fragment.IsSuperscript || fragment.IsSubscript)
+            {
+                var runProperties = new RunProperties(
+                    new VerticalTextAlignment
+                    {
+                        Val = fragment.IsSuperscript
+                            ? VerticalPositionValues.Superscript
+                            : VerticalPositionValues.Subscript
+                    }
+                );
+                run.InsertBefore(runProperties, run.GetFirstChild<Text>());
+            }
+
+            return run;
+        }
+
+        /// <summary>
+        /// 查找内容控件元素
+        /// </summary>
+        private SdtElement FindContentControlElement(WordprocessingDocument document, string tag)
+        {
+            var mainDocumentPart = document.MainDocumentPart;
+            if (mainDocumentPart == null) return null;
+
+            // 在正文、页眉、页脚中查找
+            var elements = new List<SdtElement>();
+
+            // 正文
+            elements.AddRange(mainDocumentPart.Document.Descendants<SdtElement>());
+
+            // 页眉
+            foreach (var header in mainDocumentPart.HeaderParts)
+            {
+                elements.AddRange(header.Header.Descendants<SdtElement>());
+            }
+
+            // 页脚
+            foreach (var footer in mainDocumentPart.FooterParts)
+            {
+                elements.AddRange(footer.Footer.Descendants<SdtElement>());
+            }
+
+            // 根据 Tag 查找
+            return elements.FirstOrDefault(e =>
+            {
+                var sdtProperties = e.Descendants<SdtProperties>().FirstOrDefault();
+                if (sdtProperties == null) return false;
+
+                var tagElement = sdtProperties.Descendants<Tag>().FirstOrDefault();
+                return tagElement != null && tagElement.Val == tag;
+            });
+        }
+
         public async Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
             string templateFilePath,
             Dictionary<string, FormattedCellValue> formattedData,
             string outputFilePath)
         {
-            // TODO: 实现带格式的文档处理
-            throw new NotImplementedException();
+            var result = new ProcessResult { IsSuccess = false, StartTime = DateTime.Now };
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+            try
+            {
+                _logger.LogInformation($"开始处理文档（格式化数据）: {templateFilePath}");
+
+                // 验证输入
+                if (!_fileService.FileExists(templateFilePath))
+                {
+                    result.Errors.Add($"模板文件不存在: {templateFilePath}");
+                    result.EndTime = DateTime.Now;
+                    return result;
+                }
+
+                // 复制模板文件
+                File.Copy(templateFilePath, outputFilePath, true);
+
+                // 打开文档进行编辑
+                using var document = WordprocessingDocument.Open(outputFilePath, true);
+
+                // 获取模板中的所有内容控件
+                var templateControls = await GetContentControlsAsync(templateFilePath);
+
+                // 填充每个内容控件
+                foreach (var control in templateControls)
+                {
+                    if (formattedData.TryGetValue(control.Tag, out var formattedValue))
+                    {
+                        FillContentControlWithFormattedValue(control, formattedValue, document);
+                        _logger.LogDebug($"填充内容控件 '{control.Tag}' = {formattedValue.PlainText}");
+                    }
+                    else
+                    {
+                        _logger.LogWarning($"未找到内容控件 '{control.Tag}' 的数据");
+                    }
+                }
+
+                document.Save();
+
+                stopwatch.Stop();
+                result.IsSuccess = true;
+                result.SuccessfulRecords = 1;
+                result.GeneratedFiles.Add(outputFilePath);
+                result.EndTime = DateTime.Now;
+
+                _logger.LogInformation($"文档处理完成: {outputFilePath}, 耗时: {stopwatch.Elapsed.TotalSeconds:F2}s");
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                result.Errors.Add($"处理文档失败: {ex.Message}");
+                _logger.LogError(ex, $"处理文档失败: {templateFilePath}");
+                result.EndTime = DateTime.Now;
+            }
+
+            return result;
         }
 
         public void Dispose()
