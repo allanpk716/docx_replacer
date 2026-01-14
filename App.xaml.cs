@@ -104,6 +104,7 @@ namespace DocuFiller
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
             services.AddSingleton<IFileScanner, FileScannerService>();
             services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
+            services.AddSingleton<IExcelToWordConverter, ExcelToWordConverterService>();
 
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
@@ -112,9 +113,11 @@ namespace DocuFiller
 
             // 注册ViewModels
             services.AddTransient<MainWindowViewModel>();
+            services.AddTransient<ViewModels.ConverterWindowViewModel>();
 
             // 注册主窗口
             services.AddTransient<MainWindow>();
+            services.AddTransient<Views.ConverterWindow>();
 
             _serviceProvider = services.BuildServiceProvider();
         }

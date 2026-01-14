@@ -2,13 +2,14 @@
 
 ## 项目简介
 
-DocuFiller是一个基于C# + .NET 8 + WPF开发的桌面应用程序，用于通过JSON数据文件批量填充Word文档中的内容控件。
+DocuFiller是一个基于C# + .NET 8 + WPF开发的桌面应用程序，用于通过JSON或Excel数据文件批量填充Word文档中的内容控件。
 
 ## 主要功能
 
-- **批量文档生成**：根据JSON数据批量生成Word文档
+- **批量文档生成**：根据JSON或Excel数据批量生成Word文档
+- **Excel格式保留**：支持Excel中的上标、下标等富文本格式（详见[Excel数据支持指南](docs/excel-data-user-guide.md)）
 - **模板管理**：支持.docx和.dotx格式的Word模板
-- **数据预览**：实时预览JSON数据内容和统计信息
+- **数据预览**：实时预览数据内容和统计信息
 - **进度监控**：实时显示处理进度和状态
 - **错误处理**：完善的异常处理和日志记录
 - **文件管理**：自动创建输出目录和文件命名
@@ -18,6 +19,7 @@ DocuFiller是一个基于C# + .NET 8 + WPF开发的桌面应用程序，用于�
 
 - **框架**：.NET 8 + WPF
 - **文档处理**：DocumentFormat.OpenXml
+- **Excel处理**：EPPlus 7.5.2
 - **JSON处理**：Newtonsoft.Json
 - **依赖注入**：Microsoft.Extensions.DependencyInjection
 - **日志记录**：Microsoft.Extensions.Logging
@@ -47,13 +49,14 @@ DocuFiller/
 - 保存为.docx或.dotx格式
 
 ### 2. 准备数据文件
-- 创建JSON格式的数据文件
-- 确保字段名与模板中的标记匹配
-- 支持数组格式（多条记录）
+- **JSON格式**：创建JSON格式的数据文件，确保字段名与模板中的标记匹配
+- **Excel格式**：创建Excel (.xlsx) 文件，第一列为关键词（#关键词#格式），第二列为对应值
+  - 支持富文本格式（上标、下标等）
+  - 详见[Excel数据支持指南](docs/excel-data-user-guide.md)
 
 ### 3. 运行应用程序
 - 选择Word模板文件
-- 选择JSON数据文件
+- 选择JSON或Excel数据文件
 - 设置输出目录
 - 点击开始处理
 

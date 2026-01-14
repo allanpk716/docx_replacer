@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using DocuFiller.Models;
 
@@ -13,8 +14,9 @@ namespace DocuFiller.Services.Interfaces
         /// 解析 Excel 数据文件
         /// </summary>
         /// <param name="filePath">Excel 文件路径</param>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>解析后的数据字典（关键词 -> 格式化值）</returns>
-        Task<Dictionary<string, FormattedCellValue>> ParseExcelFileAsync(string filePath);
+        Task<Dictionary<string, FormattedCellValue>> ParseExcelFileAsync(string filePath, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 验证 Excel 数据文件

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
@@ -23,6 +24,9 @@ namespace DocuFiller.Services
         // 关键词格式正则：#开头#结尾
         private static readonly Regex KeywordRegex = new Regex(@"^#.*#$", RegexOptions.Compiled);
 
+        // 最大行数限制
+        private const int MaxRows = 10000;
+
         public ExcelDataParserService(ILogger<ExcelDataParserService> logger, IFileService fileService)
         {
             _logger = logger;
@@ -31,7 +35,7 @@ namespace DocuFiller.Services
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
         }
 
-        public async Task<Dictionary<string, FormattedCellValue>> ParseExcelFileAsync(string filePath)
+        public async Task<Dictionary<string, FormattedCellValue>> ParseExcelFileAsync(string filePath, CancellationToken cancellationToken = default)
         {
             var result = new Dictionary<string, FormattedCellValue>();
 
@@ -56,8 +60,19 @@ namespace DocuFiller.Services
 
                 // 从第一行开始读取（无表头）
                 var rowCount = worksheet.Dimension.Rows;
+
+                // 检查行数限制
+                if (rowCount > MaxRows)
+                {
+                    _logger.LogWarning($"Excel 文件行数 ({rowCount}) 超过最大限制 ({MaxRows})");
+                    throw new InvalidOperationException($"Excel 文件过大，最多支持 {MaxRows} 行数据");
+                }
+
                 for (int row = 1; row <= rowCount; row++)
                 {
+                    // 检查取消请求
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     var keyCell = worksheet.Cells[row, 1];
                     var valueCell = worksheet.Cells[row, 2];
 
@@ -74,10 +89,15 @@ namespace DocuFiller.Services
                 _logger.LogInformation($"成功解析 Excel 数据，共 {result.Count} 条记录");
                 return result;
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation($"Excel 文件解析已取消: {filePath}");
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"解析 Excel 文件失败: {filePath}");
-                return result;
+                throw;
             }
         }
 
@@ -166,12 +186,14 @@ namespace DocuFiller.Services
                 // 根据检查结果设置 IsValid
                 if (result.Summary.InvalidFormatKeywords.Count > 0)
                 {
-                    result.AddError($"存在 {result.Summary.InvalidFormatKeywords.Count} 个格式不正确的关键词");
+                    var examples = result.Summary.InvalidFormatKeywords.Take(3);
+                    result.AddError($"存在 {result.Summary.InvalidFormatKeywords.Count} 个格式不正确的关键词。示例: {string.Join("; ", examples)}");
                 }
 
                 if (result.Summary.DuplicateKeywords.Count > 0)
                 {
-                    result.AddError($"存在 {result.Summary.DuplicateKeywords.Count} 个重复关键词");
+                    var examples = result.Summary.DuplicateKeywords.Take(Math.Min(5, result.Summary.DuplicateKeywords.Count));
+                    result.AddError($"存在 {result.Summary.DuplicateKeywords.Count} 个重复关键词。示例: {string.Join(", ", examples)}");
                 }
 
                 if (result.Summary.ValidKeywordRows == 0)

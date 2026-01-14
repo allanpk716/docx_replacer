@@ -40,9 +40,28 @@ namespace DocuFiller
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"无法打开关键词编辑器：{ex.Message}", "错误", 
+                MessageBox.Show($"无法打开关键词编辑器：{ex.Message}", "错误",
                     MessageBoxButton.OK, MessageBoxImage.Error);
                 System.Diagnostics.Debug.WriteLine($"[DEBUG] 打开关键词编辑器失败: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// JSON转Excel转换工具超链接点击事件
+        /// </summary>
+        private void ConverterHyperlink_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            try
+            {
+                if (DataContext is MainWindowViewModel viewModel)
+                {
+                    viewModel.OpenConverterCommand?.Execute(null);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"无法打开转换工具：{ex.Message}", "错误",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         
@@ -84,7 +103,7 @@ namespace DocuFiller
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length == 1 && IsJsonFile(files[0]))
+                if (files.Length == 1 && IsDataFile(files[0]))
                 {
                     e.Effects = DragDropEffects.Copy;
                     // 添加视觉反馈
@@ -94,12 +113,12 @@ namespace DocuFiller
                         border.BorderThickness = new Thickness(3);
                         border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3)); // 半透明蓝色
                     }
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] JSON文件拖拽进入: {files[0]}");
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 数据文件拖拽进入: {files[0]}");
                 }
                 else
                 {
                     e.Effects = DragDropEffects.None;
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 非JSON文件或多文件拖拽: {string.Join(", ", files)}");
+                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 非数据文件或多文件拖拽: {string.Join(", ", files)}");
                 }
             }
             else
@@ -132,7 +151,7 @@ namespace DocuFiller
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-                if (files.Length == 1 && IsJsonFile(files[0]))
+                if (files.Length == 1 && IsDataFile(files[0]))
                 {
                     e.Effects = DragDropEffects.Copy;
                 }
@@ -161,30 +180,29 @@ namespace DocuFiller
                     if (files != null && files.Length > 0)
                     {
                         var filePath = files[0];
-                        if (IsJsonFile(filePath))
+                        if (IsDataFile(filePath))
                         {
-                            // 验证JSON文件有效性
-                            if (IsValidJsonFile(filePath))
+                            // 对于JSON文件，验证格式
+                            if (IsJsonFile(filePath) && !IsValidJsonFile(filePath))
                             {
-                                // 设置数据路径并自动预览
-                                if (DataContext is MainWindowViewModel viewModel)
-                                {
-                                    Console.WriteLine($"[DEBUG] JSON文件拖放 - 设置DataPath: {filePath}");
-                                    viewModel.DataPath = filePath;
-                                    Console.WriteLine($"[DEBUG] JSON文件拖放 - DataPath已设置为: {viewModel.DataPath}");
-                                    // 自动触发预览
-                                    viewModel.PreviewDataCommand?.Execute(null);
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show("所选文件不是有效的JSON格式！", "文件格式错误", 
+                                MessageBox.Show("所选文件不是有效的JSON格式！", "文件格式错误",
                                     MessageBoxButton.OK, MessageBoxImage.Warning);
+                                return;
+                            }
+
+                            // 设置数据路径并自动预览
+                            if (DataContext is MainWindowViewModel viewModel)
+                            {
+                                Console.WriteLine($"[DEBUG] 数据文件拖放 - 设置DataPath: {filePath}");
+                                viewModel.DataPath = filePath;
+                                Console.WriteLine($"[DEBUG] 数据文件拖放 - DataPath已设置为: {viewModel.DataPath}");
+                                // 自动触发预览
+                                viewModel.PreviewDataCommand?.Execute(null);
                             }
                         }
                         else
                         {
-                            MessageBox.Show("请拖拽JSON文件！", "文件类型错误", 
+                            MessageBox.Show("请拖拽JSON或Excel文件！", "文件类型错误",
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
@@ -192,7 +210,7 @@ namespace DocuFiller
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"处理拖拽文件时发生错误：{ex.Message}", "错误", 
+                MessageBox.Show($"处理拖拽文件时发生错误：{ex.Message}", "错误",
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
@@ -214,9 +232,29 @@ namespace DocuFiller
         {
             if (string.IsNullOrEmpty(filePath))
                 return false;
-                
+
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             return extension == ".json";
+        }
+
+        /// <summary>
+        /// 检查是否为Excel文件
+        /// </summary>
+        private bool IsExcelFile(string filePath)
+        {
+            if (string.IsNullOrEmpty(filePath))
+                return false;
+
+            var extension = Path.GetExtension(filePath).ToLowerInvariant();
+            return extension == ".xlsx";
+        }
+
+        /// <summary>
+        /// 检查是否为支持的数据文件（JSON或Excel）
+        /// </summary>
+        private bool IsDataFile(string filePath)
+        {
+            return IsJsonFile(filePath) || IsExcelFile(filePath);
         }
         
         /// <summary>

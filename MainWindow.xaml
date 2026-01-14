@@ -24,15 +24,25 @@
                        Margin="0,0,0,10" 
                        Foreground="#2C3E50"/>
             
-            <!-- 关键词编辑器超链接 -->
-            <TextBlock HorizontalAlignment="Center">
-                <Hyperlink x:Name="KeywordEditorHyperlink" 
-                           Click="KeywordEditorHyperlink_Click"
-                           Foreground="#3498DB"
-                           TextDecorations="Underline">
-                    <Run Text="点击跳转至：关键词编辑器" FontSize="16" FontWeight="Medium"/>
-                </Hyperlink>
-            </TextBlock>
+            <!-- 功能链接区域 -->
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Margin="0,0,0,10">
+                <TextBlock Margin="0,0,30,0">
+                    <Hyperlink x:Name="KeywordEditorHyperlink"
+                               Click="KeywordEditorHyperlink_Click"
+                               Foreground="#3498DB"
+                               TextDecorations="Underline">
+                        <Run Text="关键词编辑器" FontSize="15" FontWeight="Medium"/>
+                    </Hyperlink>
+                </TextBlock>
+                <TextBlock>
+                    <Hyperlink x:Name="ConverterHyperlink"
+                               Click="ConverterHyperlink_Click"
+                               Foreground="#E67E22"
+                               TextDecorations="Underline">
+                        <Run Text="JSON转Excel转换工具" FontSize="15" FontWeight="Medium"/>
+                    </Hyperlink>
+                </TextBlock>
+            </StackPanel>
         </StackPanel>
         
         <!-- 主要内容区域 -->
@@ -114,15 +124,25 @@
 
                             <!-- 路径显示 -->
                             <Grid Grid.Row="0">
-                                <TextBox x:Name="DataPathTextBox"
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <TextBox Grid.Row="0"
                                          Style="{StaticResource TextBoxStyle}"
                                          Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
                                          IsReadOnly="True" FontSize="14"/>
+                                <TextBlock Grid.Row="1"
+                                           Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
+                                           Margin="0,5,0,0"
+                                           FontSize="12"
+                                           Foreground="#7F8C8D"
+                                           Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
                             </Grid>
 
-                            <!-- JSON文件拖拽区域 -->
-                            <Border Grid.Row="1" x:Name="DataFileDropBorder" 
-                                    BorderBrush="#BDC3C7" BorderThickness="2" 
+                            <!-- 数据文件拖拽区域 -->
+                            <Border Grid.Row="1" x:Name="DataFileDropBorder"
+                                    BorderBrush="#BDC3C7" BorderThickness="2"
                                     CornerRadius="4" Height="70" Margin="0,0,0,10"
                                     AllowDrop="True"
                                     Drop="DataFileDropBorder_Drop"
@@ -131,15 +151,15 @@
                                     DragOver="DataFileDropBorder_DragOver">
                                 <Grid>
                                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock x:Name="DataFileDropHint" 
-                                                   Text="拖拽JSON数据文件到此处" 
-                                                   Foreground="#95A5A6" 
+                                        <TextBlock x:Name="DataFileDropHint"
+                                                   Text="拖拽 JSON 或 Excel 数据文件到此处"
+                                                   Foreground="#95A5A6"
                                                    FontStyle="Italic"
                                                    HorizontalAlignment="Center"
                                                    TextWrapping="Wrap"
                                                    Margin="10,5"/>
-                                        <TextBlock Text="{Binding DataPath}" 
-                                                   Foreground="#2C3E50" 
+                                        <TextBlock Text="{Binding DataPath}"
+                                                   Foreground="#2C3E50"
                                                    FontWeight="Medium"
                                                    HorizontalAlignment="Center"
                                                    TextWrapping="Wrap"

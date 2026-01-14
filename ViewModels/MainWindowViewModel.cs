@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Input;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 
@@ -24,6 +25,7 @@ namespace DocuFiller.ViewModels
         private readonly IProgressReporter _progressReporter;
         private readonly IFileScanner _fileScanner;
         private readonly IDirectoryManager _directoryManager;
+        private readonly IExcelDataParser _excelDataParser;
         private readonly ILogger<MainWindowViewModel> _logger;
         private CancellationTokenSource? _cancellationTokenSource;
         
@@ -48,6 +50,9 @@ namespace DocuFiller.ViewModels
         // 输入源类型相关
         private InputSourceType _inputSourceType = InputSourceType.None;
         private Models.FileInfo? _singleFileInfo;
+
+        // 数据文件类型
+        private DataFileType _dataFileType = DataFileType.Json;
         
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
@@ -61,6 +66,7 @@ namespace DocuFiller.ViewModels
             IProgressReporter progressReporter,
             IFileScanner fileScanner,
             IDirectoryManager directoryManager,
+            IExcelDataParser excelDataParser,
             ILogger<MainWindowViewModel> logger)
         {
             _documentProcessor = documentProcessor ?? throw new ArgumentNullException(nameof(documentProcessor));
@@ -69,6 +75,7 @@ namespace DocuFiller.ViewModels
             _progressReporter = progressReporter ?? throw new ArgumentNullException(nameof(progressReporter));
             _fileScanner = fileScanner ?? throw new ArgumentNullException(nameof(fileScanner));
             _directoryManager = directoryManager ?? throw new ArgumentNullException(nameof(directoryManager));
+            _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             
             InitializeCommands();
@@ -100,8 +107,16 @@ namespace DocuFiller.ViewModels
             {
                 if (SetProperty(ref _dataPath, value))
                 {
+                    // 检测文件类型
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        var extension = Path.GetExtension(value).ToLowerInvariant();
+                        DataFileType = extension == ".xlsx" ? DataFileType.Excel : DataFileType.Json;
+                    }
+
                     UpdateFileInfo();
                     OnPropertyChanged(nameof(CanStartProcess));
+                    OnPropertyChanged(nameof(DataFileTypeDisplay));
                 }
             }
         }
@@ -226,6 +241,25 @@ namespace DocuFiller.ViewModels
             get => _singleFileInfo;
             set => SetProperty(ref _singleFileInfo, value);
         }
+
+        /// <summary>
+        /// 数据文件类型
+        /// </summary>
+        public DataFileType DataFileType
+        {
+            get => _dataFileType;
+            set => SetProperty(ref _dataFileType, value);
+        }
+
+        /// <summary>
+        /// 数据文件类型显示文本
+        /// </summary>
+        public string DataFileTypeDisplay => DataFileType switch
+        {
+            DataFileType.Excel => "Excel (支持格式)",
+            DataFileType.Json => "JSON (纯文本)",
+            _ => "未知"
+        };
         
         public bool CanStartProcess => !IsProcessing &&
             !string.IsNullOrEmpty(DataPath) &&
@@ -247,6 +281,7 @@ namespace DocuFiller.ViewModels
         public ICommand StartProcessCommand { get; private set; } = null!;
         public ICommand CancelProcessCommand { get; private set; } = null!;
         public ICommand ExitCommand { get; private set; } = null!;
+        public ICommand OpenConverterCommand { get; private set; } = null!;
         
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -268,7 +303,8 @@ namespace DocuFiller.ViewModels
             StartProcessCommand = new RelayCommand(async () => await StartProcessAsync(), () => CanStartProcess);
             CancelProcessCommand = new RelayCommand(CancelProcess, () => CanCancelProcess);
             ExitCommand = new RelayCommand(ExitApplication);
-            
+            OpenConverterCommand = new RelayCommand(OpenConverter);
+
             // 文件夹拖拽相关命令
             SwitchToSingleModeCommand = new RelayCommand(() => IsFolderMode = false);
             SwitchToFolderModeCommand = new RelayCommand(() => IsFolderMode = true);
@@ -318,11 +354,11 @@ namespace DocuFiller.ViewModels
         {
             var dialog = new OpenFileDialog
             {
-                Title = "选择JSON数据文件",
-                Filter = "JSON文件 (*.json)|*.json|所有文件 (*.*)|*.*",
+                Title = "选择数据文件",
+                Filter = "支持的数据文件 (*.xlsx;*.json)|*.xlsx;*.json|Excel 文件 (*.xlsx)|*.xlsx|JSON 文件 (*.json)|*.json|所有文件 (*.*)|*.*",
                 CheckFileExists = true
             };
-            
+
             if (dialog.ShowDialog() == true)
             {
                 DataPath = dialog.FileName;
@@ -385,19 +421,46 @@ namespace DocuFiller.ViewModels
             try
             {
                 ProgressMessage = "加载数据预览...";
-                
-                var statistics = await _dataParser.GetDataStatisticsAsync(DataPath);
-                DataStatistics = statistics;
-                
-                var preview = await _dataParser.GetDataPreviewAsync(DataPath, 10);
-                
-                PreviewData.Clear();
-                foreach (var item in preview)
+
+                if (DataFileType == DataFileType.Excel)
                 {
-                    PreviewData.Add(item);
+                    var preview = await _excelDataParser.GetDataPreviewAsync(DataPath, 10);
+
+                    PreviewData.Clear();
+                    foreach (var item in preview)
+                    {
+                        // 转换 Dictionary<string, FormattedCellValue> 为 Dictionary<string, object>
+                        var convertedItem = item.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.PlainText);
+                        PreviewData.Add(convertedItem);
+                    }
+
+                    var summary = await _excelDataParser.GetDataStatisticsAsync(DataPath);
+                    var fileInfo = new System.IO.FileInfo(DataPath);
+                    DataStatistics = new DataStatistics
+                    {
+                        TotalRecords = summary.ValidKeywordRows,
+                        Fields = preview.SelectMany(d => d.Keys).Distinct().ToList(),
+                        FileSizeBytes = fileInfo.Length
+                    };
+
+                    ProgressMessage = $"Excel 数据加载完成，共 {summary.ValidKeywordRows} 条记录";
                 }
-                
-                ProgressMessage = $"数据加载完成，共 {statistics.TotalRecords} 条记录";
+                else
+                {
+                    // 保留原有的 JSON 预览逻辑
+                    var statistics = await _dataParser.GetDataStatisticsAsync(DataPath);
+                    DataStatistics = statistics;
+
+                    var preview = await _dataParser.GetDataPreviewAsync(DataPath, 10);
+
+                    PreviewData.Clear();
+                    foreach (var item in preview)
+                    {
+                        PreviewData.Add(item);
+                    }
+
+                    ProgressMessage = $"JSON 数据加载完成，共 {statistics.TotalRecords} 条记录";
+                }
             }
             catch (Exception ex)
             {
@@ -487,6 +550,23 @@ namespace DocuFiller.ViewModels
         private void ExitApplication()
         {
             Application.Current.Shutdown();
+        }
+
+        private void OpenConverter()
+        {
+            try
+            {
+                var app = (App)Application.Current;
+                IServiceProvider serviceProvider = app.ServiceProvider;
+                var converterWindow = serviceProvider.GetRequiredService<Views.ConverterWindow>();
+                converterWindow.Owner = Application.Current.MainWindow;
+                converterWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "打开转换器窗口时发生错误");
+                MessageBox.Show($"打开转换器窗口时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
         
         private void UpdateFileInfo()
@@ -875,5 +955,12 @@ namespace DocuFiller.ViewModels
         #endregion
     }
 
-
+    /// <summary>
+    /// 数据文件类型
+    /// </summary>
+    public enum DataFileType
+    {
+        Json,
+        Excel
+    }
 }
