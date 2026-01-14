@@ -26,6 +26,7 @@ namespace DocuFiller.Services
         private readonly IProgressReporter _progressReporter;
         private readonly ContentControlProcessor _contentControlProcessor;
         private readonly CommentManager _commentManager;
+        private readonly IServiceProvider _serviceProvider;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _disposed = false;
 
@@ -37,7 +38,8 @@ namespace DocuFiller.Services
             IFileService fileService,
             IProgressReporter progressReporter,
             ContentControlProcessor contentControlProcessor,
-            CommentManager commentManager)
+            CommentManager commentManager,
+            IServiceProvider serviceProvider)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
@@ -45,6 +47,7 @@ namespace DocuFiller.Services
             _progressReporter = progressReporter ?? throw new ArgumentNullException(nameof(progressReporter));
             _contentControlProcessor = contentControlProcessor ?? throw new ArgumentNullException(nameof(contentControlProcessor));
             _commentManager = commentManager ?? throw new ArgumentNullException(nameof(commentManager));
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
             _progressReporter.ProgressUpdated += OnProgressUpdated;
         }
