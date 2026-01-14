@@ -57,6 +57,9 @@
     <!-- JSON处理 -->
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 
+    <!-- Excel处理 -->
+    <PackageReference Include="EPPlus" Version="7.5.2" />
+
     <!-- 系统配置 -->
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
