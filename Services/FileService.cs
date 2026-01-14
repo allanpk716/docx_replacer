@@ -124,6 +124,11 @@ namespace DocuFiller.Services
             return File.ReadAllText(filePath);
         }
 
+        public async Task<string> ReadAllTextAsync(string path)
+        {
+            return await File.ReadAllTextAsync(path);
+        }
+
         public DateTime GetLastWriteTime(string filePath)
         {
             return File.GetLastWriteTime(filePath);

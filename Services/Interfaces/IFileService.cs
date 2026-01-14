@@ -107,6 +107,13 @@ namespace DocuFiller.Services.Interfaces
         /// <param name="filePath">文件路径</param>
         /// <returns>文件内容</returns>
         string ReadAllText(string filePath);
+
+        /// <summary>
+        /// 读取文件所有文本内容（异步方法）
+        /// </summary>
+        /// <param name="path">文件路径</param>
+        /// <returns>文件内容</returns>
+        Task<string> ReadAllTextAsync(string path);
     }
 
 }
