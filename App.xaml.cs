@@ -99,6 +99,7 @@ namespace DocuFiller
             // 注册服务接口和实现
             services.AddSingleton<IFileService, FileService>();
             services.AddSingleton<IDataParser, DataParserService>();
+            services.AddSingleton<IExcelDataParser, ExcelDataParserService>();
             services.AddSingleton<IProgressReporter, ProgressReporterService>();
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
             services.AddSingleton<IFileScanner, FileScannerService>();
