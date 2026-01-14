@@ -598,6 +598,15 @@ namespace DocuFiller.Services
             return result;
         }
 
+        public async Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
+            string templateFilePath,
+            Dictionary<string, FormattedCellValue> formattedData,
+            string outputFilePath)
+        {
+            // TODO: 实现带格式的文档处理
+            throw new NotImplementedException();
+        }
+
         public void Dispose()
         {
             Dispose(true);

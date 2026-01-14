@@ -49,6 +49,18 @@ namespace DocuFiller.Services.Interfaces
         Task<System.Collections.Generic.List<ContentControlData>> GetContentControlsAsync(string templatePath);
 
         /// <summary>
+        /// 处理文档（支持格式化值）
+        /// </summary>
+        /// <param name="templateFilePath">模板文件路径</param>
+        /// <param name="formattedData">格式化数据字典</param>
+        /// <param name="outputFilePath">输出文件路径</param>
+        /// <returns>处理结果</returns>
+        Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
+            string templateFilePath,
+            System.Collections.Generic.Dictionary<string, FormattedCellValue> formattedData,
+            string outputFilePath);
+
+        /// <summary>
         /// 批量处理文件夹中的模板文件
         /// </summary>
         /// <param name="request">文件夹处理请求</param>
