@@ -141,7 +141,7 @@ namespace DocuFiller.Services.Update
                     Status = "准备下载..."
                 });
 
-                // 流式下载
+                // 流式下载（HttpClient 超时已在 DI 配置中设置为 300 秒）
                 var response = await _httpClient.GetAsync(version.DownloadUrl, HttpCompletionOption.ResponseHeadersRead);
                 response.EnsureSuccessStatusCode();
 
@@ -220,6 +220,26 @@ namespace DocuFiller.Services.Update
             {
                 _logger.LogInformation("开始安装更新: PackagePath={PackagePath}", packagePath);
 
+                // 验证文件大小（防止过大文件导致内存问题）
+                var fileInfo = new FileInfo(packagePath);
+                var maxSizeBytes = 500L * 1024L * 1024L; // 500MB - 与服务端配置一致
+                if (fileInfo.Length > maxSizeBytes)
+                {
+                    _logger.LogError("更新包文件过大: {FileSize} 字节，超过最大限制 {MaxSize} 字节",
+                        fileInfo.Length, maxSizeBytes);
+                    try
+                    {
+                        File.Delete(packagePath);
+                        _logger.LogInformation("已删除过大的更新包: {PackagePath}", packagePath);
+                    }
+                    catch (Exception deleteEx)
+                    {
+                        _logger.LogWarning(deleteEx, "删除过大更新包失败");
+                    }
+                    throw new UpdateException($"更新包文件过大: {fileInfo.Length} 字节，超过最大限制 500MB");
+                }
+                _logger.LogInformation("文件大小验证通过: {FileSize} 字节", fileInfo.Length);
+
                 // 验证文件哈希
                 if (_currentVersionInfo != null && !string.IsNullOrEmpty(_currentVersionInfo.FileHash))
                 {
@@ -228,6 +248,15 @@ namespace DocuFiller.Services.Update
                     if (!hashValid)
                     {
                         _logger.LogError("文件哈希验证失败，取消安装");
+                        try
+                        {
+                            File.Delete(packagePath);
+                            _logger.LogInformation("已删除哈希验证失败的更新包: {PackagePath}", packagePath);
+                        }
+                        catch (Exception deleteEx)
+                        {
+                            _logger.LogWarning(deleteEx, "删除无效更新包失败");
+                        }
                         throw new UpdateException("下载的文件哈希值验证失败，文件可能已损坏或被篡改");
                     }
                     _logger.LogInformation("文件哈希验证成功");
