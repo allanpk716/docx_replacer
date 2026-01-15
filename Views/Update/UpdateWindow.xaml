@@ -15,28 +15,28 @@
 
         <!-- 标题区域 -->
         <StackPanel Grid.Row="0" Margin="0,0,0,16">
-            <TextBlock Text="发现新版本" FontSize="24" FontWeight="Bold" Foreground="#2E7D32"/>
-            <TextBlock FontSize="14" Foreground="#666666" Margin="0,8,0,0">
+            <TextBlock Text="发现新版本" FontSize="24" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/>
+            <TextBlock FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,8,0,0">
                 <Run Text="当前最新版本: "/>
-                <Run Text="{Binding Version}" FontWeight="Bold" Foreground="#2E7D32"/>
+                <Run Text="{Binding Version}" FontWeight="Bold" Foreground="{StaticResource SuccessBrush}"/>
             </TextBlock>
-            <TextBlock FontSize="12" Foreground="#999999">
+            <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}">
                 <Run Text="发布日期: "/>
                 <Run Text="{Binding PublishDate, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}"/>
             </TextBlock>
-            <TextBlock FontSize="12" Foreground="#999999">
+            <TextBlock FontSize="12" Foreground="{StaticResource TextSecondaryBrush}">
                 <Run Text="文件大小: "/>
                 <Run Text="{Binding FileSizeMB, StringFormat='{}{0} MB'}"/>
             </TextBlock>
         </StackPanel>
 
         <!-- 更新说明区域 -->
-        <Border Grid.Row="1" BorderBrush="#E0E0E0" BorderThickness="1" Padding="16"
-                Background="#FAFAFA" CornerRadius="4">
+        <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1" Padding="16"
+                Background="{StaticResource BackgroundBrush}" CornerRadius="4">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <TextBlock Text="{Binding ReleaseNotes}"
                            TextWrapping="Wrap"
-                           Foreground="#333333"
+                           Foreground="{StaticResource TextPrimaryBrush}"
                            FontSize="13"
                            LineHeight="20"/>
             </ScrollViewer>
@@ -53,7 +53,7 @@
                        Margin="0,8,0,0"
                        HorizontalAlignment="Center"
                        FontSize="12"
-                       Foreground="#666666"/>
+                       Foreground="{StaticResource TextSecondaryBrush}"/>
         </StackPanel>
 
         <!-- 按钮区域 -->
@@ -64,36 +64,36 @@
                     Width="100"
                     Height="32"
                     Margin="0,0,8,0"
-                    Background="#F5F5F5"
-                    Foreground="#666666"
-                    BorderBrush="#E0E0E0"/>
+                    Background="{StaticResource BackgroundBrush}"
+                    Foreground="{StaticResource TextSecondaryBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"/>
             <!-- 跳过按钮 -->
             <Button Content="跳过此版本"
                     Command="{Binding SkipCommand}"
                     Width="100"
                     Height="32"
                     Margin="0,0,8,0"
-                    Background="#F5F5F5"
-                    Foreground="#666666"
-                    BorderBrush="#E0E0E0"/>
+                    Background="{StaticResource BackgroundBrush}"
+                    Foreground="{StaticResource TextSecondaryBrush}"
+                    BorderBrush="{StaticResource BorderBrush}"/>
             <!-- 下载按钮 -->
             <Button Content="下载更新"
                     Command="{Binding DownloadCommand}"
                     Width="100"
                     Height="32"
                     Margin="0,0,8,0"
-                    Background="#2E7D32"
+                    Background="{StaticResource SuccessBrush}"
                     Foreground="White"
-                    BorderBrush="#2E7D32"
+                    BorderBrush="{StaticResource SuccessBrush}"
                     Visibility="{Binding IsDownloading, Converter={StaticResource InverseBooleanToVisibilityConverter}}"/>
             <!-- 安装按钮 -->
             <Button Content="立即安装"
                     Command="{Binding InstallCommand}"
                     Width="100"
                     Height="32"
-                    Background="#FF6F00"
+                    Background="{StaticResource WarningBrush}"
                     Foreground="White"
-                    BorderBrush="#FF6F00"
+                    BorderBrush="{StaticResource WarningBrush}"
                     Visibility="{Binding CanUpdate, Converter={StaticResource BooleanToVisibilityConverter}}"/>
         </StackPanel>
     </Grid>

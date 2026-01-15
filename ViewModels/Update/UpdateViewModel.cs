@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using DocuFiller.Models.Update;
 using DocuFiller.Services.Update;
@@ -78,7 +79,10 @@ namespace DocuFiller.ViewModels.Update
                 if (SetProperty(ref _isDownloading, value))
                 {
                     OnPropertyChanged(nameof(CanUpdate));
-                    ((RelayCommand)DownloadCommand).RaiseCanExecuteChanged();
+                    if (DownloadCommand is RelayCommand downloadCmd)
+                    {
+                        downloadCmd.RaiseCanExecuteChanged();
+                    }
                 }
             }
         }
@@ -94,7 +98,10 @@ namespace DocuFiller.ViewModels.Update
                 if (SetProperty(ref _isInstalling, value))
                 {
                     OnPropertyChanged(nameof(CanUpdate));
-                    ((RelayCommand)InstallCommand).RaiseCanExecuteChanged();
+                    if (InstallCommand is RelayCommand installCmd)
+                    {
+                        installCmd.RaiseCanExecuteChanged();
+                    }
                 }
             }
         }
@@ -127,7 +134,10 @@ namespace DocuFiller.ViewModels.Update
             {
                 if (SetProperty(ref _canUpdate, value))
                 {
-                    ((RelayCommand)InstallCommand).RaiseCanExecuteChanged();
+                    if (InstallCommand is RelayCommand installCmd)
+                    {
+                        installCmd.RaiseCanExecuteChanged();
+                    }
                 }
             }
         }
@@ -194,8 +204,20 @@ namespace DocuFiller.ViewModels.Update
 
             var progress = new Progress<DownloadProgress>(p =>
             {
-                DownloadProgress = p.ProgressPercentage;
-                StatusMessage = p.Status;
+                var dispatcher = Application.Current?.Dispatcher;
+                if (dispatcher != null && !dispatcher.CheckAccess())
+                {
+                    dispatcher.Invoke(() =>
+                    {
+                        DownloadProgress = p.ProgressPercentage;
+                        StatusMessage = p.Status;
+                    });
+                }
+                else
+                {
+                    DownloadProgress = p.ProgressPercentage;
+                    StatusMessage = p.Status;
+                }
             });
 
             try
