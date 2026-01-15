@@ -142,6 +142,41 @@ namespace DocuFiller.Tests.Services
             Assert.Equal("new text", newText.Text);
         }
 
+        [Fact]
+        public void ReplaceTextInControl_SdtCellWrappingTableCell_PreservesColumns()
+        {
+            var wrappedCellControl = new SdtCell(
+                new SdtProperties(new Tag() { Val = "test" }),
+                new SdtContentCell(
+                    new TableCell(
+                        new Paragraph(
+                            new Run(new Text("old"))
+                        )
+                    )
+                )
+            );
+
+            var otherCell = new TableCell(
+                new Paragraph(
+                    new Run(new Text("keep"))
+                )
+            );
+
+            var row = new TableRow(wrappedCellControl, otherCell);
+            var table = new Table(row);
+
+            _replacer.ReplaceTextInControl(wrappedCellControl, "new");
+
+            var rowCellLikeCount = row.ChildElements.Count(e => e is TableCell || e is SdtCell);
+            Assert.Equal(2, rowCellLikeCount);
+
+            var replacedText = wrappedCellControl.Descendants<Text>().First().Text;
+            Assert.Equal("new", replacedText);
+
+            var otherText = otherCell.Descendants<Text>().First().Text;
+            Assert.Equal("keep", otherText);
+        }
+
         /// <summary>
         /// 测试表格单元格中的内容控件替换时保留段落结构
         /// </summary>

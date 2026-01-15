@@ -49,13 +49,20 @@ namespace DocuFiller.Services
 
             // 2. 检查是否在表格单元格中
             bool isInTableCell = OpenXmlTableCellHelper.IsInTableCell(control);
+            bool containsTableCell = control.Descendants<TableCell>().Any();
             _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 是否在表格中: {isInTableCell}");
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 是否包含表格单元格: {containsTableCell}");
 
             // 3. 根据位置选择替换策略
             if (isInTableCell)
             {
                 _logger.LogDebug("[SafeTextReplacer] 检测到表格单元格内容控件，使用安全替换策略");
                 ReplaceTextInTableCell(contentContainer, newText, control);
+            }
+            else if (containsTableCell)
+            {
+                _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 不在单元格祖先链中但包含 TableCell，使用包装单元格替换策略");
+                ReplaceTextInWrappedTableCell(control, newText);
             }
             else
             {
@@ -237,6 +244,90 @@ namespace DocuFiller.Services
                 foreach (var run in runs)
                 {
                     contentContainer.AppendChild(run);
+                }
+            }
+        }
+
+        private void ReplaceTextInWrappedTableCell(SdtElement control, string newText)
+        {
+            var targetCell = control.Descendants<TableCell>().FirstOrDefault();
+            if (targetCell == null)
+            {
+                string tag = control.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value ?? "unknown";
+                _logger.LogWarning($"[SafeTextReplacer] 控件 '{tag}' 未找到可替换的 TableCell，跳过包装单元格替换");
+                return;
+            }
+
+            var candidateRuns = targetCell.Descendants<Run>()
+                .Where(r => ReferenceEquals(GetNearestAncestorSdt(r), control))
+                .ToList();
+
+            Run targetRun;
+            if (candidateRuns.Count > 0)
+            {
+                targetRun = candidateRuns[0];
+            }
+            else
+            {
+                var paragraph = targetCell.Elements<Paragraph>().FirstOrDefault();
+                if (paragraph == null)
+                {
+                    paragraph = targetCell.AppendChild(new Paragraph());
+                }
+
+                targetRun = paragraph.AppendChild(new Run());
+            }
+
+            SetRunTextWithLineBreaks(targetRun, newText);
+
+            var targetRunTextSet = targetRun.Descendants<Text>().ToHashSet();
+            var textsToClear = targetCell.Descendants<Text>()
+                .Where(t => ReferenceEquals(GetNearestAncestorSdt(t), control))
+                .Where(t => !targetRunTextSet.Contains(t))
+                .ToList();
+
+            foreach (var text in textsToClear)
+            {
+                text.Text = string.Empty;
+            }
+        }
+
+        private static SdtElement? GetNearestAncestorSdt(OpenXmlElement element)
+        {
+            var current = element.Parent;
+            while (current != null)
+            {
+                if (current is SdtElement sdt)
+                {
+                    return sdt;
+                }
+                current = current.Parent;
+            }
+            return null;
+        }
+
+        private static void SetRunTextWithLineBreaks(Run run, string text)
+        {
+            var runProps = run.RunProperties?.CloneNode(true) as RunProperties;
+            run.RemoveAllChildren();
+            if (runProps != null)
+            {
+                run.AppendChild(runProps);
+            }
+
+            if (string.IsNullOrEmpty(text))
+            {
+                run.AppendChild(new Text(string.Empty) { Space = SpaceProcessingModeValues.Preserve });
+                return;
+            }
+
+            var lines = text.Split(["\n"], StringSplitOptions.None);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                run.AppendChild(new Text(lines[i]) { Space = SpaceProcessingModeValues.Preserve });
+                if (i < lines.Length - 1)
+                {
+                    run.AppendChild(new Break());
                 }
             }
         }
