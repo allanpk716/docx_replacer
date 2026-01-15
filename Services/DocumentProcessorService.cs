@@ -709,109 +709,167 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 用格式化值填充内容控件
+        /// 用格式化值填充内容控件（支持富文本）
         /// </summary>
+        /// <param name="control">内容控件元素</param>
+        /// <param name="formattedValue">格式化的值</param>
+        /// <param name="document">Word 文档</param>
         private void FillContentControlWithFormattedValue(
-            ContentControlData control,
+            SdtElement control,
             FormattedCellValue formattedValue,
             WordprocessingDocument document)
         {
-            // 获取内容控件的 SdtBlock 或 SdtRun
-            var sdtElement = FindContentControlElement(document, control.Tag);
-            if (sdtElement == null) return;
+            // 1. 获取控件标签（用于日志）
+            string? tag = GetControlTag(control);
+            _logger.LogDebug($"开始填充格式化内容控件: {tag}");
 
-            // 获取 SdtContent 部分
-            OpenXmlElement? sdtContent = sdtElement.Descendants<SdtContentBlock>().FirstOrDefault();
-            if (sdtContent == null)
+            // 2. 查找内容容器
+            var contentContainer = FindContentContainer(control);
+            if (contentContainer == null)
             {
-                sdtContent = sdtElement.Descendants<SdtContentRun>().FirstOrDefault();
+                _logger.LogWarning($"控件 {tag} 未找到内容容器");
+                return;
             }
 
-            if (sdtContent == null) return;
+            // 3. 清空现有内容
+            contentContainer.RemoveAllChildren();
 
-            // 清空现有内容
-            sdtContent.RemoveAllChildren();
-
-            // 创建父容器（Paragraph 或 Run）
-            if (sdtContent is SdtContentBlock)
+            // 4. 根据控件类型创建新内容
+            if (control is SdtBlock || contentContainer is SdtContentBlock)
             {
-                var paragraph = new Paragraph();
+                // 块级控件：创建 Paragraph
+                var paragraph = CreateParagraphWithFormattedText(formattedValue);
+                contentContainer.AppendChild(paragraph);
+            }
+            else
+            {
+                // 行内控件：直接添加 Run
                 foreach (var fragment in formattedValue.Fragments)
                 {
                     var run = CreateFormattedRun(fragment);
-                    paragraph.Append(run);
-                }
-                sdtContent.Append(paragraph);
-            }
-            else if (sdtContent is SdtContentRun)
-            {
-                foreach (var fragment in formattedValue.Fragments)
-                {
-                    var run = CreateFormattedRun(fragment);
-                    sdtContent.Append(run);
+                    contentContainer.AppendChild(run);
                 }
             }
+
+            _logger.LogInformation($"✓ 成功填充格式化控件 '{tag}'");
         }
 
         /// <summary>
-        /// 创建带格式的 Run 元素
+        /// 创建包含格式化文本的段落
+        /// </summary>
+        private Paragraph CreateParagraphWithFormattedText(FormattedCellValue formattedValue)
+        {
+            var paragraph = new Paragraph();
+
+            foreach (var fragment in formattedValue.Fragments)
+            {
+                var run = CreateFormattedRun(fragment);
+                paragraph.AppendChild(run);
+            }
+
+            return paragraph;
+        }
+
+        /// <summary>
+        /// 创建带格式的 Run 元素（支持上标、下标）
         /// </summary>
         private Run CreateFormattedRun(TextFragment fragment)
         {
-            var run = new Run(new Text(fragment.Text));
+            var run = new Run();
 
-            // 设置上标或下标
+            // 创建文本元素
+            var text = new Text(fragment.Text) { Space = SpaceProcessingModeValues.Preserve };
+            run.Append(text);
+
+            // 添加格式属性
             if (fragment.IsSuperscript || fragment.IsSubscript)
             {
-                var runProperties = new RunProperties(
-                    new VerticalTextAlignment
-                    {
-                        Val = fragment.IsSuperscript
-                            ? VerticalPositionValues.Superscript
-                            : VerticalPositionValues.Subscript
-                    }
-                );
-                run.InsertBefore(runProperties, run.GetFirstChild<Text>());
+                var runProperties = new RunProperties();
+                runProperties.Append(new VerticalTextAlignment
+                {
+                    Val = fragment.IsSuperscript
+                        ? VerticalPositionValues.Superscript
+                        : VerticalPositionValues.Subscript
+                });
+                run.InsertBefore(runProperties, text);
             }
 
             return run;
         }
 
         /// <summary>
-        /// 查找内容控件元素
+        /// 查找内容控件的内容容器
         /// </summary>
-        private SdtElement FindContentControlElement(WordprocessingDocument document, string tag)
+        private OpenXmlElement? FindContentContainer(SdtElement control)
         {
-            var mainDocumentPart = document.MainDocumentPart;
-            if (mainDocumentPart == null) return null;
+            var runContent = control.Descendants<SdtContentRun>().FirstOrDefault();
+            if (runContent != null) return runContent;
 
-            // 在正文、页眉、页脚中查找
-            var elements = new List<SdtElement>();
+            var blockContent = control.Descendants<SdtContentBlock>().FirstOrDefault();
+            if (blockContent != null) return blockContent;
 
-            // 正文
-            elements.AddRange(mainDocumentPart.Document.Descendants<SdtElement>());
+            var cellContent = control.Descendants<SdtContentCell>().FirstOrDefault();
+            return cellContent;
+        }
 
-            // 页眉
-            foreach (var header in mainDocumentPart.HeaderParts)
+        /// <summary>
+        /// 获取内容控件标签
+        /// </summary>
+        private string? GetControlTag(SdtElement control)
+        {
+            return control.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value;
+        }
+
+        /// <summary>
+        /// 获取文档中所有内容控件（包括页眉页脚）
+        /// </summary>
+        private List<(SdtElement Element, string Tag, ContentControlLocation Location)> GetAllContentControls(
+            WordprocessingDocument document)
+        {
+            var result = new List<(SdtElement, string, ContentControlLocation)>();
+
+            if (document.MainDocumentPart == null)
+                return result;
+
+            // 1. 文档主体
+            foreach (var control in document.MainDocumentPart.Document.Descendants<SdtElement>())
             {
-                elements.AddRange(header.Header.Descendants<SdtElement>());
+                string? tag = GetControlTag(control);
+                if (!string.IsNullOrWhiteSpace(tag))
+                {
+                    result.Add((control, tag, ContentControlLocation.Body));
+                }
             }
 
-            // 页脚
-            foreach (var footer in mainDocumentPart.FooterParts)
+            // 2. 页眉
+            foreach (var headerPart in document.MainDocumentPart.HeaderParts)
             {
-                elements.AddRange(footer.Footer.Descendants<SdtElement>());
+                foreach (var control in headerPart.Header?.Descendants<SdtElement>()
+                    ?? Enumerable.Empty<SdtElement>())
+                {
+                    string? tag = GetControlTag(control);
+                    if (!string.IsNullOrWhiteSpace(tag))
+                    {
+                        result.Add((control, tag, ContentControlLocation.Header));
+                    }
+                }
             }
 
-            // 根据 Tag 查找
-            return elements.FirstOrDefault(e =>
+            // 3. 页脚
+            foreach (var footerPart in document.MainDocumentPart.FooterParts)
             {
-                var sdtProperties = e.Descendants<SdtProperties>().FirstOrDefault();
-                if (sdtProperties == null) return false;
+                foreach (var control in footerPart.Footer?.Descendants<SdtElement>()
+                    ?? Enumerable.Empty<SdtElement>())
+                {
+                    string? tag = GetControlTag(control);
+                    if (!string.IsNullOrWhiteSpace(tag))
+                    {
+                        result.Add((control, tag, ContentControlLocation.Footer));
+                    }
+                }
+            }
 
-                var tagElement = sdtProperties.Descendants<Tag>().FirstOrDefault();
-                return tagElement != null && tagElement.Val == tag;
-            });
+            return result;
         }
 
         public async Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
@@ -826,7 +884,7 @@ namespace DocuFiller.Services
             {
                 _logger.LogInformation($"开始处理文档（格式化数据）: {templateFilePath}");
 
-                // 验证输入
+                // 1. 验证输入
                 if (!_fileService.FileExists(templateFilePath))
                 {
                     result.Errors.Add($"模板文件不存在: {templateFilePath}");
@@ -834,35 +892,42 @@ namespace DocuFiller.Services
                     return result;
                 }
 
-                // 复制模板文件
+                // 2. 复制模板文件
                 File.Copy(templateFilePath, outputFilePath, true);
 
-                // 打开文档进行编辑
+                // 3. 打开文档进行编辑
                 using var document = WordprocessingDocument.Open(outputFilePath, true);
 
-                // 获取模板中的所有内容控件
-                var templateControls = await GetContentControlsAsync(templateFilePath);
+                // 4. 获取模板中的所有内容控件（包括页眉页脚）
+                var allControls = GetAllContentControls(document);
+                _logger.LogInformation($"找到 {allControls.Count} 个内容控件");
 
-                // 填充每个内容控件
-                foreach (var control in templateControls)
+                // 5. 填充每个匹配的内容控件
+                int filledCount = 0;
+                foreach (var controlInfo in allControls)
                 {
-                    if (formattedData.TryGetValue(control.Tag, out var formattedValue))
+                    if (formattedData.TryGetValue(controlInfo.Tag, out var formattedValue))
                     {
-                        FillContentControlWithFormattedValue(control, formattedValue, document);
-                        _logger.LogDebug($"填充内容控件 '{control.Tag}' = {formattedValue.PlainText}");
+                        FillContentControlWithFormattedValue(
+                            controlInfo.Element,
+                            formattedValue,
+                            document);
+                        filledCount++;
                     }
                     else
                     {
-                        _logger.LogWarning($"未找到内容控件 '{control.Tag}' 的数据");
+                        _logger.LogDebug($"未找到控件 '{controlInfo.Tag}' 的数据");
                     }
                 }
 
+                // 6. 保存并关闭
                 document.Save();
 
                 stopwatch.Stop();
                 result.IsSuccess = true;
                 result.SuccessfulRecords = 1;
                 result.GeneratedFiles.Add(outputFilePath);
+                result.Message = $"成功填充 {filledCount} 个内容控件";
                 result.EndTime = DateTime.Now;
 
                 _logger.LogInformation($"文档处理完成: {outputFilePath}, 耗时: {stopwatch.Elapsed.TotalSeconds:F2}s");
