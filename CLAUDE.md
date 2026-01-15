@@ -97,6 +97,24 @@ The application uses DocumentFormat.OpenXml SDK to manipulate Word documents:
 - Data is mapped to controls based on matching field names
 - Supports text content replacement in structured documents
 
+#### Table Content Control Handling (表格内容控件处理)
+表格中的内容控件替换需要特别处理以保持表格结构不变。`SafeTextReplacer` 服务实现了三种替换策略：
+
+| 场景 | 结构示意 | 检测方式 | 处理方法 |
+|------|----------|----------|----------|
+| 控件在单元格内 | `TableCell -> SdtCell` | `isInTableCell = true` | `ReplaceTextInTableCell` |
+| 控件包装单元格 | `TableRow -> SdtCell -> TableCell` | `containsTableCell = true` | `ReplaceTextInWrappedTableCell` |
+| 普通控件 | `SdtRun/SdtBlock` | 两者均为 false | `ReplaceTextStandard` |
+
+**关键注意事项**：
+1. **不要删除 TableCell 结构**：当 `containsTableCell = true` 时，控件包装了整个表格单元格，此时必须使用 `ReplaceTextInWrappedTableCell` 方法，该方法会找到被包装的 TableCell 并只替换其中的文本内容，而不会删除 TableCell 本身
+2. **区分 SdtBlock 和 SdtRun**：块级控件（SdtBlock）包含完整的 Paragraph 结构，处理时需要确保容器内只有一个段落
+3. **避免破坏其他控件**：在 SdtContentBlock 容器内可能存在多个段落，每个段落可能属于不同的控件，不能随意删除
+
+**相关文件**：
+- `Services/SafeTextReplacer.cs`: 核心替换逻辑实现
+- `Utils/OpenXmlTableCellHelper.cs`: 表格单元格位置检测工具
+
 ### JSON Data Structure
 Expected JSON format is an array of objects where each object represents one document:
 ```json
