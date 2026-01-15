@@ -21,6 +21,7 @@ namespace DocuFiller.Services.Update
         private readonly ILogger<UpdateService> _logger;
         private readonly string _serverUrl;
         private readonly string _channel;
+        private VersionInfo? _currentVersionInfo;
 
         /// <summary>
         /// 更新可用事件
@@ -84,6 +85,9 @@ namespace DocuFiller.Services.Update
                     _logger.LogInformation("发现新版本: {LatestVersion} > {CurrentVersion}",
                         versionInfo.Version, currentVersion);
 
+                    // 保存版本信息供后续使用
+                    _currentVersionInfo = versionInfo;
+
                     // 触发更新可用事件
                     UpdateAvailable?.Invoke(this, new UpdateAvailableEventArgs
                     {
@@ -119,6 +123,9 @@ namespace DocuFiller.Services.Update
         {
             if (version == null)
                 throw new ArgumentNullException(nameof(version));
+
+            // 保存版本信息供后续使用
+            _currentVersionInfo = version;
 
             try
             {
@@ -201,7 +208,7 @@ namespace DocuFiller.Services.Update
         /// </summary>
         /// <param name="packagePath">更新包路径</param>
         /// <returns>是否成功启动安装程序</returns>
-        public Task<bool> InstallUpdateAsync(string packagePath)
+        public async Task<bool> InstallUpdateAsync(string packagePath)
         {
             if (string.IsNullOrEmpty(packagePath))
                 throw new ArgumentException("更新包路径不能为空", nameof(packagePath));
@@ -213,8 +220,22 @@ namespace DocuFiller.Services.Update
             {
                 _logger.LogInformation("开始安装更新: PackagePath={PackagePath}", packagePath);
 
-                // TODO: 验证文件哈希（需要从服务器获取版本信息中的哈希值）
-                // await VerifyFileHashAsync(packagePath, expectedHash);
+                // 验证文件哈希
+                if (_currentVersionInfo != null && !string.IsNullOrEmpty(_currentVersionInfo.FileHash))
+                {
+                    _logger.LogInformation("开始验证文件哈希值...");
+                    var hashValid = await VerifyFileHashAsync(packagePath, _currentVersionInfo.FileHash);
+                    if (!hashValid)
+                    {
+                        _logger.LogError("文件哈希验证失败，取消安装");
+                        throw new UpdateException("下载的文件哈希值验证失败，文件可能已损坏或被篡改");
+                    }
+                    _logger.LogInformation("文件哈希验证成功");
+                }
+                else
+                {
+                    _logger.LogWarning("未找到版本信息或哈希值，跳过哈希验证");
+                }
 
                 // 启动安装程序
                 var startInfo = new ProcessStartInfo
@@ -232,7 +253,7 @@ namespace DocuFiller.Services.Update
                 if (process == null)
                 {
                     _logger.LogError("启动安装程序失败");
-                    return Task.FromResult(false);
+                    return false;
                 }
 
                 _logger.LogInformation("安装程序已启动，进程 ID: {ProcessId}", process.Id);
@@ -244,7 +265,7 @@ namespace DocuFiller.Services.Update
                     System.Windows.Application.Current.Shutdown();
                 });
 
-                return Task.FromResult(true);
+                return true;
             }
             catch (Exception ex)
             {

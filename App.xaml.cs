@@ -109,12 +109,11 @@ namespace DocuFiller
             services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
             services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
 
-            // 注册更新服务
+            // 注册更新服务（AddHttpClient 已注册服务，无需重复注册）
             services.AddHttpClient<IUpdateService, UpdateService>(client =>
             {
                 client.Timeout = TimeSpan.FromSeconds(300);
             });
-            services.AddSingleton<IUpdateService, UpdateService>();
 
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
