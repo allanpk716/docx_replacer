@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Wordprocessing;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Utils;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using WordprocessingDocumentType = DocumentFormat.OpenXml.WordprocessingDocumentType;
@@ -52,15 +53,21 @@ namespace DocuFiller.Tests.Integration
 
             var fileService = new FileService();
             var dataParser = new DataParserService(_loggerFactory.CreateLogger<DataParserService>(), fileService);
+            var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
+            var serviceProvider = new ServiceCollection()
+                .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
+                .BuildServiceProvider();
             var processor = new DocumentProcessorService(
                 _loggerFactory.CreateLogger<DocumentProcessorService>(),
                 dataParser,
+                excelDataParser,
                 fileService,
                 new ProgressReporterService(_loggerFactory.CreateLogger<ProgressReporterService>()),
                 new ContentControlProcessor(
                     _loggerFactory.CreateLogger<ContentControlProcessor>(),
                     new CommentManager(_loggerFactory.CreateLogger<CommentManager>())),
-                new CommentManager(_loggerFactory.CreateLogger<CommentManager>()));
+                new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
+                serviceProvider);
 
             // Act
             bool success = await processor.ProcessSingleDocumentAsync(

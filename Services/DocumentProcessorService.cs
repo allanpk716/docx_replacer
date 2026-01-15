@@ -22,6 +22,7 @@ namespace DocuFiller.Services
     {
         private readonly ILogger<DocumentProcessorService> _logger;
         private readonly IDataParser _dataParser;
+        private readonly IExcelDataParser _excelDataParser;
         private readonly IFileService _fileService;
         private readonly IProgressReporter _progressReporter;
         private readonly ContentControlProcessor _contentControlProcessor;
@@ -35,6 +36,7 @@ namespace DocuFiller.Services
         public DocumentProcessorService(
             ILogger<DocumentProcessorService> logger,
             IDataParser dataParser,
+            IExcelDataParser excelDataParser,
             IFileService fileService,
             IProgressReporter progressReporter,
             ContentControlProcessor contentControlProcessor,
@@ -43,6 +45,7 @@ namespace DocuFiller.Services
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
+            _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
             _progressReporter = progressReporter ?? throw new ArgumentNullException(nameof(progressReporter));
             _contentControlProcessor = contentControlProcessor ?? throw new ArgumentNullException(nameof(contentControlProcessor));
@@ -82,7 +85,117 @@ namespace DocuFiller.Services
                     return result;
                 }
 
-                // 解析数据文件
+                // 根据文件扩展名选择解析器
+                string dataExtension = Path.GetExtension(request.DataFilePath)?.ToLowerInvariant() ?? "";
+                _logger.LogInformation($"数据文件扩展名: {dataExtension}");
+
+                if (dataExtension == ".xlsx")
+                {
+                    // 使用 Excel 解析器处理
+                    return await ProcessExcelDataAsync(request);
+                }
+                else
+                {
+                    // 使用 JSON 解析器处理
+                    return await ProcessJsonDataAsync(request);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.AddError($"批量处理过程中发生异常: {ex.Message}");
+                _logger.LogError(ex, "批量处理异常");
+            }
+            finally
+            {
+                result.EndTime = DateTime.Now;
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 处理 Excel 数据文件
+        /// </summary>
+        private async Task<ProcessResult> ProcessExcelDataAsync(ProcessRequest request)
+        {
+            ProcessResult result = new ProcessResult { StartTime = DateTime.Now };
+
+            try
+            {
+                _logger.LogInformation("使用 Excel 解析器处理数据");
+
+                // 解析 Excel 数据文件
+                Dictionary<string, FormattedCellValue> excelData = await _excelDataParser.ParseExcelFileAsync(request.DataFilePath);
+                if (excelData == null || !excelData.Any())
+                {
+                    result.AddError("Excel 数据文件为空或解析失败");
+                    return result;
+                }
+
+                _logger.LogInformation($"成功解析 Excel 数据，共 {excelData.Count} 个键值对");
+
+                // 确保输出目录存在
+                try
+                {
+                    _ = _fileService.EnsureDirectoryExists(request.OutputDirectory);
+                }
+                catch (Exception ex)
+                {
+                    result.AddError($"无法创建输出目录: {request.OutputDirectory}, 错误: {ex.Message}");
+                    return result;
+                }
+
+                // 生成输出文件名
+                string templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
+                string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+                string outputFileName = $"{templateFileName} -- 替换 --{timestamp}.docx";
+                string outputPath = Path.Combine(request.OutputDirectory, outputFileName);
+
+                // 使用格式化数据处理文档
+                ProcessResult processResult = await ProcessDocumentWithFormattedDataAsync(
+                    request.TemplateFilePath,
+                    excelData,
+                    outputPath);
+
+                if (processResult.IsSuccess)
+                {
+                    result.IsSuccess = true;
+                    result.SuccessfulRecords = 1;
+                    result.GeneratedFiles.Add(outputPath);
+                    result.Message = $"Excel 数据处理完成，成功生成 1 个文档";
+
+                    _progressReporter.ReportCompleted(1, "处理完成");
+                }
+                else
+                {
+                    result.AddError($"处理文档失败: {string.Join(", ", processResult.Errors)}");
+                }
+
+                _logger.LogInformation($"Excel 数据处理完成，成功: {result.SuccessfulRecords}");
+            }
+            catch (Exception ex)
+            {
+                result.AddError($"Excel 数据处理过程中发生异常: {ex.Message}");
+                _logger.LogError(ex, "Excel 数据处理异常");
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// 处理 JSON 数据文件
+        /// </summary>
+        private async Task<ProcessResult> ProcessJsonDataAsync(ProcessRequest request)
+        {
+            ProcessResult result = new ProcessResult { StartTime = DateTime.Now };
+
+            try
+            {
+                _logger.LogInformation("使用 JSON 解析器处理数据");
+
+                // 解析 JSON 数据文件
                 List<Dictionary<string, object>> dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
                 if (dataList == null || !dataList.Any())
                 {
@@ -117,14 +230,8 @@ namespace DocuFiller.Services
             }
             catch (Exception ex)
             {
-                result.AddError($"批量处理过程中发生异常: {ex.Message}");
-                _logger.LogError(ex, "批量处理异常");
-            }
-            finally
-            {
-                result.EndTime = DateTime.Now;
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = null;
+                result.AddError($"JSON 数据处理过程中发生异常: {ex.Message}");
+                _logger.LogError(ex, "JSON 数据处理异常");
             }
 
             return result;
