@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using DocuFiller.Configuration;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
+using DocuFiller.Services.Update;
 using DocuFiller.ViewModels;
 using DocuFiller.Utils;
 
@@ -107,6 +108,13 @@ namespace DocuFiller
             services.AddSingleton<IExcelToWordConverter, ExcelToWordConverterService>();
             services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
             services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
+
+            // 注册更新服务
+            services.AddHttpClient<IUpdateService, UpdateService>(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(300);
+            });
+            services.AddSingleton<IUpdateService, UpdateService>();
 
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();

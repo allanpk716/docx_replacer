@@ -63,6 +63,9 @@
 
     <!-- 系统配置 -->
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
+
+    <!-- HTTP客户端 -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>
