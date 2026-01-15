@@ -119,15 +119,7 @@ namespace DocuFiller.Services
             // 删除其他多余的 Run（但保留第一个 Run 的格式）
             var firstRun = runs[0];
 
-            // 清空第一个 Run 的所有子元素
-            firstRun.RemoveAllChildren();
-
-            // 创建新的 Text 元素
-            var textElement = new Text(newText)
-            {
-                Space = SpaceProcessingModeValues.Preserve
-            };
-            firstRun.AppendChild(textElement);
+            SetRunTextWithLineBreaks(firstRun, newText);
 
             // 移除其他多余的 Run
             for (int i = 1; i < runs.Count; i++)
@@ -167,51 +159,15 @@ namespace DocuFiller.Services
             if (paragraphs.Count == 0)
             {
                 // 如果没有段落，创建一个新的
-                var runToInsert = new Run();
-                var runProperties = new RunProperties();
-                var color = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
-                runProperties.AppendChild(color);
-                runToInsert.AppendChild(runProperties);
-
-                var textElement = new Text(newText)
-                {
-                    Space = SpaceProcessingModeValues.Preserve
-                };
-                runToInsert.AppendChild(textElement);
-
-                var newParagraph = new Paragraph(runToInsert);
+                var newParagraph = new Paragraph(new Run());
                 contentContainer.AppendChild(newParagraph);
                 _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 创建了新段落和 Run");
-                return;
+                paragraphs = [newParagraph];
             }
 
-            // 策略：只修改第一个段落的内容，不删除任何段落
-            // 因为每个段落可能属于不同的控件，删除它们会破坏其他控件
-            var firstParagraph = paragraphs[0];
+            ReplaceTextPreservingStructure(contentContainer, newText, control);
 
-            // 获取第一个段落的所有 Run
-            var runs = firstParagraph.Elements<Run>().ToList();
-            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 第一个段落有 {runs.Count} 个 Run");
-
-            // 清空第一个段落的所有内容
-            firstParagraph.RemoveAllChildren();
-
-            // 创建新的 Run 并添加到第一个段落
-            var newRun = new Run();
-            var newRunProperties = new RunProperties();
-            var newColor = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
-            newRunProperties.AppendChild(newColor);
-            newRun.AppendChild(newRunProperties);
-
-            var newTextElement = new Text(newText)
-            {
-                Space = SpaceProcessingModeValues.Preserve
-            };
-            newRun.AppendChild(newTextElement);
-
-            firstParagraph.AppendChild(newRun);
-
-            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 替换了第一个段落的内容为 '{newText.Substring(0, Math.Min(50, newText.Length))}...'");
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 替换了块级控件内容为 '{newText.Substring(0, Math.Min(50, newText.Length))}...'");
             _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 容器内仍有 {contentContainer.Elements<Paragraph>().Count()} 个段落（未删除）");
         }
 
@@ -223,28 +179,47 @@ namespace DocuFiller.Services
         /// <param name="control">内容控件</param>
         private void ReplaceTextStandard(OpenXmlElement contentContainer, string newText, SdtElement control)
         {
-            // 清空容器并重新创建内容
-            contentContainer.RemoveAllChildren();
+            ReplaceTextPreservingStructure(contentContainer, newText, control);
+        }
 
-            if (control is SdtBlock)
+        private void ReplaceTextPreservingStructure(OpenXmlElement contentContainer, string newText, SdtElement control)
+        {
+            var candidateRuns = contentContainer.Descendants<Run>()
+                .Where(r => ReferenceEquals(GetNearestAncestorSdt(r), control))
+                .ToList();
+
+            Run targetRun;
+            if (candidateRuns.Count > 0)
             {
-                // 块级控件：创建带格式的段落
-                var paragraph = new Paragraph();
-                var runs = CreateFormattedRuns(newText);
-                foreach (var run in runs)
-                {
-                    paragraph.AppendChild(run);
-                }
-                contentContainer.AppendChild(paragraph);
+                targetRun = candidateRuns[0];
             }
             else
             {
-                // 行内控件：创建带格式的 Run
-                var runs = CreateFormattedRuns(newText);
-                foreach (var run in runs)
+                if (contentContainer is SdtContentBlock blockContent)
                 {
-                    contentContainer.AppendChild(run);
+                    var paragraph = blockContent.Elements<Paragraph>().FirstOrDefault();
+                    if (paragraph == null)
+                    {
+                        paragraph = blockContent.AppendChild(new Paragraph());
+                    }
+                    targetRun = paragraph.AppendChild(new Run());
                 }
+                else
+                {
+                    targetRun = contentContainer.AppendChild(new Run());
+                }
+            }
+
+            SetRunTextWithLineBreaks(targetRun, newText);
+
+            foreach (var run in candidateRuns)
+            {
+                if (ReferenceEquals(run, targetRun))
+                {
+                    continue;
+                }
+
+                ClearRunTextContent(run);
             }
         }
 
@@ -290,6 +265,17 @@ namespace DocuFiller.Services
             {
                 text.Text = string.Empty;
             }
+
+            var removableElements = targetCell.Descendants()
+                .Where(e => ReferenceEquals(GetNearestAncestorSdt(e), control))
+                .Where(e => e is Break || e is TabChar || e is CarriageReturn)
+                .Where(e => !ReferenceEquals(e.Parent, targetRun))
+                .ToList();
+
+            foreach (var element in removableElements)
+            {
+                element.Remove();
+            }
         }
 
         private static SdtElement? GetNearestAncestorSdt(OpenXmlElement element)
@@ -332,47 +318,16 @@ namespace DocuFiller.Services
             }
         }
 
-        /// <summary>
-        /// 创建格式化的 Run 元素列表（处理换行符）
-        /// </summary>
-        /// <param name="text">要格式化的文本</param>
-        /// <returns>格式化的 Run 列表</returns>
-        private List<Run> CreateFormattedRuns(string text)
+        private static void ClearRunTextContent(Run run)
         {
-            var runs = new List<Run>();
+            var toRemove = run.ChildElements
+                .Where(e => e is Text || e is Break || e is TabChar || e is CarriageReturn)
+                .ToList();
 
-            if (string.IsNullOrEmpty(text))
-                return runs;
-
-            // 按换行符分割文本
-            string[] lines = text.Split(["\n"], StringSplitOptions.None);
-            _logger.LogDebug($"文本分割为 {lines.Length} 行");
-
-            for (int i = 0; i < lines.Length; i++)
+            foreach (var element in toRemove)
             {
-                string line = lines[i];
-
-                // 创建带红色格式的Run
-                var run = new Run();
-                var runProperties = new RunProperties();
-                var color = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
-                runProperties.AppendChild(color);
-                run.AppendChild(runProperties);
-
-                // 添加文本内容
-                var text_element = new Text(line);
-                run.AppendChild(text_element);
-                runs.Add(run);
-
-                // 如果不是最后一行，添加换行符
-                if (i < lines.Length - 1)
-                {
-                    var breakRun = new Run(new Break());
-                    runs.Add(breakRun);
-                }
+                element.Remove();
             }
-
-            return runs;
         }
     }
 }

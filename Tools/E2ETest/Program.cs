@@ -38,6 +38,24 @@ namespace DocuFiller.Tools
                 string dataFile = Path.Combine(testDir, "FD68 IVDR.xlsx");
                 string outputDir = Path.Combine(testDir, "output");
 
+                var templateArg = GetArg(args, "--template");
+                if (!string.IsNullOrWhiteSpace(templateArg))
+                {
+                    templateFile = templateArg;
+                }
+
+                var dataArg = GetArg(args, "--data");
+                if (!string.IsNullOrWhiteSpace(dataArg))
+                {
+                    dataFile = dataArg;
+                }
+
+                var outputArg = GetArg(args, "--output");
+                if (!string.IsNullOrWhiteSpace(outputArg))
+                {
+                    outputDir = outputArg;
+                }
+
                 // 规范化路径
                 templateFile = Path.GetFullPath(templateFile);
                 dataFile = Path.GetFullPath(dataFile);
@@ -215,6 +233,18 @@ namespace DocuFiller.Tools
                 .AddEnvironmentVariables();
 
             return builder.Build();
+        }
+
+        static string? GetArg(string[] args, string name)
+        {
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (string.Equals(args[i], name, StringComparison.OrdinalIgnoreCase) && i + 1 < args.Length)
+                {
+                    return args[i + 1];
+                }
+            }
+            return null;
         }
     }
 }

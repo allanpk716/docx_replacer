@@ -382,6 +382,10 @@ namespace DocuFiller.Services
 
                 foreach (var cell in cells)
                 {
+                    bool hasSdtContext = cell.Descendants<SdtElement>().Any() || cell.Ancestors<SdtElement>().Any();
+                    if (!hasSdtContext)
+                        continue;
+
                     // 获取所有段落，但过滤掉 SdtContentBlock 内的段落
                     var allParagraphs = cell.Elements<Paragraph>().ToList();
                     var directParagraphs = allParagraphs
