@@ -5,7 +5,9 @@
     <Application.Resources>
         <!-- 转换器 -->
         <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
-        
+        <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+
         <!-- 全局样式定义 -->
         
         <!-- 颜色资源 -->
