@@ -88,7 +88,14 @@ namespace DocuFiller.Services
         /// <param name="control">内容控件</param>
         private void ReplaceTextInTableCell(OpenXmlElement contentContainer, string newText, SdtElement control)
         {
-            // 获取所有 Run 元素
+            // 特殊处理：如果是 SdtBlock（格式文本内容控件），需要特别处理段落结构
+            if (control is SdtBlock || contentContainer is SdtContentBlock)
+            {
+                ReplaceTextInTableCellForBlock(control, newText);
+                return;
+            }
+
+            // 获取所有 Run 元素（SdtRun 等行内控件）
             var runs = contentContainer.Descendants<Run>().ToList();
 
             if (runs.Count == 0)
@@ -118,6 +125,66 @@ namespace DocuFiller.Services
             }
 
             _logger.LogDebug("表格单元格安全替换: 保留第一个 Run，删除 {RemovedCount} 个多余 Run", runs.Count - 1);
+        }
+
+        /// <summary>
+        /// 表格单元格中块级控件的安全替换策略
+        /// 关键：确保单元格中只有一个段落，并且该段落只有一个 Run
+        /// </summary>
+        /// <param name="control">内容控件</param>
+        /// <param name="newText">新文本</param>
+        private void ReplaceTextInTableCellForBlock(SdtElement control, string newText)
+        {
+            // 获取内容容器
+            var contentContainer = control.Descendants<SdtContentBlock>().FirstOrDefault();
+            if (contentContainer == null)
+            {
+                _logger.LogWarning("未找到 SdtContentBlock 容器");
+                return;
+            }
+
+            // 获取容器中的所有段落
+            var paragraphs = contentContainer.Elements<Paragraph>().ToList();
+
+            if (paragraphs.Count == 0)
+            {
+                // 如果没有段落，创建一个新的
+                var newParagraph = new Paragraph(
+                    new Run(new Text(newText) { Space = SpaceProcessingModeValues.Preserve })
+                );
+                contentContainer.AppendChild(newParagraph);
+                _logger.LogDebug("表格单元格块级控件: 创建新段落");
+                return;
+            }
+
+            // 保留第一个段落，删除其他段落（但保留第一个段落的 Run 结构）
+            var firstParagraph = paragraphs[0];
+
+            // 清空第一个段落的所有内容
+            firstParagraph.RemoveAllChildren();
+
+            // 在第一个段落中创建新的 Run
+            var newRun = new Run();
+            var runProperties = new RunProperties();
+            var color = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
+            runProperties.AppendChild(color);
+            newRun.AppendChild(runProperties);
+
+            var textElement = new Text(newText)
+            {
+                Space = SpaceProcessingModeValues.Preserve
+            };
+            newRun.AppendChild(textElement);
+
+            firstParagraph.AppendChild(newRun);
+
+            // 移除其他多余的段落
+            for (int i = 1; i < paragraphs.Count; i++)
+            {
+                paragraphs[i].Remove();
+            }
+
+            _logger.LogDebug("表格单元格块级控件: 保留第一个段落，删除 {RemovedCount} 个多余段落", paragraphs.Count - 1);
         }
 
         /// <summary>
