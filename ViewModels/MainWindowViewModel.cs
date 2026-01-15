@@ -616,7 +616,7 @@ namespace DocuFiller.ViewModels
         /// 处理单个文件拖拽
         /// </summary>
         /// <param name="filePath">文件路径</param>
-        public async Task HandleSingleFileDropAsync(string filePath)
+        public Task HandleSingleFileDropAsync(string filePath)
         {
             try
             {
@@ -630,7 +630,7 @@ namespace DocuFiller.ViewModels
                         "文件格式错误",
                         MessageBoxButton.OK,
                         MessageBoxImage.Warning);
-                    return;
+                    return Task.CompletedTask;
                 }
 
                 var fileInfo = new System.IO.FileInfo(filePath);
@@ -674,6 +674,7 @@ namespace DocuFiller.ViewModels
                     MessageBoxButton.OK,
                     MessageBoxImage.Error);
             }
+            return Task.CompletedTask;
         }
 
         /// <summary>

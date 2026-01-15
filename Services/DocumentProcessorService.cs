@@ -1091,7 +1091,7 @@ namespace DocuFiller.Services
             return result;
         }
 
-        public async Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
+        public Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
             string templateFilePath,
             Dictionary<string, FormattedCellValue> formattedData,
             string outputFilePath)
@@ -1108,7 +1108,7 @@ namespace DocuFiller.Services
                 {
                     result.Errors.Add($"模板文件不存在: {templateFilePath}");
                     result.EndTime = DateTime.Now;
-                    return result;
+                    return Task.FromResult(result);
                 }
 
                 // 2. 复制模板文件
@@ -1163,7 +1163,7 @@ namespace DocuFiller.Services
                 result.EndTime = DateTime.Now;
             }
 
-            return result;
+            return Task.FromResult(result);
         }
 
         public void Dispose()

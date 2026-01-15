@@ -76,10 +76,10 @@ namespace DocuFiller.ViewModels
 
         #region Commands
 
-        public ICommand BrowseSourceCommand { get; private set; }
-        public ICommand BrowseOutputCommand { get; private set; }
-        public ICommand StartConvertCommand { get; private set; }
-        public ICommand ClearListCommand { get; private set; }
+        public ICommand BrowseSourceCommand { get; private set; } = null!;
+        public ICommand BrowseOutputCommand { get; private set; } = null!;
+        public ICommand StartConvertCommand { get; private set; } = null!;
+        public ICommand ClearListCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
