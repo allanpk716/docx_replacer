@@ -93,8 +93,38 @@ namespace DocuFiller.ViewModels
 
             // 设置默认输出目录
             _outputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出");
+
+            // 启动时自动检查更新（后台运行）
+            Task.Run(async () => await OnInitializedAsync());
         }
-        
+
+        /// <summary>
+        /// 初始化后的异步操作
+        /// </summary>
+        private async Task OnInitializedAsync()
+        {
+            try
+            {
+                // 从配置读取是否在启动时检查更新
+                var checkOnStartup = GetConfigValue("CheckUpdateOnStartup", "true");
+                if (!bool.Parse(checkOnStartup))
+                {
+                    _logger.LogInformation("启动时自动检查更新已禁用");
+                    return;
+                }
+
+                // 延迟2秒后检查，避免影响启动速度
+                await Task.Delay(2000);
+
+                _logger.LogInformation("开始启动时自动检查更新...");
+                await CheckForUpdateAsync(isAutoCheck: true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "启动时自动检查更新失败");
+            }
+        }
+
         #region 属性
         
         public string TemplatePath
@@ -975,15 +1005,22 @@ namespace DocuFiller.ViewModels
         }
 
         /// <summary>
-        /// 手动检查更新
+        /// 检查更新
         /// </summary>
-        private async Task CheckForUpdateAsync()
+        /// <param name="isAutoCheck">是否为自动检查</param>
+        private async Task CheckForUpdateAsync(bool isAutoCheck = false)
         {
             try
             {
-                _logger.LogInformation("用户手动检查更新");
-
-                ProgressMessage = "正在检查更新...";
+                if (isAutoCheck)
+                {
+                    _logger.LogInformation("自动检查更新");
+                }
+                else
+                {
+                    _logger.LogInformation("用户手动检查更新");
+                    ProgressMessage = "正在检查更新...";
+                }
 
                 var currentVersion = UpdateService.GetCurrentVersion();
                 var channel = GetConfigValue("UpdateChannel", "stable");
@@ -993,7 +1030,10 @@ namespace DocuFiller.ViewModels
                 if (versionInfo != null)
                 {
                     _logger.LogInformation("发现新版本: {Version}", versionInfo.Version);
-                    ProgressMessage = $"发现新版本: {versionInfo.Version}";
+                    if (!isAutoCheck)
+                    {
+                        ProgressMessage = $"发现新版本: {versionInfo.Version}";
+                    }
 
                     // 显示更新窗口
                     ShowUpdateWindow(versionInfo);
@@ -1001,23 +1041,29 @@ namespace DocuFiller.ViewModels
                 else
                 {
                     _logger.LogInformation("当前版本已是最新: {Version}", currentVersion);
-                    ProgressMessage = "当前版本已是最新";
-                    MessageBox.Show(
-                        $"当前版本 {currentVersion} 已是最新版本！",
-                        "检查更新",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
+                    if (!isAutoCheck)
+                    {
+                        ProgressMessage = "当前版本已是最新";
+                        MessageBox.Show(
+                            $"当前版本 {currentVersion} 已是最新版本！",
+                            "检查更新",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "检查更新时发生错误");
-                ProgressMessage = "检查更新失败";
-                MessageBox.Show(
-                    $"检查更新时发生错误：{ex.Message}",
-                    "错误",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                if (!isAutoCheck)
+                {
+                    ProgressMessage = "检查更新失败";
+                    MessageBox.Show(
+                        $"检查更新时发生错误：{ex.Message}",
+                        "错误",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
         }
 
