@@ -36,6 +36,7 @@
     <Compile Include="..\Services\Interfaces\*.cs" Link="Services\Interfaces\%(Filename).cs" />
     <Compile Include="..\Models\*.cs" Link="Models\%(Filename).cs" />
     <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
+    <Compile Include="..\DocuFiller\Utils\OpenXmlTableCellHelper.cs" Link="Utils\OpenXmlTableCellHelper.cs" />
     <Compile Include="..\Exceptions\*.cs" Link="Exceptions\%(Filename).cs" />
   </ItemGroup>
 
