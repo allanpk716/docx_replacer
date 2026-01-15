@@ -34,32 +34,36 @@ namespace DocuFiller.Services
             if (control == null)
                 throw new ArgumentNullException(nameof(control));
 
-            _logger.LogDebug("开始安全替换内容控件文本: '{NewText}'", newText);
+            string tag = control.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value ?? "unknown";
+            _logger.LogInformation($"[SafeTextReplacer] 开始替换控件 '{tag}' (类型: {control.GetType().Name}), 新文本: '{newText}'");
 
             // 1. 查找内容容器
             var contentContainer = FindContentContainer(control);
             if (contentContainer == null)
             {
-                _logger.LogWarning("未找到内容容器，无法替换文本");
+                _logger.LogWarning($"[SafeTextReplacer] 控件 '{tag}' 未找到内容容器，无法替换文本");
                 return;
             }
 
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 内容容器类型: {contentContainer.GetType().Name}");
+
             // 2. 检查是否在表格单元格中
             bool isInTableCell = OpenXmlTableCellHelper.IsInTableCell(control);
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 是否在表格中: {isInTableCell}");
 
             // 3. 根据位置选择替换策略
             if (isInTableCell)
             {
-                _logger.LogDebug("检测到表格单元格内容控件，使用安全替换策略");
+                _logger.LogDebug("[SafeTextReplacer] 检测到表格单元格内容控件，使用安全替换策略");
                 ReplaceTextInTableCell(contentContainer, newText, control);
             }
             else
             {
-                _logger.LogDebug("非表格单元格内容控件，使用标准替换策略");
+                _logger.LogDebug("[SafeTextReplacer] 非表格单元格内容控件，使用标准替换策略");
                 ReplaceTextStandard(contentContainer, newText, control);
             }
 
-            _logger.LogInformation("安全替换完成");
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 替换完成");
         }
 
         /// <summary>
@@ -135,16 +139,22 @@ namespace DocuFiller.Services
         /// <param name="newText">新文本</param>
         private void ReplaceTextInTableCellForBlock(SdtElement control, string newText)
         {
+            string tag = control.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value ?? "unknown";
+            _logger.LogInformation($"[SafeTextReplacer] 处理块级控件 '{tag}', 使用表格单元格块级替换策略");
+
             // 获取内容容器
             var contentContainer = control.Descendants<SdtContentBlock>().FirstOrDefault();
             if (contentContainer == null)
             {
-                _logger.LogWarning("未找到 SdtContentBlock 容器");
+                _logger.LogWarning($"[SafeTextReplacer] 控件 '{tag}' 未找到 SdtContentBlock 容器");
                 return;
             }
 
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 找到 SdtContentBlock 容器");
+
             // 获取容器中的所有段落
             var paragraphs = contentContainer.Elements<Paragraph>().ToList();
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 容器中有 {paragraphs.Count} 个段落");
 
             if (paragraphs.Count == 0)
             {
@@ -153,12 +163,13 @@ namespace DocuFiller.Services
                     new Run(new Text(newText) { Space = SpaceProcessingModeValues.Preserve })
                 );
                 contentContainer.AppendChild(newParagraph);
-                _logger.LogDebug("表格单元格块级控件: 创建新段落");
+                _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 创建了新段落");
                 return;
             }
 
             // 保留第一个段落，删除其他段落（但保留第一个段落的 Run 结构）
             var firstParagraph = paragraphs[0];
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 第一个段落有 {firstParagraph.ChildElements.Count} 个子元素");
 
             // 清空第一个段落的所有内容
             firstParagraph.RemoveAllChildren();
@@ -178,13 +189,17 @@ namespace DocuFiller.Services
 
             firstParagraph.AppendChild(newRun);
 
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 在第一个段落中设置了新文本");
+
             // 移除其他多余的段落
+            int removedCount = 0;
             for (int i = 1; i < paragraphs.Count; i++)
             {
                 paragraphs[i].Remove();
+                removedCount++;
             }
 
-            _logger.LogDebug("表格单元格块级控件: 保留第一个段落，删除 {RemovedCount} 个多余段落", paragraphs.Count - 1);
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 删除了 {removedCount} 个多余段落, 现在容器中有 {contentContainer.Elements<Paragraph>().Count()} 个段落");
         }
 
         /// <summary>
