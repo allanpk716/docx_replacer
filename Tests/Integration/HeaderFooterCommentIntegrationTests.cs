@@ -68,7 +68,8 @@ namespace DocuFiller.Tests.Integration
                     new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
                     new SafeTextReplacer(_loggerFactory.CreateLogger<SafeTextReplacer>())),
                 new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
-                serviceProvider);
+                serviceProvider,
+                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
             // Act
             bool success = await processor.ProcessSingleDocumentAsync(

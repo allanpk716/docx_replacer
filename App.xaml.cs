@@ -105,6 +105,8 @@ namespace DocuFiller
             services.AddSingleton<IFileScanner, FileScannerService>();
             services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
             services.AddSingleton<IExcelToWordConverter, ExcelToWordConverterService>();
+            services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
+            services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
 
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();

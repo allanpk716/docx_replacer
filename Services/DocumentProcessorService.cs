@@ -28,6 +28,7 @@ namespace DocuFiller.Services
         private readonly ContentControlProcessor _contentControlProcessor;
         private readonly CommentManager _commentManager;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ISafeFormattedContentReplacer _safeFormattedContentReplacer;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _disposed = false;
 
@@ -41,7 +42,8 @@ namespace DocuFiller.Services
             IProgressReporter progressReporter,
             ContentControlProcessor contentControlProcessor,
             CommentManager commentManager,
-            IServiceProvider serviceProvider)
+            IServiceProvider serviceProvider,
+            ISafeFormattedContentReplacer safeFormattedContentReplacer)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
@@ -51,6 +53,7 @@ namespace DocuFiller.Services
             _contentControlProcessor = contentControlProcessor ?? throw new ArgumentNullException(nameof(contentControlProcessor));
             _commentManager = commentManager ?? throw new ArgumentNullException(nameof(commentManager));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _safeFormattedContentReplacer = safeFormattedContentReplacer ?? throw new ArgumentNullException(nameof(safeFormattedContentReplacer));
 
             _progressReporter.ProgressUpdated += OnProgressUpdated;
         }
@@ -714,27 +717,71 @@ namespace DocuFiller.Services
         /// <param name="control">内容控件元素</param>
         /// <param name="formattedValue">格式化的值</param>
         /// <param name="document">Word 文档</param>
+        /// <param name="location">控件位置（用于批注）</param>
         private void FillContentControlWithFormattedValue(
             SdtElement control,
             FormattedCellValue formattedValue,
-            WordprocessingDocument document)
+            WordprocessingDocument document,
+            ContentControlLocation location = ContentControlLocation.Body)
         {
             // 1. 获取控件标签（用于日志）
             string? tag = GetControlTag(control);
-            _logger.LogDebug($"开始填充格式化内容控件: {tag}");
-
-            // 2. 查找内容容器
-            var contentContainer = FindContentContainer(control);
-            if (contentContainer == null)
+            if (string.IsNullOrWhiteSpace(tag))
             {
-                _logger.LogWarning($"控件 {tag} 未找到内容容器");
+                _logger.LogWarning("内容控件标签为空，跳过处理");
                 return;
             }
 
-            // 3. 清空现有内容
+            _logger.LogDebug($"开始填充格式化内容控件: {tag}");
+
+            // 2. 检查是否在表格单元格中
+            bool isInTableCell = OpenXmlTableCellHelper.IsInTableCell(control);
+
+            // 3. 记录旧值（用于批注）
+            string oldValue = ExtractExistingText(control);
+
+            // 4. 根据位置选择填充策略
+            if (isInTableCell)
+            {
+                _logger.LogDebug("检测到表格单元格内容控件，使用安全填充策略");
+                _safeFormattedContentReplacer.ReplaceFormattedContentInControl(control, formattedValue);
+            }
+            else
+            {
+                _logger.LogDebug("非表格单元格内容控件，使用标准填充策略");
+                FillFormattedContentStandard(control, formattedValue);
+            }
+
+            // 5. 添加批注（仅正文区域支持，页眉页脚不支持批注）
+            if (location == ContentControlLocation.Body)
+            {
+                AddProcessingComment(document, control, tag, formattedValue.PlainText, oldValue, location);
+            }
+            else
+            {
+                _logger.LogDebug($"跳过批注添加(页眉页脚不支持批注功能),标签: '{tag}', 位置: {location}");
+            }
+
+            _logger.LogInformation($"✓ 成功填充格式化控件 '{tag}' ({location})");
+        }
+
+        /// <summary>
+        /// 标准格式化内容填充（非表格单元格）
+        /// </summary>
+        private void FillFormattedContentStandard(SdtElement control, FormattedCellValue formattedValue)
+        {
+            // 查找内容容器
+            var contentContainer = FindContentContainer(control);
+            if (contentContainer == null)
+            {
+                _logger.LogWarning($"未找到内容容器");
+                return;
+            }
+
+            // 清空现有内容
             contentContainer.RemoveAllChildren();
 
-            // 4. 根据控件类型创建新内容
+            // 根据控件类型创建新内容
             if (control is SdtBlock || contentContainer is SdtContentBlock)
             {
                 // 块级控件：创建 Paragraph
@@ -750,8 +797,6 @@ namespace DocuFiller.Services
                     contentContainer.AppendChild(run);
                 }
             }
-
-            _logger.LogInformation($"✓ 成功填充格式化控件 '{tag}'");
         }
 
         /// <summary>
@@ -818,6 +863,83 @@ namespace DocuFiller.Services
         private string? GetControlTag(SdtElement control)
         {
             return control.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value;
+        }
+
+        /// <summary>
+        /// 提取现有文本内容（用于批注）
+        /// </summary>
+        private string ExtractExistingText(SdtElement control)
+        {
+            List<Text> existingTextElements = control.Descendants<Text>().ToList();
+            return existingTextElements.Any() ? string.Join("", existingTextElements.Select(static t => t.Text)) : string.Empty;
+        }
+
+        /// <summary>
+        /// 添加处理批注
+        /// </summary>
+        private void AddProcessingComment(WordprocessingDocument document, SdtElement control, string tag, string newValue, string oldValue, ContentControlLocation location)
+        {
+            // 查找所有相关的Run元素
+            List<Run> targetRuns = FindAllTargetRuns(control);
+
+            if (targetRuns.Count == 0)
+            {
+                _logger.LogWarning($"未找到目标Run元素，跳过批注添加，标签: '{tag}'");
+                return;
+            }
+
+            string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
+            string locationText = location switch
+            {
+                ContentControlLocation.Header => "页眉",
+                ContentControlLocation.Footer => "页脚",
+                _ => "正文"
+            };
+            string commentText = $"此字段（{locationText}）已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
+
+            // 根据Run数量选择批注方式
+            if (targetRuns.Count == 1)
+            {
+                // 单行文本：使用原有方法
+                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag);
+            }
+            else
+            {
+                // 多行文本：使用新的范围批注方法
+                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag);
+            }
+        }
+
+        /// <summary>
+        /// 查找内容控件中所有相关的Run元素
+        /// </summary>
+        private List<Run> FindAllTargetRuns(SdtElement control)
+        {
+            List<Run> runs = new List<Run>();
+
+            // 尝试从内容容器中查找Run
+            OpenXmlElement? content = FindContentContainer(control);
+            if (content != null)
+            {
+                if (content is SdtContentBlock || content is SdtContentCell)
+                {
+                    // 块级控件：获取段落中的所有Run
+                    runs = content.Descendants<Run>().ToList();
+                }
+                else if (content is SdtContentRun)
+                {
+                    // 行内控件：获取所有Run
+                    runs = content.Descendants<Run>().ToList();
+                }
+            }
+            else
+            {
+                // 直接从控件中查找Run
+                runs = control.Descendants<Run>().ToList();
+            }
+
+            _logger.LogDebug($"在内容控件中找到 {runs.Count} 个Run元素");
+            return runs;
         }
 
         /// <summary>
@@ -911,7 +1033,8 @@ namespace DocuFiller.Services
                         FillContentControlWithFormattedValue(
                             controlInfo.Element,
                             formattedValue,
-                            document);
+                            document,
+                            controlInfo.Location);
                         filledCount++;
                     }
                     else
