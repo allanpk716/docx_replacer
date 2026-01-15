@@ -342,6 +342,9 @@ namespace DocuFiller.Services
                 // 处理文档中的所有内容控件（包括页眉页脚）
                 _contentControlProcessor.ProcessContentControlsInDocument(document, data, cancellationToken);
 
+                // 修复表格单元格结构（重要：处理完所有内容控件后，确保单元格中只有一个段落）
+                FixTableCellStructure(document);
+
                 // 保存文档
                 document.MainDocumentPart.Document.Save();
                 return true;
@@ -351,6 +354,88 @@ namespace DocuFiller.Services
                 _logger.LogError(ex, $"处理单个文档失败: {outputPath}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// 修复表格单元格结构
+        /// 确保每个表格单元格中只有一个段落，多个段落会导致表格结构错乱
+        /// 关键：只合并单元格直接包含的段落，跳过 SdtContentBlock 容器内的段落
+        /// </summary>
+        /// <param name="document">Word 文档</param>
+        private void FixTableCellStructure(WordprocessingDocument document)
+        {
+            if (document.MainDocumentPart == null)
+                return;
+
+            _logger.LogInformation("开始修复表格单元格结构");
+
+            var tables = document.MainDocumentPart.Document.Descendants<Table>().ToList();
+            _logger.LogInformation($"找到 {tables.Count} 个表格");
+
+            int totalCellsFixed = 0;
+            int totalParagraphsMerged = 0;
+
+            foreach (var table in tables)
+            {
+                var cells = table.Descendants<TableCell>().ToList();
+                _logger.LogDebug($"表格中有 {cells.Count} 个单元格");
+
+                foreach (var cell in cells)
+                {
+                    // 获取所有段落，但过滤掉 SdtContentBlock 内的段落
+                    var allParagraphs = cell.Elements<Paragraph>().ToList();
+                    var directParagraphs = allParagraphs
+                        .Where(p => !IsInSdtContentBlock(p))
+                        .ToList();
+
+                    if (directParagraphs.Count <= 1)
+                        continue;
+
+                    _logger.LogDebug($"单元格中有 {directParagraphs.Count} 个直接段落，需要合并（总段落数: {allParagraphs.Count}）");
+
+                    // 保留第一个直接段落
+                    var firstParagraph = directParagraphs[0];
+
+                    // 将其他直接段落中的 Run 移动到第一个段落
+                    for (int i = 1; i < directParagraphs.Count; i++)
+                    {
+                        var extraParagraph = directParagraphs[i];
+                        var runs = extraParagraph.Elements<Run>().ToList();
+
+                        foreach (var run in runs)
+                        {
+                            run.Remove();
+                            firstParagraph.AppendChild(run);
+                        }
+
+                        // 删除多余的段落
+                        extraParagraph.Remove();
+                        totalParagraphsMerged++;
+                    }
+
+                    totalCellsFixed++;
+                }
+            }
+
+            _logger.LogInformation($"表格单元格结构修复完成: 修复了 {totalCellsFixed} 个单元格，合并了 {totalParagraphsMerged} 个段落");
+        }
+
+        /// <summary>
+        /// 检查段落是否在 SdtContentBlock 容器内
+        /// </summary>
+        private bool IsInSdtContentBlock(Paragraph paragraph)
+        {
+            var current = paragraph.Parent;
+            while (current != null)
+            {
+                if (current is SdtContentBlock)
+                    return true;
+                // 如果到达单元格级别，停止查找
+                if (current is TableCell)
+                    return false;
+                current = current.Parent;
+            }
+            return false;
         }
 
         public Task<ValidationResult> ValidateTemplateAsync(string templatePath)
@@ -1043,7 +1128,10 @@ namespace DocuFiller.Services
                     }
                 }
 
-                // 6. 保存并关闭
+                // 6. 修复表格单元格结构（重要：处理完所有内容控件后，确保单元格中只有一个段落）
+                FixTableCellStructure(document);
+
+                // 7. 保存并关闭
                 document.Save();
 
                 stopwatch.Stop();

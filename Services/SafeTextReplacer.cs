@@ -133,7 +133,8 @@ namespace DocuFiller.Services
 
         /// <summary>
         /// 表格单元格中块级控件的安全替换策略
-        /// 关键：确保单元格中只有一个段落，并且该段落只有一个 Run
+        /// 关键：确保 SdtContentBlock 容器中只有一个段落，并且该段落只有一个 Run
+        /// 注意：不删除容器内的其他段落，因为它们可能属于其他控件
         /// </summary>
         /// <param name="control">内容控件</param>
         /// <param name="newText">新文本</param>
@@ -159,47 +160,52 @@ namespace DocuFiller.Services
             if (paragraphs.Count == 0)
             {
                 // 如果没有段落，创建一个新的
-                var newParagraph = new Paragraph(
-                    new Run(new Text(newText) { Space = SpaceProcessingModeValues.Preserve })
-                );
+                var runToInsert = new Run();
+                var runProperties = new RunProperties();
+                var color = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
+                runProperties.AppendChild(color);
+                runToInsert.AppendChild(runProperties);
+
+                var textElement = new Text(newText)
+                {
+                    Space = SpaceProcessingModeValues.Preserve
+                };
+                runToInsert.AppendChild(textElement);
+
+                var newParagraph = new Paragraph(runToInsert);
                 contentContainer.AppendChild(newParagraph);
-                _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 创建了新段落");
+                _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 创建了新段落和 Run");
                 return;
             }
 
-            // 保留第一个段落，删除其他段落（但保留第一个段落的 Run 结构）
+            // 策略：只修改第一个段落的内容，不删除任何段落
+            // 因为每个段落可能属于不同的控件，删除它们会破坏其他控件
             var firstParagraph = paragraphs[0];
-            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 第一个段落有 {firstParagraph.ChildElements.Count} 个子元素");
+
+            // 获取第一个段落的所有 Run
+            var runs = firstParagraph.Elements<Run>().ToList();
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 第一个段落有 {runs.Count} 个 Run");
 
             // 清空第一个段落的所有内容
             firstParagraph.RemoveAllChildren();
 
-            // 在第一个段落中创建新的 Run
+            // 创建新的 Run 并添加到第一个段落
             var newRun = new Run();
-            var runProperties = new RunProperties();
-            var color = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
-            runProperties.AppendChild(color);
-            newRun.AppendChild(runProperties);
+            var newRunProperties = new RunProperties();
+            var newColor = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
+            newRunProperties.AppendChild(newColor);
+            newRun.AppendChild(newRunProperties);
 
-            var textElement = new Text(newText)
+            var newTextElement = new Text(newText)
             {
                 Space = SpaceProcessingModeValues.Preserve
             };
-            newRun.AppendChild(textElement);
+            newRun.AppendChild(newTextElement);
 
             firstParagraph.AppendChild(newRun);
 
-            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 在第一个段落中设置了新文本");
-
-            // 移除其他多余的段落
-            int removedCount = 0;
-            for (int i = 1; i < paragraphs.Count; i++)
-            {
-                paragraphs[i].Remove();
-                removedCount++;
-            }
-
-            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 删除了 {removedCount} 个多余段落, 现在容器中有 {contentContainer.Elements<Paragraph>().Count()} 个段落");
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 替换了第一个段落的内容为 '{newText.Substring(0, Math.Min(50, newText.Length))}...'");
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 容器内仍有 {contentContainer.Elements<Paragraph>().Count()} 个段落（未删除）");
         }
 
         /// <summary>

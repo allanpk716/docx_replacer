@@ -21,7 +21,7 @@ namespace DocuFiller
         private ServiceProvider _serviceProvider = null!;
         private ILogger<App> _logger = null!;
         private IConfiguration _configuration = null!;
-        
+
         /// <summary>
         /// 获取服务提供程序
         /// </summary>
