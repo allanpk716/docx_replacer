@@ -10,7 +10,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using DocuFiller.Models;
+using DocuFiller.Models.Update;
 using DocuFiller.Services.Interfaces;
+using DocuFiller.Services.Update;
+using DocuFiller.Views.Update;
+using DocuFiller.ViewModels.Update;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -26,6 +30,7 @@ namespace DocuFiller.ViewModels
         private readonly IFileScanner _fileScanner;
         private readonly IDirectoryManager _directoryManager;
         private readonly IExcelDataParser _excelDataParser;
+        private readonly IUpdateService _updateService;
         private readonly ILogger<MainWindowViewModel> _logger;
         private CancellationTokenSource? _cancellationTokenSource;
         
@@ -39,6 +44,8 @@ namespace DocuFiller.ViewModels
         private double _progressPercentage = 0;
         private bool _isProcessing = false;
         private DataStatistics _dataStatistics = new();
+        private bool _isUpdateAvailable;
+        private VersionInfo? _latestVersionInfo;
         
         // 文件夹拖拽相关属性
         private string? _templateFolderPath;
@@ -67,6 +74,7 @@ namespace DocuFiller.ViewModels
             IFileScanner fileScanner,
             IDirectoryManager directoryManager,
             IExcelDataParser excelDataParser,
+            IUpdateService updateService,
             ILogger<MainWindowViewModel> logger)
         {
             _documentProcessor = documentProcessor ?? throw new ArgumentNullException(nameof(documentProcessor));
@@ -76,11 +84,13 @@ namespace DocuFiller.ViewModels
             _fileScanner = fileScanner ?? throw new ArgumentNullException(nameof(fileScanner));
             _directoryManager = directoryManager ?? throw new ArgumentNullException(nameof(directoryManager));
             _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
+            _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            
+
             InitializeCommands();
             SubscribeToProgressEvents();
-            
+            SubscribeToUpdateEvents();
+
             // 设置默认输出目录
             _outputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出");
         }
@@ -268,6 +278,24 @@ namespace DocuFiller.ViewModels
              (InputSourceType == InputSourceType.Folder && FolderStructure != null && !FolderStructure.IsEmpty));
         public bool CanCancelProcess => IsProcessing;
         public bool CanProcessFolder => !IsProcessing && IsFolderMode && FolderStructure != null && !FolderStructure.IsEmpty && !string.IsNullOrEmpty(DataPath);
+
+        /// <summary>
+        /// 是否有可用更新
+        /// </summary>
+        public bool IsUpdateAvailable
+        {
+            get => _isUpdateAvailable;
+            set => SetProperty(ref _isUpdateAvailable, value);
+        }
+
+        /// <summary>
+        /// 最新版本信息
+        /// </summary>
+        public VersionInfo? LatestVersionInfo
+        {
+            get => _latestVersionInfo;
+            set => SetProperty(ref _latestVersionInfo, value);
+        }
         
         #endregion
         
@@ -282,7 +310,8 @@ namespace DocuFiller.ViewModels
         public ICommand CancelProcessCommand { get; private set; } = null!;
         public ICommand ExitCommand { get; private set; } = null!;
         public ICommand OpenConverterCommand { get; private set; } = null!;
-        
+        public ICommand CheckForUpdateCommand { get; private set; } = null!;
+
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
         public ICommand SwitchToFolderModeCommand { get; private set; } = null!;
@@ -304,6 +333,7 @@ namespace DocuFiller.ViewModels
             CancelProcessCommand = new RelayCommand(CancelProcess, () => CanCancelProcess);
             ExitCommand = new RelayCommand(ExitApplication);
             OpenConverterCommand = new RelayCommand(OpenConverter);
+            CheckForUpdateCommand = new RelayCommand(async () => await CheckForUpdateAsync());
 
             // 文件夹拖拽相关命令
             SwitchToSingleModeCommand = new RelayCommand(() => IsFolderMode = false);
@@ -313,10 +343,15 @@ namespace DocuFiller.ViewModels
         }
         
 
-        
+
         private void SubscribeToProgressEvents()
         {
             _progressReporter.ProgressUpdated += OnProgressUpdated;
+        }
+
+        private void SubscribeToUpdateEvents()
+        {
+            _updateService.UpdateAvailable += OnUpdateAvailable;
         }
         
         private void OnProgressUpdated(object? sender, ProgressEventArgs e)
@@ -936,6 +971,131 @@ namespace DocuFiller.ViewModels
                         await HandleFolderDropAsync(directory);
                     });
                 }
+            }
+        }
+
+        /// <summary>
+        /// 手动检查更新
+        /// </summary>
+        private async Task CheckForUpdateAsync()
+        {
+            try
+            {
+                _logger.LogInformation("用户手动检查更新");
+
+                ProgressMessage = "正在检查更新...";
+
+                var currentVersion = UpdateService.GetCurrentVersion();
+                var channel = GetConfigValue("UpdateChannel", "stable");
+
+                var versionInfo = await _updateService.CheckForUpdateAsync(currentVersion, channel);
+
+                if (versionInfo != null)
+                {
+                    _logger.LogInformation("发现新版本: {Version}", versionInfo.Version);
+                    ProgressMessage = $"发现新版本: {versionInfo.Version}";
+
+                    // 显示更新窗口
+                    ShowUpdateWindow(versionInfo);
+                }
+                else
+                {
+                    _logger.LogInformation("当前版本已是最新: {Version}", currentVersion);
+                    ProgressMessage = "当前版本已是最新";
+                    MessageBox.Show(
+                        $"当前版本 {currentVersion} 已是最新版本！",
+                        "检查更新",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查更新时发生错误");
+                ProgressMessage = "检查更新失败";
+                MessageBox.Show(
+                    $"检查更新时发生错误：{ex.Message}",
+                    "错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 处理更新可用事件
+        /// </summary>
+        private void OnUpdateAvailable(object? sender, UpdateAvailableEventArgs e)
+        {
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                try
+                {
+                    _logger.LogInformation("收到更新可用事件: {Version}", e.Version.Version);
+
+                    LatestVersionInfo = e.Version;
+                    IsUpdateAvailable = true;
+
+                    // 显示更新通知对话框
+                    var result = MessageBox.Show(
+                        $"发现新版本 {e.Version.Version}！\n\n是否立即查看更新详情？",
+                        "发现新版本",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Information);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        ShowUpdateWindow(e.Version);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "处理更新可用事件时发生错误");
+                }
+            });
+        }
+
+        /// <summary>
+        /// 显示更新窗口
+        /// </summary>
+        private void ShowUpdateWindow(VersionInfo versionInfo)
+        {
+            try
+            {
+                _logger.LogInformation("显示更新窗口: {Version}", versionInfo.Version);
+
+                var app = (App)Application.Current;
+                var updateViewModel = app.ServiceProvider.GetRequiredService<UpdateViewModel>();
+                var updateWindow = new UpdateWindow(updateViewModel);
+
+                updateWindow.Owner = Application.Current.MainWindow;
+                updateWindow.ShowDialog();
+
+                _logger.LogInformation("更新窗口已关闭");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "显示更新窗口时发生错误");
+                MessageBox.Show(
+                    $"显示更新窗口时发生错误：{ex.Message}",
+                    "错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 从配置获取值
+        /// </summary>
+        private static string GetConfigValue(string key, string defaultValue)
+        {
+            try
+            {
+                var value = System.Configuration.ConfigurationManager.AppSettings[key];
+                return string.IsNullOrEmpty(value) ? defaultValue : value;
+            }
+            catch
+            {
+                return defaultValue;
             }
         }
 

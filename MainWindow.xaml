@@ -34,12 +34,20 @@
                         <Run Text="关键词编辑器" FontSize="15" FontWeight="Medium"/>
                     </Hyperlink>
                 </TextBlock>
-                <TextBlock>
+                <TextBlock Margin="0,0,30,0">
                     <Hyperlink x:Name="ConverterHyperlink"
                                Click="ConverterHyperlink_Click"
                                Foreground="#E67E22"
                                TextDecorations="Underline">
                         <Run Text="JSON转Excel转换工具" FontSize="15" FontWeight="Medium"/>
+                    </Hyperlink>
+                </TextBlock>
+                <TextBlock>
+                    <Hyperlink x:Name="CheckForUpdateHyperlink"
+                               Click="CheckForUpdateHyperlink_Click"
+                               Foreground="#27AE60"
+                               TextDecorations="Underline">
+                        <Run Text="检查更新" FontSize="15" FontWeight="Medium"/>
                     </Hyperlink>
                 </TextBlock>
             </StackPanel>

@@ -64,6 +64,25 @@ namespace DocuFiller
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
+
+        /// <summary>
+        /// 检查更新超链接点击事件
+        /// </summary>
+        private void CheckForUpdateHyperlink_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            try
+            {
+                if (DataContext is MainWindowViewModel viewModel)
+                {
+                    viewModel.CheckForUpdateCommand?.Execute(null);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"检查更新失败：{ex.Message}", "错误",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
         
         /// <summary>
         /// 窗口关闭时的处理
