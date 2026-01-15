@@ -33,6 +33,7 @@
     <Compile Include="..\Services\DataParserService.cs" Link="Services\DataParserService.cs" />
     <Compile Include="..\Services\ExcelDataParserService.cs" Link="Services\ExcelDataParserService.cs" />
     <Compile Include="..\Services\SafeTextReplacer.cs" Link="Services\SafeTextReplacer.cs" />
+    <Compile Include="..\Services\SafeFormattedContentReplacer.cs" Link="Services\SafeFormattedContentReplacer.cs" />
     <Compile Include="..\Services\ProgressReporterService.cs" Link="Services\ProgressReporterService.cs" />
     <Compile Include="..\Services\Interfaces\*.cs" Link="Services\Interfaces\%(Filename).cs" />
     <Compile Include="..\Models\*.cs" Link="Models\%(Filename).cs" />
