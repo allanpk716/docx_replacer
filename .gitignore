@@ -6,3 +6,4 @@ bin/
 /*.zip
 nul
 .worktrees/
+scripts/build/
