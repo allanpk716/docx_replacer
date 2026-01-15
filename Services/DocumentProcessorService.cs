@@ -404,12 +404,20 @@ namespace DocuFiller.Services
                     for (int i = 1; i < directParagraphs.Count; i++)
                     {
                         var extraParagraph = directParagraphs[i];
-                        var runs = extraParagraph.Elements<Run>().ToList();
-
-                        foreach (var run in runs)
+                        bool extraHasContent = extraParagraph.ChildElements.Any(e => e is not ParagraphProperties);
+                        if (extraHasContent && firstParagraph.ChildElements.Any(e => e is not ParagraphProperties))
                         {
-                            run.Remove();
-                            firstParagraph.AppendChild(run);
+                            firstParagraph.AppendChild(new Run(new Break()));
+                        }
+
+                        var elementsToMove = extraParagraph.ChildElements
+                            .Where(e => e is not ParagraphProperties)
+                            .ToList();
+
+                        foreach (var element in elementsToMove)
+                        {
+                            element.Remove();
+                            firstParagraph.AppendChild(element);
                         }
 
                         // 删除多余的段落
