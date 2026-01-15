@@ -7,6 +7,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocuFiller.Models;
 using DocuFiller.Services;
+using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Xunit;
 using WordprocessingDocumentType = DocumentFormat.OpenXml.WordprocessingDocumentType;
@@ -25,7 +26,8 @@ namespace DocuFiller.Tests
             var commentLogger = new Logger<CommentManager>(loggerFactory);
             _commentManager = new CommentManager(commentLogger);
             var processorLogger = new Logger<ContentControlProcessor>(loggerFactory);
-            _processor = new ContentControlProcessor(processorLogger, _commentManager);
+            var safeReplacerLogger = new Logger<SafeTextReplacer>(loggerFactory);
+            _processor = new ContentControlProcessor(processorLogger, _commentManager, new SafeTextReplacer(safeReplacerLogger));
 
             // 设置测试输出路径
             _testOutputPath = Path.Combine(Path.GetTempPath(), "DocuFillerTests");

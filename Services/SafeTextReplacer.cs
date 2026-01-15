@@ -128,26 +128,72 @@ namespace DocuFiller.Services
         /// <param name="control">内容控件</param>
         private void ReplaceTextStandard(OpenXmlElement contentContainer, string newText, SdtElement control)
         {
-            // 标准逻辑：清空容器并重新创建内容
-            // 这个逻辑与现有代码类似，但更安全
+            // 清空容器并重新创建内容
             contentContainer.RemoveAllChildren();
 
             if (control is SdtBlock)
             {
-                var paragraph = new Paragraph(new Run(new Text(newText)
+                // 块级控件：创建带格式的段落
+                var paragraph = new Paragraph();
+                var runs = CreateFormattedRuns(newText);
+                foreach (var run in runs)
                 {
-                    Space = SpaceProcessingModeValues.Preserve
-                }));
+                    paragraph.AppendChild(run);
+                }
                 contentContainer.AppendChild(paragraph);
             }
             else
             {
-                var run = new Run(new Text(newText)
+                // 行内控件：创建带格式的 Run
+                var runs = CreateFormattedRuns(newText);
+                foreach (var run in runs)
                 {
-                    Space = SpaceProcessingModeValues.Preserve
-                });
-                contentContainer.AppendChild(run);
+                    contentContainer.AppendChild(run);
+                }
             }
+        }
+
+        /// <summary>
+        /// 创建格式化的 Run 元素列表（处理换行符）
+        /// </summary>
+        /// <param name="text">要格式化的文本</param>
+        /// <returns>格式化的 Run 列表</returns>
+        private List<Run> CreateFormattedRuns(string text)
+        {
+            var runs = new List<Run>();
+
+            if (string.IsNullOrEmpty(text))
+                return runs;
+
+            // 按换行符分割文本
+            string[] lines = text.Split(["\n"], StringSplitOptions.None);
+            _logger.LogDebug($"文本分割为 {lines.Length} 行");
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+
+                // 创建带红色格式的Run
+                var run = new Run();
+                var runProperties = new RunProperties();
+                var color = new DocumentFormat.OpenXml.Wordprocessing.Color() { Val = "FF0000" }; // 红色
+                runProperties.AppendChild(color);
+                run.AppendChild(runProperties);
+
+                // 添加文本内容
+                var text_element = new Text(line);
+                run.AppendChild(text_element);
+                runs.Add(run);
+
+                // 如果不是最后一行，添加换行符
+                if (i < lines.Length - 1)
+                {
+                    var breakRun = new Run(new Break());
+                    runs.Add(breakRun);
+                }
+            }
+
+            return runs;
         }
     }
 }

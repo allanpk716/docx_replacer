@@ -5,6 +5,7 @@ using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocuFiller.Models;
+using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.Services
@@ -16,11 +17,13 @@ namespace DocuFiller.Services
     {
         private readonly ILogger<ContentControlProcessor> _logger;
         private readonly CommentManager _commentManager;
+        private readonly ISafeTextReplacer _safeTextReplacer;
 
-        public ContentControlProcessor(ILogger<ContentControlProcessor> logger, CommentManager commentManager)
+        public ContentControlProcessor(ILogger<ContentControlProcessor> logger, CommentManager commentManager, ISafeTextReplacer safeTextReplacer)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _commentManager = commentManager ?? throw new ArgumentNullException(nameof(commentManager));
+            _safeTextReplacer = safeTextReplacer ?? throw new ArgumentNullException(nameof(safeTextReplacer));
         }
 
         /// <summary>
@@ -205,17 +208,10 @@ namespace DocuFiller.Services
         /// </summary>
         private void ProcessContentReplacement(SdtElement control, string value)
         {
-            // 尝试查找内容容器
-            OpenXmlElement? content = FindContentContainer(control);
+            // 使用安全文本替换服务
+            _safeTextReplacer.ReplaceTextInControl(control, value);
 
-            if (content != null)
-            {
-                ReplaceContentInContainer(content, value, control);
-            }
-            else
-            {
-                ReplaceTextDirectly(control, value);
-            }
+            _logger.LogDebug($"使用安全文本替换服务替换内容: '{value}'");
         }
 
         /// <summary>
