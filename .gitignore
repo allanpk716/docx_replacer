@@ -45,3 +45,4 @@ ExcelToWordVerifier/obj/
 # ========== Update Server (已迁移到独立仓库) ==========
 # git@github.com:LiteHomeLab/update-server.git
 docufiller-update-server/
+.claude/
