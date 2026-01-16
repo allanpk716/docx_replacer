@@ -28,18 +28,42 @@ DocuFiller是一个基于C# + .NET 8 + WPF开发的桌面应用程序，用于�
 ## 项目结构
 
 ```
-DocuFiller/
-├── Models/                 # 数据模型
-├── ViewModels/            # 视图模型
-├── Services/              # 业务服务
-│   ├── Interfaces/        # 服务接口
-│   └── *.cs              # 服务实现
-├── Utils/                 # 工具类
-├── Examples/              # 示例文件
-├── Templates/             # 模板文件
-├── Logs/                  # 日志文件
-└── Output/               # 输出文件
+docx_replacer/                         # 主项目根目录
+├── Models/                            # 数据模型
+├── ViewModels/                        # 视图模型
+├── Views/                             # XAML 视图
+├── Services/                          # 业务服务
+│   ├── Interfaces/                    # 服务接口
+│   └── *.cs                          # 服务实现
+├── Converters/                        # WPF 值转换器
+├── Utils/                             # 工具类
+├── Exceptions/                        # 自定义异常
+├── Configuration/                     # 配置类
+├── Properties/                        # 项目属性
+├── DocuFiller/                        # 资源文件夹
+├── Tools/                             # 诊断和测试工具
+│   ├── E2ETest/                      # 端到端测试
+│   ├── ExcelToWordVerifier/          # Excel 转 Word 验证工具
+│   ├── ExcelFormattedTestGenerator/  # Excel 格式化测试生成器
+│   └── ...                           # 其他诊断工具
+├── Tests/                             # 单元测试
+├── scripts/                           # 构建和发布脚本
+├── docs/                              # 项目文档
+│   ├── features/                     # 功能说明文档
+│   ├── plans/                        # 开发计划文档
+│   └── *.md                          # 其他文档
+├── Examples/                          # 示例数据文件（输出目录）
+├── Templates/                         # 模板文件（输出目录）
+├── Logs/                              # 日志文件（输出目录）
+└── Output/                            # 生成的文档（输出目录）
 ```
+
+### 相关项目
+
+- **[update-server](https://github.com/LiteHomeLab/update-server)** - 应用自动更新服务器
+  - 独立的 Go 语言项目
+  - 支持多应用的发布和更新
+  - 用于 DocuFiller 的自动更新功能
 
 ## 使用方法
 

@@ -1,9 +1,47 @@
-/test_data
-/.vs
+# ========== Build Outputs ==========
 obj/
 bin/
+*.exe
+*.dll
+*.pdb
+
+# ========== IDE & Editor ==========
+/.vs
+/.vscode
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ========== Test Data ==========
+/test_data
+test_data/**/*.docx
+test_data/**/*.xlsx
+
+# ========== Generated Documents ==========
 *.docx
 /*.zip
+/output/
+
+# ========== Temporary Files ==========
 nul
+*.tmp
+*.log
+*.cache
+
+# ========== Git Worktrees ==========
 .worktrees/
+
+# ========== Script Build Outputs ==========
 scripts/build/
+
+# ========== Tool Projects Build Outputs ==========
+Tools/*/bin/
+Tools/*/obj/
+ExcelToWordVerifier/bin/
+ExcelToWordVerifier/obj/
+
+# ========== Update Server (已迁移到独立仓库) ==========
+# git@github.com:LiteHomeLab/update-server.git
+docufiller-update-server/
