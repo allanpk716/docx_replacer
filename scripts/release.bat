@@ -93,8 +93,16 @@ if not "%TAG_FROM_PARAM%"=="" (
 
 REM Otherwise, try to get current git tag
 echo Detecting git tag...
-for /f "delims=" %%t in ('git.exe describe --tags --abbrev=0 2^>nul') do (
-    set CURRENT_TAG=%%t
+git.exe describe --tags --abbrev=0 2>.giterr >.gittag
+if exist .gittag (
+    set /p CURRENT_TAG=<.gittag
+    del .gittag
+)
+if exist .giterr del .giterr
+
+REM Trim any trailing carriage returns from the tag
+if defined CURRENT_TAG (
+    for /f "delims=" %%t in ("!CURRENT_TAG!") do set CURRENT_TAG=%%t
 )
 
 if "!CURRENT_TAG!"=="" (
@@ -115,3 +123,70 @@ set TAG_TO_USE=!CURRENT_TAG!
 echo Found tag: !TAG_TO_USE!
 
 :TagDetected
+
+REM ========================================
+REM Parse Channel and Version
+REM ========================================
+
+if defined USER_DEFINED_CHANNEL (
+    REM Use provided channel and version
+    set CHANNEL=%USER_DEFINED_CHANNEL%
+    set VERSION=%TAG_TO_USE%
+    echo.
+    echo ========================================
+    echo Manual Release Mode
+    echo ========================================
+    echo Channel: !CHANNEL!
+    echo Version: !VERSION!
+    goto :ParsingComplete
+)
+
+REM Auto-detect from git tag
+echo.
+echo ========================================
+echo Parsing tag: !TAG_TO_USE!
+echo ========================================
+
+REM Check if tag starts with 'v'
+echo !TAG_TO_USE! | findstr /i "^v" >nul
+if errorlevel 1 (
+    echo Error: Tag must start with 'v' (e.g., v1.0.0 or v1.0.0-beta)
+    echo Invalid tag: !TAG_TO_USE!
+    exit /b 1
+)
+
+REM Check for -beta suffix
+echo !TAG_TO_USE! | findstr /i "-beta$" >nul
+if errorlevel 1 (
+    REM No -beta suffix = stable channel
+    set CHANNEL=stable
+    set VERSION=!TAG_TO_USE:~1!
+    echo Detected: STABLE release
+) else (
+    REM Has -beta suffix = beta channel
+    set CHANNEL=beta
+    REM Remove 'v' prefix and '-beta' suffix
+    set VERSION=!TAG_TO_USE:~1,-5!
+    echo Detected: BETA release
+)
+
+echo Version: !VERSION!
+
+:ParsingComplete
+echo.
+
+REM Validate version format - must start with x.y.z
+echo !VERSION! | findstr /i "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" >nul
+if errorlevel 1 (
+    echo Error: Invalid version format: !VERSION!
+    echo Expected format: x.y.z (e.g., 1.0.0 or 1.0.0-test)
+    exit /b 1
+)
+
+echo ========================================
+echo Release Summary
+echo ========================================
+echo Channel: !CHANNEL!
+echo Version: !VERSION!
+echo ========================================
+echo.
