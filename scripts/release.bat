@@ -236,3 +236,60 @@ echo Build completed successfully!
 echo ========================================
 echo Build output: !BUILD_FILE!
 echo.
+
+REM ========================================
+REM Upload to Update Server
+REM ========================================
+
+echo.
+echo ========================================
+echo Step 2: Uploading to Update Server
+echo ========================================
+echo Server: !UPDATE_SERVER_URL!
+echo Program: docufiller
+echo Channel: !CHANNEL!
+echo Version: !VERSION!
+echo File: !BUILD_FILE!
+echo ========================================
+echo.
+
+REM Upload using upload-admin.exe
+"!UPLOAD_ADMIN_PATH!" upload ^
+  --program-id docufiller ^
+  --channel !CHANNEL! ^
+  --version !VERSION! ^
+  --file "!BUILD_FILE!" ^
+  --server !UPDATE_SERVER_URL! ^
+  --token !UPDATE_TOKEN!
+
+if errorlevel 1 (
+    echo.
+    echo ========================================
+    echo UPLOAD FAILED!
+    echo ========================================
+    echo.
+    echo The build file is available at: !BUILD_FILE!
+    echo You can retry upload manually with:
+    echo.
+    echo "!UPLOAD_ADMIN_PATH!" upload --program-id docufiller --channel !CHANNEL! --version !VERSION! --file "!BUILD_FILE!" --server !UPDATE_SERVER_URL! --token YOUR_TOKEN
+    echo.
+    exit /b 1
+)
+
+echo.
+echo ========================================
+echo Release completed successfully!
+echo ========================================
+echo.
+echo Summary:
+echo   Program: docufiller
+echo   Channel: !CHANNEL!
+echo   Version: !VERSION!
+echo   Server: !UPDATE_SERVER_URL!
+echo.
+echo You can verify the release at:
+echo   !UPDATE_SERVER_URL!/api/version/latest?channel=!CHANNEL!
+echo.
+echo ========================================
+
+endlocal
