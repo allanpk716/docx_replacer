@@ -201,6 +201,15 @@ echo ========================================
 echo Step 1: Building DocuFiller
 echo ========================================
 
+REM Check if build.bat exists
+if not exist "%SCRIPT_DIR%build.bat" (
+    echo.
+    echo Error: build.bat not found in scripts directory!
+    echo.
+    echo Please ensure build.bat exists before running release.
+    exit /b 1
+)
+
 call "%SCRIPT_DIR%build.bat"
 if errorlevel 1 (
     echo.
@@ -210,11 +219,6 @@ if errorlevel 1 (
     echo Release aborted due to build failure.
     exit /b 1
 )
-
-echo.
-echo ========================================
-echo Build completed successfully!
-echo ========================================
 
 REM Verify build output exists
 set BUILD_FILE=%SCRIPT_DIR%build\docufiller-!VERSION!.zip
@@ -226,5 +230,9 @@ if not exist "!BUILD_FILE!" (
     exit /b 1
 )
 
+echo.
+echo ========================================
+echo Build completed successfully!
+echo ========================================
 echo Build output: !BUILD_FILE!
 echo.
