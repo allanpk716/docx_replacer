@@ -191,3 +191,40 @@ echo Channel: !CHANNEL!
 echo Version: !VERSION!
 echo ========================================
 echo.
+
+REM ========================================
+REM Build Project
+REM ========================================
+
+echo.
+echo ========================================
+echo Step 1: Building DocuFiller
+echo ========================================
+
+call "%SCRIPT_DIR%build.bat"
+if errorlevel 1 (
+    echo.
+    echo ========================================
+    echo BUILD FAILED!
+    echo ========================================
+    echo Release aborted due to build failure.
+    exit /b 1
+)
+
+echo.
+echo ========================================
+echo Build completed successfully!
+echo ========================================
+
+REM Verify build output exists
+set BUILD_FILE=%SCRIPT_DIR%build\docufiller-!VERSION!.zip
+if not exist "!BUILD_FILE!" (
+    echo Error: Build file not found: !BUILD_FILE!
+    echo.
+    echo Expected: build\docufiller-!VERSION!.zip
+    echo Please check if build.bat completed successfully.
+    exit /b 1
+)
+
+echo Build output: !BUILD_FILE!
+echo.
