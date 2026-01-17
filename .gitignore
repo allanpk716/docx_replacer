@@ -46,3 +46,7 @@ ExcelToWordVerifier/obj/
 # git@github.com:LiteHomeLab/update-server.git
 docufiller-update-server/
 .claude/
+
+# ========== Release Configuration ==========
+# Release configuration (contains sensitive token)
+scripts/config/release-config.bat

@@ -1,0 +1,12 @@
+@echo off
+REM Update Server Configuration for DocuFiller Release
+REM This file is a template. Copy to release-config.bat and fill in your values.
+
+REM Update Server URL (your deployed server address)
+set UPDATE_SERVER_URL=http://172.18.200.47:58100
+
+REM Upload Token for authentication (must match your server's config)
+set UPDATE_TOKEN=change-this-token-in-production
+
+REM Path to upload-admin.exe tool
+set UPLOAD_ADMIN_PATH=C:\WorkSpace\Go2Hell\src\github.com\LiteHomeLab\update-server\bin\upload-admin.exe
