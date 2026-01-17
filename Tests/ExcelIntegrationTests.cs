@@ -47,6 +47,8 @@ namespace DocuFiller.Tests
             services.AddSingleton<IExcelDataParser, ExcelDataParserService>();
             services.AddSingleton<ContentControlProcessor>();
             services.AddSingleton<CommentManager>();
+            services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
+            services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
             services.AddSingleton<IProgressReporter, ProgressReporterService>();
             services.AddSingleton<IDataParser, DataParserService>();
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
@@ -63,19 +65,31 @@ namespace DocuFiller.Tests
             var mainPart = document.AddMainDocumentPart();
             mainPart.Document = new Document(new Body());
 
-            // 创建内容控件
-            var sdtBlock = new SdtBlock();
-            var sdtProperties = new SdtProperties(
+            var productNameControl = new SdtBlock();
+            var productNameProperties = new SdtProperties(
                 new SdtAlias { Val = "产品名称" },
                 new Tag { Val = "#产品名称#" }
             );
 
-            var sdtContent = new SdtContentBlock(
+            var productNameContent = new SdtContentBlock(
                 new Paragraph(new Run(new Text("默认值")))
             );
 
-            sdtBlock.Append(sdtProperties, sdtContent);
-            mainPart.Document.Body.Append(sdtBlock);
+            productNameControl.Append(productNameProperties, productNameContent);
+            mainPart.Document.Body.Append(productNameControl);
+
+            var specControl = new SdtBlock();
+            var specProperties = new SdtProperties(
+                new SdtAlias { Val = "规格" },
+                new Tag { Val = "#规格#" }
+            );
+
+            var specContent = new SdtContentBlock(
+                new Paragraph(new Run(new Text("默认值")))
+            );
+
+            specControl.Append(specProperties, specContent);
+            mainPart.Document.Body.Append(specControl);
             mainPart.Document.Save();
         }
 

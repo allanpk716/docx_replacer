@@ -57,6 +57,9 @@ namespace DocuFiller.Services
                 return;
             }
 
+            var baseRunProperties = GetBaseRunProperties(runs);
+            _logger.LogDebug("格式化替换: 基础RunProperties存在: {HasBaseRunProperties}", baseRunProperties != null);
+
             // 3. 策略：删除所有现有 Run，然后为每个片段创建新的 Run
             // 移除所有现有的 Run
             foreach (var run in runs)
@@ -74,26 +77,28 @@ namespace DocuFiller.Services
 
                 var newRun = new Run();
 
-                // 如果需要特殊格式，添加 RunProperties
+                var runProperties = CloneRunProperties(baseRunProperties);
+
                 if (fragment.IsSuperscript || fragment.IsSubscript)
                 {
-                    var runProperties = new RunProperties();
-
                     if (fragment.IsSuperscript)
                     {
-                        runProperties.VerticalTextAlignment = new VerticalTextAlignment
-                        {
-                            Val = VerticalPositionValues.Superscript
-                        };
+                        runProperties ??= new RunProperties();
+                        runProperties.VerticalTextAlignment = new VerticalTextAlignment { Val = VerticalPositionValues.Superscript };
                     }
                     else if (fragment.IsSubscript)
                     {
-                        runProperties.VerticalTextAlignment = new VerticalTextAlignment
-                        {
-                            Val = VerticalPositionValues.Subscript
-                        };
+                        runProperties ??= new RunProperties();
+                        runProperties.VerticalTextAlignment = new VerticalTextAlignment { Val = VerticalPositionValues.Subscript };
                     }
+                }
+                else if (runProperties?.VerticalTextAlignment != null)
+                {
+                    runProperties.VerticalTextAlignment = null;
+                }
 
+                if (runProperties != null)
+                {
                     newRun.AppendChild(runProperties);
                 }
 
@@ -103,6 +108,24 @@ namespace DocuFiller.Services
 
             _logger.LogDebug("格式化内容替换完成: 保留了 {FragmentCount} 个片段，删除了 {RemovedCount} 个多余 Run",
                 formattedValue.Fragments.Count, runs.Count - 1);
+        }
+
+        private static RunProperties? GetBaseRunProperties(System.Collections.Generic.IReadOnlyList<Run> runs)
+        {
+            foreach (var run in runs)
+            {
+                if (run.RunProperties != null)
+                {
+                    return run.RunProperties.CloneNode(true) as RunProperties;
+                }
+            }
+
+            return null;
+        }
+
+        private static RunProperties? CloneRunProperties(RunProperties? runProperties)
+        {
+            return runProperties?.CloneNode(true) as RunProperties;
         }
 
         /// <summary>

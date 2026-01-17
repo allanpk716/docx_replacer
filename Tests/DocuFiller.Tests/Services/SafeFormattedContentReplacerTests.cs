@@ -243,5 +243,45 @@ namespace DocuFiller.Tests.Services
             var control = cell.Descendants<SdtRun>().First();
             Assert.Throws<ArgumentNullException>(() => _replacer.ReplaceFormattedContentInControl(control, null!));
         }
+
+        [Fact]
+        public void ReplaceFormattedContentInControl_PreservesRunFontsFromTemplate()
+        {
+            var sdtRun = new SdtRun(
+                new SdtProperties(new Tag() { Val = "test" }),
+                new SdtContentRun(
+                    new Run(
+                        new RunProperties(
+                            new RunFonts
+                            {
+                                Ascii = "KaiTi",
+                                HighAnsi = "KaiTi"
+                            }
+                        ),
+                        new Text("old")
+                    )
+                )
+            );
+
+            var formattedValue = new FormattedCellValue
+            {
+                Fragments = new System.Collections.Generic.List<TextFragment>
+                {
+                    new TextFragment { Text = "A" },
+                    new TextFragment { Text = "B", IsSuperscript = true }
+                }
+            };
+
+            _replacer.ReplaceFormattedContentInControl(sdtRun, formattedValue);
+
+            var runs = sdtRun.Descendants<Run>().ToList();
+            Assert.Equal(2, runs.Count);
+            Assert.Equal("A", runs[0].GetFirstChild<Text>()?.Text);
+            Assert.Equal("B", runs[1].GetFirstChild<Text>()?.Text);
+            Assert.Equal("KaiTi", runs[0].RunProperties?.RunFonts?.Ascii?.Value);
+            Assert.Equal("KaiTi", runs[1].RunProperties?.RunFonts?.Ascii?.Value);
+            Assert.Null(runs[0].RunProperties?.VerticalTextAlignment);
+            Assert.Equal(VerticalPositionValues.Superscript, runs[1].RunProperties?.VerticalTextAlignment?.Val?.Value);
+        }
     }
 }

@@ -875,6 +875,13 @@ namespace DocuFiller.Services
                 return;
             }
 
+            var baseRunProperties = contentContainer.Descendants<Run>()
+                .Select(static r => r.RunProperties)
+                .FirstOrDefault(static rp => rp != null)?
+                .CloneNode(true) as RunProperties;
+
+            _logger.LogDebug("标准格式化填充: 基础RunProperties存在: {HasBaseRunProperties}", baseRunProperties != null);
+
             // 清空现有内容
             contentContainer.RemoveAllChildren();
 
@@ -882,7 +889,7 @@ namespace DocuFiller.Services
             if (control is SdtBlock || contentContainer is SdtContentBlock)
             {
                 // 块级控件：创建 Paragraph
-                var paragraph = CreateParagraphWithFormattedText(formattedValue);
+                var paragraph = CreateParagraphWithFormattedText(formattedValue, baseRunProperties);
                 contentContainer.AppendChild(paragraph);
             }
             else
@@ -890,7 +897,7 @@ namespace DocuFiller.Services
                 // 行内控件：直接添加 Run
                 foreach (var fragment in formattedValue.Fragments)
                 {
-                    var run = CreateFormattedRun(fragment);
+                    var run = CreateFormattedRun(fragment, baseRunProperties);
                     contentContainer.AppendChild(run);
                 }
             }
@@ -899,13 +906,13 @@ namespace DocuFiller.Services
         /// <summary>
         /// 创建包含格式化文本的段落
         /// </summary>
-        private Paragraph CreateParagraphWithFormattedText(FormattedCellValue formattedValue)
+        private Paragraph CreateParagraphWithFormattedText(FormattedCellValue formattedValue, RunProperties? baseRunProperties)
         {
             var paragraph = new Paragraph();
 
             foreach (var fragment in formattedValue.Fragments)
             {
-                var run = CreateFormattedRun(fragment);
+                var run = CreateFormattedRun(fragment, baseRunProperties);
                 paragraph.AppendChild(run);
             }
 
@@ -917,24 +924,37 @@ namespace DocuFiller.Services
         /// </summary>
         private Run CreateFormattedRun(TextFragment fragment)
         {
+            return CreateFormattedRun(fragment, null);
+        }
+
+        private Run CreateFormattedRun(TextFragment fragment, RunProperties? baseRunProperties)
+        {
             var run = new Run();
 
             // 创建文本元素
             var text = new Text(fragment.Text) { Space = SpaceProcessingModeValues.Preserve };
-            run.Append(text);
+            var runProperties = baseRunProperties?.CloneNode(true) as RunProperties;
 
             // 添加格式属性
             if (fragment.IsSuperscript || fragment.IsSubscript)
             {
-                var runProperties = new RunProperties();
-                runProperties.Append(new VerticalTextAlignment
+                runProperties ??= new RunProperties();
+                runProperties.VerticalTextAlignment = new VerticalTextAlignment
                 {
-                    Val = fragment.IsSuperscript
-                        ? VerticalPositionValues.Superscript
-                        : VerticalPositionValues.Subscript
-                });
-                run.InsertBefore(runProperties, text);
+                    Val = fragment.IsSuperscript ? VerticalPositionValues.Superscript : VerticalPositionValues.Subscript
+                };
             }
+            else if (runProperties?.VerticalTextAlignment != null)
+            {
+                runProperties.VerticalTextAlignment = null;
+            }
+
+            if (runProperties != null)
+            {
+                run.Append(runProperties);
+            }
+
+            run.Append(text);
 
             return run;
         }

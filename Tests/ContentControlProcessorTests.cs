@@ -200,13 +200,17 @@ namespace DocuFiller.Tests
 
                 var runs = sdtContent?.Descendants<Run>().ToList();
                 Assert.NotNull(runs);
-                Assert.Equal(5, runs?.Count); // 3行文本 + 2个换行符
+                Assert.Single(runs);
 
-                var textElements = runs?.Where(r => r.Descendants<Text>().Any()).ToList();
-                Assert.Equal(3, textElements?.Count);
-                Assert.Equal("Line1", textElements?[0].Descendants<Text>().First().Text);
-                Assert.Equal("Line2", textElements?[1].Descendants<Text>().First().Text);
-                Assert.Equal("Line3", textElements?[2].Descendants<Text>().First().Text);
+                var run = runs![0];
+                var texts = run.Descendants<Text>().Select(t => t.Text).ToList();
+                Assert.Equal(3, texts.Count);
+                Assert.Equal("Line1", texts[0]);
+                Assert.Equal("Line2", texts[1]);
+                Assert.Equal("Line3", texts[2]);
+
+                var breaks = run.Descendants<Break>().ToList();
+                Assert.Equal(2, breaks.Count);
             }
 
             // Cleanup
