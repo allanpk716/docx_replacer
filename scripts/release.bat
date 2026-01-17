@@ -47,4 +47,50 @@ if not exist "!UPLOAD_ADMIN_PATH!" (
     exit /b 1
 )
 
+REM ========================================
+REM Detect Git Tag
+REM ========================================
+
+REM Try to get tag from command line parameter
+set TAG_FROM_PARAM=%1
+set CHANNEL_FROM_PARAM=%2
+
+REM If parameters provided, use them
+if not "%TAG_FROM_PARAM%"=="" (
+    set TAG_TO_USE=%TAG_FROM_PARAM%
+    if "%CHANNEL_FROM_PARAM%"=="" (
+        echo Error: When specifying version, you must also specify channel
+        echo Usage: release.bat [stable^|beta] [version]
+        echo Example: release.bat stable 1.0.0
+        exit /b 1
+    )
+    set USER_DEFINED_CHANNEL=%CHANNEL_FROM_PARAM%
+    goto :TagDetected
+)
+
+REM Otherwise, try to get current git tag
+echo Detecting git tag...
+for /f "delims=" %%t in ('git.exe describe --tags --abbrev=0 2^>nul') do (
+    set CURRENT_TAG=%%t
+)
+
+if "!CURRENT_TAG!"=="" (
+    echo Error: No git tag found.
+    echo.
+    echo Please create and push a tag first, or specify version manually:
+    echo.
+    echo Using git tag:
+    echo   git tag v1.0.0
+    echo   git push origin v1.0.0
+    echo.
+    echo Using parameters:
+    echo   release.bat stable 1.0.0
+    exit /b 1
+)
+
+set TAG_TO_USE=!CURRENT_TAG!
+echo Found tag: !TAG_TO_USE!
+
+:TagDetected
+
 endlocal
