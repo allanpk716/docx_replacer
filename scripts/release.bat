@@ -269,9 +269,8 @@ if errorlevel 1 (
     echo ========================================
     echo.
     echo The build file is available at: !BUILD_FILE!
-    echo You can retry upload manually with:
-    echo.
-    echo "!UPLOAD_ADMIN_PATH!" upload --program-id docufiller --channel !CHANNEL! --version !VERSION! --file "!BUILD_FILE!" --server !UPDATE_SERVER_URL! --token YOUR_TOKEN
+    echo To retry manually, use your upload token from release-config.bat:
+    echo   "!UPLOAD_ADMIN_PATH!" upload --program-id docufiller --channel !CHANNEL! --version !VERSION! --file "!BUILD_FILE!" --server !UPDATE_SERVER_URL! --token %%UPDATE_TOKEN%%
     echo.
     exit /b 1
 )
