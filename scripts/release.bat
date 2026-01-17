@@ -175,11 +175,12 @@ echo Version: !VERSION!
 :ParsingComplete
 echo.
 
-REM Validate version format - must start with x.y.z
-echo !VERSION! | findstr /i "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*" >nul
+REM Validate version format - applies to BOTH manual and auto-detect modes
+echo !VERSION! | findstr /i "^[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$" >nul
 if errorlevel 1 (
     echo Error: Invalid version format: !VERSION!
-    echo Expected format: x.y.z (e.g., 1.0.0 or 1.0.0-test)
+    echo Expected format: x.y.z where x, y, z are numbers
+    echo Example: 1.0.0, 2.3.4, 10.20.30
     exit /b 1
 )
 
