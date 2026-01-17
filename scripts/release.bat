@@ -193,6 +193,49 @@ echo ========================================
 echo.
 
 REM ========================================
+REM Validate Version Consistency
+REM ========================================
+
+echo Checking version consistency with DocuFiller.csproj...
+
+for /f "tokens=2 delims=<> " %%v in ('type "%PROJECT_ROOT%\DocuFiller.csproj" ^| findstr /i "<Version>"') do (
+    set CSPROJ_VERSION=%%v
+)
+
+if "!CSPROJ_VERSION!"=="" (
+    echo Warning: Cannot read version from DocuFiller.csproj
+    goto :VersionCheckDone
+)
+
+echo.
+echo ========================================
+echo Version Consistency Check
+echo ========================================
+echo Git Tag Version: !VERSION!
+echo CSPROJ Version:   !CSPROJ_VERSION!
+echo ========================================
+
+if "!VERSION!"=="!CSPROJ_VERSION!" (
+    echo [OK] Versions match
+) else (
+    echo.
+    echo Warning: Version mismatch detected!
+    echo.
+    echo The git tag version (!VERSION!) does not match the version
+    echo in DocuFiller.csproj (!CSPROJ_VERSION!).
+    echo.
+    set /p CONTINUE="Continue anyway? (Y/N): "
+    if /i not "!CONTINUE!"=="Y" (
+        echo Release cancelled.
+        exit /b 1
+    )
+    echo.
+)
+
+:VersionCheckDone
+echo.
+
+REM ========================================
 REM Build Project
 REM ========================================
 
