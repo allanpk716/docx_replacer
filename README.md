@@ -128,6 +128,19 @@ dotnet build
 dotnet run
 ```
 
+## 发布 Release
+
+DocuFiller 使用自动化脚本发布到更新服务器。详见 [发布流程文档](docs/release-workflow.md)。
+
+快速发布：
+```bash
+# 稳定版
+git tag v1.0.0 && git push origin v1.0.0 && scripts\release.bat
+
+# 测试版
+git tag v1.0.1-beta && git push origin v1.0.1-beta && scripts\release.bat
+```
+
 ## 配置说明
 
 应用程序通过`App.config`文件进行配置：
