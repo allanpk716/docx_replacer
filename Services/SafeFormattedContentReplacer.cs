@@ -40,6 +40,14 @@ namespace DocuFiller.Services
 
             _logger.LogDebug("开始安全替换格式化内容: '{PlainText}'", formattedValue.PlainText);
 
+            bool containsTableCell = control.Descendants<TableCell>().Any();
+            if (containsTableCell)
+            {
+                _logger.LogDebug("检测到控件包装了 TableCell，使用包装单元格安全替换策略");
+                ReplaceFormattedContentInWrappedTableCell(control, formattedValue);
+                return;
+            }
+
             // 1. 查找内容容器
             var contentContainer = FindContentContainer(control);
             if (contentContainer == null)
@@ -48,66 +56,26 @@ namespace DocuFiller.Services
                 return;
             }
 
-            // 2. 获取所有 Run 元素
-            var runs = contentContainer.Descendants<Run>().ToList();
-
-            if (runs.Count == 0)
+            if (contentContainer is SdtContentRun runContainer)
             {
-                _logger.LogWarning("内容容器中没有找到 Run 元素");
+                ReplaceFormattedContentInRunContainer(runContainer, formattedValue);
                 return;
             }
 
-            var baseRunProperties = GetBaseRunProperties(runs);
-            _logger.LogDebug("格式化替换: 基础RunProperties存在: {HasBaseRunProperties}", baseRunProperties != null);
-
-            // 3. 策略：删除所有现有 Run，然后为每个片段创建新的 Run
-            // 移除所有现有的 Run
-            foreach (var run in runs)
+            if (contentContainer is SdtContentBlock blockContainer)
             {
-                run.Remove();
+                ReplaceFormattedContentInBlockContainer(control, blockContainer, formattedValue);
+                return;
             }
 
-            // 为每个格式化片段创建新的 Run
-            foreach (var fragment in formattedValue.Fragments)
+            if (contentContainer is SdtContentCell)
             {
-                var textElement = new Text(fragment.Text)
-                {
-                    Space = SpaceProcessingModeValues.Preserve
-                };
-
-                var newRun = new Run();
-
-                var runProperties = CloneRunProperties(baseRunProperties);
-
-                if (fragment.IsSuperscript || fragment.IsSubscript)
-                {
-                    if (fragment.IsSuperscript)
-                    {
-                        runProperties ??= new RunProperties();
-                        runProperties.VerticalTextAlignment = new VerticalTextAlignment { Val = VerticalPositionValues.Superscript };
-                    }
-                    else if (fragment.IsSubscript)
-                    {
-                        runProperties ??= new RunProperties();
-                        runProperties.VerticalTextAlignment = new VerticalTextAlignment { Val = VerticalPositionValues.Subscript };
-                    }
-                }
-                else if (runProperties?.VerticalTextAlignment != null)
-                {
-                    runProperties.VerticalTextAlignment = null;
-                }
-
-                if (runProperties != null)
-                {
-                    newRun.AppendChild(runProperties);
-                }
-
-                newRun.AppendChild(textElement);
-                contentContainer.AppendChild(newRun);
+                _logger.LogWarning("内容容器为 SdtContentCell 但未检测到 TableCell，尝试按包装单元格策略处理");
+                ReplaceFormattedContentInWrappedTableCell(control, formattedValue);
+                return;
             }
 
-            _logger.LogDebug("格式化内容替换完成: 保留了 {FragmentCount} 个片段，删除了 {RemovedCount} 个多余 Run",
-                formattedValue.Fragments.Count, runs.Count - 1);
+            _logger.LogWarning("不支持的内容容器类型: {ContainerType}", contentContainer.GetType().Name);
         }
 
         private static RunProperties? GetBaseRunProperties(System.Collections.Generic.IReadOnlyList<Run> runs)
@@ -126,6 +94,163 @@ namespace DocuFiller.Services
         private static RunProperties? CloneRunProperties(RunProperties? runProperties)
         {
             return runProperties?.CloneNode(true) as RunProperties;
+        }
+
+        private void ReplaceFormattedContentInRunContainer(SdtContentRun contentContainer, FormattedCellValue formattedValue)
+        {
+            var runs = contentContainer.Descendants<Run>().ToList();
+
+            if (runs.Count == 0)
+            {
+                contentContainer.RemoveAllChildren();
+                foreach (var fragment in formattedValue.Fragments)
+                {
+                    contentContainer.AppendChild(CreateRunForFragment(fragment, null));
+                }
+                return;
+            }
+
+            var baseRunProperties = GetBaseRunProperties(runs);
+            _logger.LogDebug("行内控件替换: 基础RunProperties存在: {HasBaseRunProperties}", baseRunProperties != null);
+
+            foreach (var run in runs)
+            {
+                run.Remove();
+            }
+
+            foreach (var fragment in formattedValue.Fragments)
+            {
+                contentContainer.AppendChild(CreateRunForFragment(fragment, baseRunProperties));
+            }
+        }
+
+        private void ReplaceFormattedContentInBlockContainer(SdtElement control, SdtContentBlock contentContainer, FormattedCellValue formattedValue)
+        {
+            var candidateRuns = contentContainer.Descendants<Run>()
+                .Where(r => ReferenceEquals(GetNearestAncestorSdt(r), control))
+                .ToList();
+
+            RunProperties? baseRunProperties = null;
+            if (candidateRuns.Count > 0)
+            {
+                baseRunProperties = GetBaseRunProperties(candidateRuns);
+            }
+
+            _logger.LogDebug("块级控件替换: 基础RunProperties存在: {HasBaseRunProperties}", baseRunProperties != null);
+
+            var paragraph = contentContainer.Elements<Paragraph>().FirstOrDefault();
+            if (paragraph == null)
+            {
+                paragraph = contentContainer.AppendChild(new Paragraph());
+            }
+
+            foreach (var run in candidateRuns)
+            {
+                run.Remove();
+            }
+
+            foreach (var fragment in formattedValue.Fragments)
+            {
+                paragraph.AppendChild(CreateRunForFragment(fragment, baseRunProperties));
+            }
+        }
+
+        private void ReplaceFormattedContentInWrappedTableCell(SdtElement control, FormattedCellValue formattedValue)
+        {
+            var targetCell = control.Descendants<TableCell>().FirstOrDefault();
+            if (targetCell == null)
+            {
+                _logger.LogWarning("未找到可替换的 TableCell，跳过包装单元格替换");
+                return;
+            }
+
+            var candidateRuns = targetCell.Descendants<Run>()
+                .Where(r => ReferenceEquals(GetNearestAncestorSdt(r), control))
+                .ToList();
+
+            RunProperties? baseRunProperties = null;
+            if (candidateRuns.Count > 0)
+            {
+                baseRunProperties = GetBaseRunProperties(candidateRuns);
+            }
+
+            _logger.LogDebug("包装单元格替换: 基础RunProperties存在: {HasBaseRunProperties}", baseRunProperties != null);
+
+            var paragraph = targetCell.Elements<Paragraph>().FirstOrDefault();
+            if (paragraph == null)
+            {
+                paragraph = targetCell.AppendChild(new Paragraph());
+            }
+
+            foreach (var run in candidateRuns)
+            {
+                run.Remove();
+            }
+
+            foreach (var fragment in formattedValue.Fragments)
+            {
+                paragraph.AppendChild(CreateRunForFragment(fragment, baseRunProperties));
+            }
+        }
+
+        private Run CreateRunForFragment(TextFragment fragment, RunProperties? baseRunProperties)
+        {
+            var newRun = new Run();
+            var runProperties = CloneRunProperties(baseRunProperties);
+
+            if (fragment.IsSuperscript || fragment.IsSubscript)
+            {
+                runProperties ??= new RunProperties();
+                runProperties.VerticalTextAlignment = new VerticalTextAlignment
+                {
+                    Val = fragment.IsSuperscript ? VerticalPositionValues.Superscript : VerticalPositionValues.Subscript
+                };
+            }
+            else if (runProperties?.VerticalTextAlignment != null)
+            {
+                runProperties.VerticalTextAlignment = null;
+            }
+
+            if (runProperties != null)
+            {
+                newRun.AppendChild(runProperties);
+            }
+
+            AppendTextWithLineBreaks(newRun, fragment.Text);
+            return newRun;
+        }
+
+        private static void AppendTextWithLineBreaks(Run run, string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                run.AppendChild(new Text(string.Empty) { Space = SpaceProcessingModeValues.Preserve });
+                return;
+            }
+
+            var lines = text.Split(["\n"], StringSplitOptions.None);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                run.AppendChild(new Text(lines[i]) { Space = SpaceProcessingModeValues.Preserve });
+                if (i < lines.Length - 1)
+                {
+                    run.AppendChild(new Break());
+                }
+            }
+        }
+
+        private static SdtElement? GetNearestAncestorSdt(OpenXmlElement element)
+        {
+            var current = element.Parent;
+            while (current != null)
+            {
+                if (current is SdtElement sdt)
+                {
+                    return sdt;
+                }
+                current = current.Parent;
+            }
+            return null;
         }
 
         /// <summary>

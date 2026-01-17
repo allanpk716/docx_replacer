@@ -833,6 +833,7 @@ namespace DocuFiller.Services
 
             // 2. 检查是否在表格单元格中
             bool isInTableCell = OpenXmlTableCellHelper.IsInTableCell(control);
+            bool containsTableCell = control.Descendants<TableCell>().Any();
 
             // 3. 记录旧值（用于批注）
             string oldValue = ExtractExistingText(control);
@@ -841,6 +842,11 @@ namespace DocuFiller.Services
             if (isInTableCell)
             {
                 _logger.LogDebug("检测到表格单元格内容控件，使用安全填充策略");
+                _safeFormattedContentReplacer.ReplaceFormattedContentInControl(control, formattedValue);
+            }
+            else if (containsTableCell)
+            {
+                _logger.LogDebug("检测到控件包装了表格单元格，使用安全填充策略");
                 _safeFormattedContentReplacer.ReplaceFormattedContentInControl(control, formattedValue);
             }
             else

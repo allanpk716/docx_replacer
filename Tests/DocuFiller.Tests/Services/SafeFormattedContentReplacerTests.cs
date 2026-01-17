@@ -283,5 +283,92 @@ namespace DocuFiller.Tests.Services
             Assert.Null(runs[0].RunProperties?.VerticalTextAlignment);
             Assert.Equal(VerticalPositionValues.Superscript, runs[1].RunProperties?.VerticalTextAlignment?.Val?.Value);
         }
+
+        [Fact]
+        public void ReplaceFormattedContentInControl_SdtCellWrappingTableCell_PreservesColumns()
+        {
+            var wrappedCellControl = new SdtCell(
+                new SdtProperties(new Tag() { Val = "test" }),
+                new SdtContentCell(
+                    new TableCell(
+                        new Paragraph(
+                            new Run(new Text("old"))
+                        )
+                    )
+                )
+            );
+
+            var otherCell = new TableCell(
+                new Paragraph(
+                    new Run(new Text("keep"))
+                )
+            );
+
+            var row = new TableRow(wrappedCellControl, otherCell);
+            _ = new Table(row);
+
+            var formattedValue = new FormattedCellValue
+            {
+                Fragments = new System.Collections.Generic.List<TextFragment>
+                {
+                    new TextFragment { Text = "H" },
+                    new TextFragment { Text = "2", IsSuperscript = true },
+                    new TextFragment { Text = "O" }
+                }
+            };
+
+            _replacer.ReplaceFormattedContentInControl(wrappedCellControl, formattedValue);
+
+            var rowCellLikeCount = row.ChildElements.Count(e => e is TableCell || e is SdtCell);
+            Assert.Equal(2, rowCellLikeCount);
+
+            var replacedText = string.Concat(wrappedCellControl.Descendants<Text>().Select(t => t.Text));
+            Assert.Equal("H2O", replacedText);
+
+            var runs = wrappedCellControl.Descendants<Run>().ToList();
+            Assert.Equal(3, runs.Count);
+            Assert.Equal(VerticalPositionValues.Superscript, runs[1].RunProperties?.VerticalTextAlignment?.Val?.Value);
+
+            var otherText = string.Concat(otherCell.Descendants<Text>().Select(t => t.Text));
+            Assert.Equal("keep", otherText);
+        }
+
+        [Fact]
+        public void ReplaceFormattedContentInControl_SdtBlockInTableCell_PreservesParagraphContainer()
+        {
+            var sdtBlock = new SdtBlock(
+                new SdtProperties(new Tag() { Val = "test" }),
+                new SdtContentBlock(
+                    new Paragraph(new Run(new Text("old")))
+                )
+            );
+
+            var cell = new TableCell(sdtBlock);
+
+            var formattedValue = new FormattedCellValue
+            {
+                Fragments = new System.Collections.Generic.List<TextFragment>
+                {
+                    new TextFragment { Text = "A" },
+                    new TextFragment { Text = "B", IsSubscript = true }
+                }
+            };
+
+            _replacer.ReplaceFormattedContentInControl(sdtBlock, formattedValue);
+
+            var contentBlock = sdtBlock.GetFirstChild<SdtContentBlock>();
+            Assert.NotNull(contentBlock);
+            Assert.True(contentBlock!.Elements<Paragraph>().Any());
+            Assert.Empty(contentBlock.Elements<Run>());
+
+            var runs = sdtBlock.Descendants<Run>().ToList();
+            Assert.Equal(2, runs.Count);
+            Assert.Equal("A", runs[0].GetFirstChild<Text>()?.Text);
+            Assert.Equal("B", runs[1].GetFirstChild<Text>()?.Text);
+            Assert.Equal(VerticalPositionValues.Subscript, runs[1].RunProperties?.VerticalTextAlignment?.Val?.Value);
+
+            var cellParagraphCount = cell.Elements<Paragraph>().Count();
+            Assert.Equal(0, cellParagraphCount);
+        }
     }
 }
