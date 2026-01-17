@@ -48,6 +48,17 @@ if not exist "!UPLOAD_ADMIN_PATH!" (
 )
 
 REM ========================================
+REM Check Git Availability
+REM ========================================
+
+where git.exe >nul 2>&1
+if errorlevel 1 (
+    echo Error: git.exe not found in PATH
+    echo Please install Git or ensure it's in your PATH
+    exit /b 1
+)
+
+REM ========================================
 REM Detect Git Tag
 REM ========================================
 
@@ -65,6 +76,18 @@ if not "%TAG_FROM_PARAM%"=="" (
         exit /b 1
     )
     set USER_DEFINED_CHANNEL=%CHANNEL_FROM_PARAM%
+
+    REM Validate channel parameter
+    if /i not "!CHANNEL_FROM_PARAM!"=="stable" (
+        if /i not "!CHANNEL_FROM_PARAM!"=="beta" (
+            echo Error: Invalid channel "!CHANNEL_FROM_PARAM!"
+            echo Channel must be either "stable" or "beta"
+            echo Usage: release.bat [stable^|beta] [version]
+            echo Example: release.bat stable 1.0.0
+            exit /b 1
+        )
+    )
+
     goto :TagDetected
 )
 
@@ -92,5 +115,3 @@ set TAG_TO_USE=!CURRENT_TAG!
 echo Found tag: !TAG_TO_USE!
 
 :TagDetected
-
-endlocal
