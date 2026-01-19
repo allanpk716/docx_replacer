@@ -386,12 +386,12 @@ namespace DocuFiller.ViewModels
         
         private void OnProgressUpdated(object? sender, ProgressEventArgs e)
         {
-            Application.Current.Dispatcher.Invoke(() =>
+            Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 ProgressPercentage = e.ProgressPercentage;
                 ProgressText = $"{e.ProgressPercentage:F1}%";
                 ProgressMessage = e.StatusMessage;
-                
+
                 if (e.IsCompleted)
                 {
                     IsProcessing = false;
