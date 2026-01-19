@@ -770,14 +770,9 @@ namespace DocuFiller.Services
                                 _logger.LogWarning($"✗ 处理失败: {outputFileName}");
                             }
 
-                            // 更新进度
-                            double progress = (double)currentOperation / totalOperations * 100;
-                            ProgressUpdated?.Invoke(this, new ProgressEventArgs
-                            {
-                                ProgressPercentage = (int)progress,
-                                StatusMessage = $"正在处理 {templateFile.Name} ({currentOperation}/{totalOperations})",
-                                CurrentFileName = templateFile.Name
-                            });
+                            // 更新进度 - 使用 _progressReporter 确保进度传播到 UI
+                            _progressReporter.ReportProgress(currentOperation, totalOperations,
+                                $"正在处理 {templateFile.Name} ({currentOperation}/{totalOperations})", templateFile.Name);
 
                             _logger.LogInformation($"✓ 完成模板文件处理: {templateFile.Name}");
                         }
@@ -885,14 +880,9 @@ namespace DocuFiller.Services
                                     _logger.LogWarning($"✗ 处理失败: {outputFileName}");
                                 }
 
-                                // 更新进度
-                                double progress = (double)currentOperation / totalOperations * 100;
-                                ProgressUpdated?.Invoke(this, new ProgressEventArgs
-                                {
-                                    ProgressPercentage = (int)progress,
-                                    StatusMessage = $"正在处理 {templateFile.Name} (第{i + 1}/{dataList.Count()}条数据)",
-                                    CurrentFileName = templateFile.Name
-                                });
+                                // 更新进度 - 使用 _progressReporter 确保进度传播到 UI
+                                _progressReporter.ReportProgress(currentOperation, totalOperations,
+                                    $"正在处理 {templateFile.Name} (第{i + 1}/{dataList.Count()}条数据)", templateFile.Name);
                             }
 
                             _logger.LogInformation($"✓ 完成模板文件处理: {templateFile.Name}");
