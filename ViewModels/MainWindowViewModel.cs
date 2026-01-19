@@ -575,8 +575,12 @@ namespace DocuFiller.ViewModels
                     OutputDirectory = OutputDirectory,
                     OutputFileNamePattern = "{timestamp}"
                 };
-                
-                var result = await _documentProcessor.ProcessDocumentsAsync(request);
+
+                // 使用 Task.Run 将处理移到后台线程，避免阻塞 UI
+                var result = await Task.Run(async () =>
+                {
+                    return await _documentProcessor.ProcessDocumentsAsync(request);
+                }, _cancellationTokenSource.Token);
                 
                 if (result.IsSuccess)
                 {
@@ -925,14 +929,14 @@ namespace DocuFiller.ViewModels
                 Console.WriteLine($"[DEBUG] FolderProcessRequest - TemplateFiles.Count: {request.TemplateFiles?.Count ?? 0}");
                 
                 ProgressMessage = "开始批量处理文件夹...";
-                
-                if (_cancellationTokenSource == null)
-                {
-                    Console.WriteLine("[DEBUG] 警告：_cancellationTokenSource为null，使用默认取消令牌");
-                }
-                
+
                 var cancellationToken = _cancellationTokenSource?.Token ?? CancellationToken.None;
-                var result = await _documentProcessor.ProcessFolderAsync(request, cancellationToken);
+
+                // 关键修改：使用 Task.Run 将整个处理逻辑移到后台线程，避免阻塞 UI
+                var result = await Task.Run(async () =>
+                {
+                    return await _documentProcessor.ProcessFolderAsync(request, cancellationToken);
+                }, cancellationToken);
                 
                 if (result.IsSuccess)
                 {
