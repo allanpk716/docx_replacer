@@ -286,7 +286,7 @@ namespace DocuFiller.Services
                 {
                     var fragment = new TextFragment
                     {
-                        Text = rt.Text,
+                        Text = NormalizeLineEndings(rt.Text),
                         IsSuperscript = rt.VerticalAlign == ExcelVerticalAlignmentFont.Superscript,
                         IsSubscript = rt.VerticalAlign == ExcelVerticalAlignmentFont.Subscript
                     };
@@ -298,7 +298,7 @@ namespace DocuFiller.Services
                 // 普通文本，检查整个单元格的格式
                 var fragment = new TextFragment
                 {
-                    Text = cell.Text ?? "",
+                    Text = NormalizeLineEndings(cell.Text ?? ""),
                     IsSuperscript = cell.Style.Font.VerticalAlign == ExcelVerticalAlignmentFont.Superscript,
                     IsSubscript = cell.Style.Font.VerticalAlign == ExcelVerticalAlignmentFont.Subscript
                 };
@@ -306,6 +306,11 @@ namespace DocuFiller.Services
             }
 
             return formattedValue;
+        }
+
+        private static string NormalizeLineEndings(string text)
+        {
+            return (text ?? string.Empty).Replace("\r\n", "\n").Replace("\r", "\n");
         }
     }
 }

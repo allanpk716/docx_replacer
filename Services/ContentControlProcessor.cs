@@ -127,14 +127,33 @@ namespace DocuFiller.Services
             ContentControlLocation location,
             CancellationToken cancellationToken)
         {
-            var contentControls = partRoot.Descendants<SdtElement>().ToList();
-            _logger.LogDebug($"在 {location} 中找到 {contentControls.Count} 个内容控件");
+            var allControls = partRoot.Descendants<SdtElement>().ToList();
+            var taggedControls = allControls
+                .Select(c => new { Control = c, Tag = GetControlTag(c) })
+                .Where(x => !string.IsNullOrWhiteSpace(x.Tag))
+                .ToList();
+
+            var contentControls = taggedControls
+                .Where(x => !HasDescendantWithSameTag(x.Control, x.Tag!))
+                .Select(x => x.Control)
+                .ToList();
+
+            _logger.LogDebug($"在 {location} 中找到 {allControls.Count} 个内容控件，需处理 {contentControls.Count} 个带标签控件");
 
             foreach (var control in contentControls)
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 ProcessContentControl(control, data, document, location);
             }
+        }
+
+        private bool HasDescendantWithSameTag(SdtElement control, string tag)
+        {
+            var normalizedTag = tag.Trim();
+            return control.Descendants<SdtElement>()
+                .Select(GetControlTag)
+                .Any(t => !string.IsNullOrWhiteSpace(t) &&
+                          string.Equals(t!.Trim(), normalizedTag, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>

@@ -936,9 +936,6 @@ namespace DocuFiller.Services
         private Run CreateFormattedRun(TextFragment fragment, RunProperties? baseRunProperties)
         {
             var run = new Run();
-
-            // 创建文本元素
-            var text = new Text(fragment.Text) { Space = SpaceProcessingModeValues.Preserve };
             var runProperties = baseRunProperties?.CloneNode(true) as RunProperties;
 
             // 添加格式属性
@@ -960,9 +957,34 @@ namespace DocuFiller.Services
                 run.Append(runProperties);
             }
 
-            run.Append(text);
+            AppendTextWithLineBreaks(run, fragment.Text);
 
             return run;
+        }
+
+        private static string NormalizeLineEndings(string text)
+        {
+            return (text ?? string.Empty).Replace("\r\n", "\n").Replace("\r", "\n");
+        }
+
+        private static void AppendTextWithLineBreaks(Run run, string text)
+        {
+            var normalized = NormalizeLineEndings(text);
+            if (string.IsNullOrEmpty(normalized))
+            {
+                run.AppendChild(new Text(string.Empty) { Space = SpaceProcessingModeValues.Preserve });
+                return;
+            }
+
+            var lines = normalized.Split(["\n"], StringSplitOptions.None);
+            for (int i = 0; i < lines.Length; i++)
+            {
+                run.AppendChild(new Text(lines[i]) { Space = SpaceProcessingModeValues.Preserve });
+                if (i < lines.Length - 1)
+                {
+                    run.AppendChild(new Break());
+                }
+            }
         }
 
         /// <summary>

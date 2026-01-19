@@ -90,6 +90,17 @@ namespace DocuFiller.Tests
 
             specControl.Append(specProperties, specContent);
             mainPart.Document.Body.Append(specControl);
+
+            var multilineControl = new SdtBlock();
+            var multilineProperties = new SdtProperties(
+                new SdtAlias { Val = "多行" },
+                new Tag { Val = "#多行#" }
+            );
+            var multilineContent = new SdtContentBlock(
+                new Paragraph(new Run(new Text("默认值")))
+            );
+            multilineControl.Append(multilineProperties, multilineContent);
+            mainPart.Document.Body.Append(multilineControl);
             mainPart.Document.Save();
         }
 
@@ -107,6 +118,9 @@ namespace DocuFiller.Tests
             var cell = worksheet.Cells[2, 2];
             cell.Value = "2x10";
             cell.RichText.Add("9").VerticalAlign = OfficeOpenXml.Style.ExcelVerticalAlignmentFont.Superscript;
+
+            worksheet.Cells[3, 1].Value = "#多行#";
+            worksheet.Cells[3, 2].Value = "Line1\nLine2\nLine3";
 
             package.SaveAs(new System.IO.FileInfo(path));
         }
@@ -145,6 +159,34 @@ namespace DocuFiller.Tests
             });
 
             Assert.NotNull(superscriptRun);
+        }
+
+        [Fact]
+        public async Task EndToEnd_ExcelToWord_PreservesLineBreaks()
+        {
+            var excelData = await _excelParser.ParseExcelFileAsync(_testExcelPath);
+
+            var result = await _documentProcessor.ProcessDocumentWithFormattedDataAsync(
+                _testTemplatePath,
+                excelData,
+                _outputPath
+            );
+
+            Assert.True(result.IsSuccess);
+            Assert.True(File.Exists(_outputPath));
+
+            using var outputDoc = WordprocessingDocument.Open(_outputPath, false);
+            var sdt = outputDoc.MainDocumentPart?.Document.Body?.Descendants<SdtBlock>()
+                .FirstOrDefault(b => b.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value == "#多行#");
+
+            Assert.NotNull(sdt);
+            var breaks = sdt!.Descendants<Break>().ToList();
+            Assert.Equal(2, breaks.Count);
+
+            var texts = sdt.Descendants<Text>().Select(t => t.Text).ToList();
+            Assert.Contains("Line1", texts);
+            Assert.Contains("Line2", texts);
+            Assert.Contains("Line3", texts);
         }
 
         public void Dispose()
