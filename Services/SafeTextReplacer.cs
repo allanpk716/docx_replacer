@@ -179,7 +179,44 @@ namespace DocuFiller.Services
         /// <param name="control">内容控件</param>
         private void ReplaceTextStandard(OpenXmlElement contentContainer, string newText, SdtElement control)
         {
-            ReplaceTextPreservingStructure(contentContainer, newText, control);
+            ReplaceTextByRebuildingContent(contentContainer, newText);
+        }
+
+        private void ReplaceTextByRebuildingContent(OpenXmlElement contentContainer, string newText)
+        {
+            var baseRunProperties = contentContainer.Descendants<Run>()
+                .Select(static r => r.RunProperties)
+                .FirstOrDefault(static rp => rp != null)?
+                .CloneNode(true) as RunProperties;
+
+            contentContainer.RemoveAllChildren();
+
+            if (contentContainer is SdtContentBlock || contentContainer is SdtContentCell)
+            {
+                var paragraph = new Paragraph();
+                paragraph.AppendChild(CreateRunWithLineBreaks(newText, baseRunProperties));
+                contentContainer.AppendChild(paragraph);
+                return;
+            }
+
+            if (contentContainer is SdtContentRun)
+            {
+                contentContainer.AppendChild(CreateRunWithLineBreaks(newText, baseRunProperties));
+                return;
+            }
+
+            contentContainer.AppendChild(CreateRunWithLineBreaks(newText, baseRunProperties));
+        }
+
+        private static Run CreateRunWithLineBreaks(string text, RunProperties? baseRunProperties)
+        {
+            var run = new Run();
+            if (baseRunProperties != null)
+            {
+                run.AppendChild((RunProperties)baseRunProperties.CloneNode(true));
+            }
+            SetRunTextWithLineBreaks(run, text);
+            return run;
         }
 
         private void ReplaceTextPreservingStructure(OpenXmlElement contentContainer, string newText, SdtElement control)

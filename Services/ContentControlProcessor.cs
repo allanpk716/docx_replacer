@@ -134,7 +134,7 @@ namespace DocuFiller.Services
                 .ToList();
 
             var contentControls = taggedControls
-                .Where(x => !HasDescendantWithSameTag(x.Control, x.Tag!))
+                .Where(x => !HasAncestorWithSameTag(x.Control, x.Tag!))
                 .Select(x => x.Control)
                 .ToList();
 
@@ -147,10 +147,10 @@ namespace DocuFiller.Services
             }
         }
 
-        private bool HasDescendantWithSameTag(SdtElement control, string tag)
+        private bool HasAncestorWithSameTag(SdtElement control, string tag)
         {
             var normalizedTag = tag.Trim();
-            return control.Descendants<SdtElement>()
+            return control.Ancestors<SdtElement>()
                 .Select(GetControlTag)
                 .Any(t => !string.IsNullOrWhiteSpace(t) &&
                           string.Equals(t!.Trim(), normalizedTag, StringComparison.OrdinalIgnoreCase));

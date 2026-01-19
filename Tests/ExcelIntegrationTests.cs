@@ -101,6 +101,22 @@ namespace DocuFiller.Tests
             );
             multilineControl.Append(multilineProperties, multilineContent);
             mainPart.Document.Body.Append(multilineControl);
+
+            var headerPart = mainPart.AddNewPart<HeaderPart>();
+            headerPart.Header = new Header(
+                new Paragraph(
+                    new SdtRun(
+                        new SdtProperties(new Tag() { Val = "#页眉字段#" }),
+                        new SdtContentRun(
+                            new Run(new Text("123")),
+                            new SdtRun(
+                                new SdtProperties(),
+                                new SdtContentRun(new Run(new Text("123")))
+                            )
+                        )
+                    )
+                )
+            );
             mainPart.Document.Save();
         }
 
@@ -121,6 +137,9 @@ namespace DocuFiller.Tests
 
             worksheet.Cells[3, 1].Value = "#多行#";
             worksheet.Cells[3, 2].Value = "Line1\nLine2\nLine3";
+
+            worksheet.Cells[4, 1].Value = "#页眉字段#";
+            worksheet.Cells[4, 2].Value = "456";
 
             package.SaveAs(new System.IO.FileInfo(path));
         }
@@ -187,6 +206,23 @@ namespace DocuFiller.Tests
             Assert.Contains("Line1", texts);
             Assert.Contains("Line2", texts);
             Assert.Contains("Line3", texts);
+        }
+
+        [Fact]
+        public async Task EndToEnd_ExcelToWord_HeaderControl_ShouldNotLeaveOldText()
+        {
+            var excelData = await _excelParser.ParseExcelFileAsync(_testExcelPath);
+
+            var result = await _documentProcessor.ProcessDocumentWithFormattedDataAsync(
+                _testTemplatePath,
+                excelData,
+                _outputPath
+            );
+
+            Assert.True(result.IsSuccess);
+            using var outputDoc = WordprocessingDocument.Open(_outputPath, false);
+            var headerText = outputDoc.MainDocumentPart?.HeaderParts.First().Header?.InnerText;
+            Assert.Equal("456", headerText);
         }
 
         public void Dispose()

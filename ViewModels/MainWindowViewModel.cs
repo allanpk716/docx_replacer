@@ -580,12 +580,40 @@ namespace DocuFiller.ViewModels
                 
                 if (result.IsSuccess)
                 {
-                    MessageBox.Show($"处理完成！\n生成了 {result.SuccessfulRecords} 个文件\n耗时：{result.Duration.TotalSeconds:F1} 秒", 
+                    MessageBox.Show($"处理完成！\n生成了 {result.SuccessfulRecords} 个文件\n耗时：{result.Duration.TotalSeconds:F1} 秒",
                         "处理完成", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show($"处理失败：\n{string.Join("\n", result.Errors)}", 
+                    // 收集所有错误信息
+                    var errorMessages = new List<string>();
+
+                    // 添加 Errors 列表中的错误
+                    if (result.Errors != null && result.Errors.Any())
+                    {
+                        errorMessages.AddRange(result.Errors);
+                    }
+
+                    // 添加 ErrorMessage（如果不在 Errors 列表中）
+                    if (!string.IsNullOrEmpty(result.ErrorMessage))
+                    {
+                        if (!errorMessages.Contains(result.ErrorMessage))
+                        {
+                            errorMessages.Add(result.ErrorMessage);
+                        }
+                    }
+
+                    // 添加 Message 属性（如果有）
+                    if (!string.IsNullOrEmpty(result.Message))
+                    {
+                        if (!errorMessages.Contains(result.Message))
+                        {
+                            errorMessages.Add(result.Message);
+                        }
+                    }
+
+                    var errorText = errorMessages.Any() ? string.Join("\n", errorMessages) : "未知错误";
+                    MessageBox.Show($"处理失败：\n{errorText}",
                         "处理失败", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -908,12 +936,42 @@ namespace DocuFiller.ViewModels
                 
                 if (result.IsSuccess)
                 {
-                    MessageBox.Show($"批量处理完成！\n处理了 {result.TotalProcessed} 个文件\n生成了 {result.GeneratedFiles.Count} 个文件\n耗时：{result.Duration.TotalSeconds:F1} 秒", 
+                    MessageBox.Show($"批量处理完成！\n处理了 {result.TotalProcessed} 个文件\n生成了 {result.GeneratedFiles.Count} 个文件\n耗时：{result.Duration.TotalSeconds:F1} 秒",
                         "处理完成", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
                 else
                 {
-                    MessageBox.Show($"批量处理失败：\n{string.Join("\n", result.Errors)}", 
+                    // 收集所有错误信息
+                    var errorMessages = new List<string>();
+
+                    // 添加 Errors 列表中的错误
+                    if (result.Errors != null && result.Errors.Any())
+                    {
+                        errorMessages.AddRange(result.Errors);
+                    }
+
+                    // 添加 ErrorMessage（如果不在 Errors 列表中）
+                    if (!string.IsNullOrEmpty(result.ErrorMessage))
+                    {
+                        if (!errorMessages.Contains(result.ErrorMessage))
+                        {
+                            errorMessages.Add(result.ErrorMessage);
+                        }
+                    }
+
+                    // 添加 FailedFiles 中的错误
+                    if (result.FailedFiles != null && result.FailedFiles.Any())
+                    {
+                        errorMessages.Add("失败的文件:");
+                        errorMessages.AddRange(result.FailedFiles.Take(10)); // 最多显示10个失败的文件
+                        if (result.FailedFiles.Count > 10)
+                        {
+                            errorMessages.Add($"... 还有 {result.FailedFiles.Count - 10} 个文件失败");
+                        }
+                    }
+
+                    var errorText = errorMessages.Any() ? string.Join("\n", errorMessages) : "未知错误";
+                    MessageBox.Show($"批量处理失败：\n{errorText}",
                         "处理失败", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }

@@ -143,6 +143,47 @@ namespace DocuFiller.Tests.Integration
             Assert.Equal("新页眉", headerText);
         }
 
+        [Fact]
+        public async Task ProcessDocument_HeaderControl_ShouldNotLeaveOldPlaceholderText()
+        {
+            string templatePath = Path.Combine(_testDir, "template-header-oldtext.docx");
+            string outputPath = Path.Combine(_testDir, "output-header-oldtext.docx");
+            string dataPath = Path.Combine(_testDir, "data-header-oldtext.json");
+
+            CreateHeaderTemplateWithNestedUntaggedContent(templatePath);
+            File.WriteAllText(dataPath, @"[{""HeaderField"":""456""}]");
+
+            var fileService = new FileService();
+            var dataParser = new DataParserService(_loggerFactory.CreateLogger<DataParserService>(), fileService);
+            var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
+            var serviceProvider = new ServiceCollection()
+                .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
+                .BuildServiceProvider();
+            var processor = new DocumentProcessorService(
+                _loggerFactory.CreateLogger<DocumentProcessorService>(),
+                dataParser,
+                excelDataParser,
+                fileService,
+                new ProgressReporterService(_loggerFactory.CreateLogger<ProgressReporterService>()),
+                new ContentControlProcessor(
+                    _loggerFactory.CreateLogger<ContentControlProcessor>(),
+                    new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
+                    new SafeTextReplacer(_loggerFactory.CreateLogger<SafeTextReplacer>())),
+                new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
+                serviceProvider,
+                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
+
+            bool success = await processor.ProcessSingleDocumentAsync(
+                templatePath,
+                outputPath,
+                (await dataParser.ParseJsonFileAsync(dataPath)).First());
+
+            Assert.True(success);
+            using var document = WordprocessingDocument.Open(outputPath, false);
+            var headerText = document.MainDocumentPart?.HeaderParts.First().Header?.InnerText;
+            Assert.Equal("456", headerText);
+        }
+
         private void CreateTestTemplate(string path)
         {
             using var document = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
@@ -182,6 +223,29 @@ namespace DocuFiller.Tests.Integration
                             new SdtRun(
                                 new SdtProperties(new Tag() { Val = "HeaderField" }),
                                 new SdtContentRun(new Run(new Text("页眉占位符")))
+                            )
+                        )
+                    )
+                )
+            );
+        }
+
+        private void CreateHeaderTemplateWithNestedUntaggedContent(string path)
+        {
+            using var document = WordprocessingDocument.Create(path, WordprocessingDocumentType.Document);
+            var mainPart = document.AddMainDocumentPart();
+            mainPart.Document = new Document(new Body());
+
+            var headerPart = mainPart.AddNewPart<HeaderPart>();
+            headerPart.Header = new Header(
+                new Paragraph(
+                    new SdtRun(
+                        new SdtProperties(new Tag() { Val = "HeaderField" }),
+                        new SdtContentRun(
+                            new Run(new Text("123")),
+                            new SdtRun(
+                                new SdtProperties(),
+                                new SdtContentRun(new Run(new Text("123")))
                             )
                         )
                     )

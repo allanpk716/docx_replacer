@@ -92,9 +92,8 @@ namespace DocuFiller.Tests.Services
 
             // Assert
             var runs = sdtRun.Descendants<Run>().ToList();
-            Assert.Equal(2, runs.Count);
+            Assert.Single(runs);
             Assert.Equal("new text", runs[0].Descendants<Text>().First().Text);
-            Assert.Empty(runs[1].Descendants<Text>());
         }
 
         /// <summary>
