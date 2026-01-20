@@ -17,6 +17,7 @@ DocuFiller是一个基于C# + .NET 8 + WPF开发的桌面应用程序，用于�
 
 ## 技术架构
 
+### 核心框架
 - **框架**：.NET 8 + WPF
 - **文档处理**：DocumentFormat.OpenXml
 - **Excel处理**：EPPlus 7.5.2
@@ -24,6 +25,77 @@ DocuFiller是一个基于C# + .NET 8 + WPF开发的桌面应用程序，用于�
 - **依赖注入**：Microsoft.Extensions.DependencyInjection
 - **日志记录**：Microsoft.Extensions.Logging
 - **架构模式**：MVVM + 分层架构
+
+### 架构设计
+
+#### MVVM 模式
+项目遵循标准的 MVVM（Model-View-ViewModel）模式：
+- **Views** (XAML)：通过 DataContext 绑定到 ViewModels
+- **ViewModels**：处理业务逻辑和状态管理
+- **Models**：表示数据结构
+
+#### 依赖注入
+- 服务在 `App.xaml.cs:ConfigureServices()` 中注册
+- 使用 Microsoft.Extensions.DependencyInjection 容器
+- 通过构造函数注入解析服务依赖
+
+#### 服务层架构
+核心服务接口和实现：
+
+| 服务 | 接口 | 职责 |
+|------|------|------|
+| 文档处理 | `IDocumentProcessor` | 使用 OpenXML 处理 Word 文档 |
+| 数据解析 | `IDataParser` | 处理 JSON/Excel 数据文件 |
+| 文件操作 | `IFileService` | 管理文件 I/O 操作 |
+| 进度报告 | `IProgressReporter` | 跟踪和报告处理进度 |
+| 文件扫描 | `IFileScanner` | 发现目录中的模板文件 |
+| 目录管理 | `IDirectoryManager` | 处理文件夹操作 |
+
+#### 文档处理管道
+
+```
+1. 模板文件选择 (.docx/.dotx)
+         ↓
+2. JSON/Excel 数据解析和验证
+         ↓
+3. 从模板提取内容控件
+         ↓
+4. 数据映射和验证
+         ↓
+5. 批量文档生成（带进度跟踪）
+         ↓
+6. 输出文件管理和组织
+```
+
+#### OpenXML 集成 - 表格内容控件处理
+
+文档使用 DocumentFormat.OpenXml SDK 操作 Word 文档，支持复杂的内容控件替换：
+
+**表格中的内容控件替换需要特别处理**，`SafeTextReplacer` 服务实现了三种替换策略：
+
+| 场景 | 结构示意 | 检测方式 | 处理方法 |
+|------|----------|----------|----------|
+| 控件在单元格内 | `TableCell → SdtCell` | `isInTableCell = true` | `ReplaceTextInTableCell` |
+| 控件包装单元格 | `TableRow → SdtCell → TableCell` | `containsTableCell = true` | `ReplaceTextInWrappedTableCell` |
+| 普通控件 | `SdtRun/SdtBlock` | 两者均为 false | `ReplaceTextStandard` |
+
+**关键注意事项**：
+1. **不要删除 TableCell 结构**：当 `containsTableCell = true` 时，控件包装了整个表格单元格，此时必须使用 `ReplaceTextInWrappedTableCell` 方法，该方法会找到被包装的 TableCell 并只替换其中的文本内容，而不会删除 TableCell 本身
+2. **区分 SdtBlock 和 SdtRun**：块级控件（SdtBlock）包含完整的 Paragraph 结构，处理时需要确保容器内只有一个段落
+3. **避免破坏其他控件**：在 SdtContentBlock 容器内可能存在多个段落，每个段落可能属于不同的控件，不能随意删除
+
+**相关文件**：
+- `Services/SafeTextReplacer.cs` - 核心替换逻辑实现
+- `Utils/OpenXmlTableCellHelper.cs` - 表格单元格位置检测工具
+
+#### 核心数据模型
+
+| 模型 | 用途 |
+|------|------|
+| `ProcessRequest` | 封装文档处理所需的所有数据 |
+| `ProcessResult` | 包含处理操作的结果和统计信息 |
+| `ProgressEventArgs` | 在长时间运行的操作中携带进度信息 |
+| `ContentControlData` | 表示可以用数据填充的 Word 文档内容控件 |
 
 ## 项目结构
 
@@ -130,7 +202,7 @@ dotnet run
 
 ## 发布 Release
 
-DocuFiller 使用自动化脚本发布到更新服务器。详见 [发布流程文档](docs/release-workflow.md)。
+DocuFiller 使用自动化脚本发布到更新服务器。详见 [部署与发布指南](docs/deployment-guide.md)。
 
 快速发布：
 ```bash
