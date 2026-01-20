@@ -88,7 +88,7 @@ namespace DocuFiller.Services.Update
                 }
 
                 _logger.LogDebug("检查更新响应: HasUpdate={HasUpdate}, LatestVersion={Version}",
-                    checkResponse.HasUpdate, checkResponse.Version);
+                    checkResponse.HasUpdate, checkResponse.LatestVersion);
 
                 // 如果没有更新，返回 null
                 if (!checkResponse.HasUpdate)
@@ -98,7 +98,7 @@ namespace DocuFiller.Services.Update
                 }
 
                 // 转换为 VersionInfo
-                var versionInfo = ConvertToVersionInfo(checkResponse);
+                var versionInfo = ConvertToVersionInfo(checkResponse, channel);
                 if (versionInfo == null)
                 {
                     _logger.LogWarning("无法转换版本信息");
@@ -339,17 +339,17 @@ namespace DocuFiller.Services.Update
         /// <summary>
         /// 转换 UpdateClientCheckResponse 为 VersionInfo
         /// </summary>
-        private VersionInfo? ConvertToVersionInfo(UpdateClientCheckResponse response)
+        private VersionInfo? ConvertToVersionInfo(UpdateClientCheckResponse response, string channel)
         {
             try
             {
                 return new VersionInfo
                 {
-                    Version = response.Version,
-                    Channel = response.Channel,
-                    FileName = response.FileName,
+                    Version = response.LatestVersion,
+                    Channel = channel,
+                    FileName = $"DocuFiller-{response.LatestVersion}.exe",
                     FileSize = response.FileSize,
-                    FileHash = response.FileHash,
+                    FileHash = string.Empty,
                     ReleaseNotes = response.ReleaseNotes,
                     PublishDate = response.PublishDate,
                     Mandatory = response.Mandatory,
@@ -372,23 +372,6 @@ namespace DocuFiller.Services.Update
             string appDir = AppDomain.CurrentDomain.BaseDirectory;
             return Path.Combine(appDir, "update-client.exe");
         }
-    }
-
-    /// <summary>
-    /// update-client.exe check 命令的 JSON 响应
-    /// </summary>
-    public class UpdateClientCheckResponse
-    {
-        public bool HasUpdate { get; set; }
-        public string Version { get; set; } = string.Empty;
-        public string Channel { get; set; } = string.Empty;
-        public string FileName { get; set; } = string.Empty;
-        public long FileSize { get; set; }
-        public string FileHash { get; set; } = string.Empty;
-        public string ReleaseNotes { get; set; } = string.Empty;
-        public DateTime PublishDate { get; set; }
-        public bool Mandatory { get; set; }
-        public string DownloadUrl { get; set; } = string.Empty;
     }
 
     /// <summary>
