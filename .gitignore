@@ -52,6 +52,7 @@ docufiller-update-server/
 scripts/config/release-config.bat
 
 # ========== External Dependencies ==========
-# External tools and configuration (manually maintained)
-External/update-client.exe
+# Update client files placed manually by users or deployment
+# Source: update-client.exe built from update-server repository
+# Note: .exe files are already excluded by global *.exe rule
 External/update-config.yaml
