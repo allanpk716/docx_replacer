@@ -121,11 +121,13 @@ namespace DocuFiller
             services.AddTransient<MainWindowViewModel>();
             services.AddTransient<ViewModels.ConverterWindowViewModel>();
             services.AddTransient<ViewModels.Update.UpdateViewModel>();
+            services.AddTransient<ViewModels.Update.UpdateBannerViewModel>();
 
             // 注册主窗口
             services.AddTransient<MainWindow>();
             services.AddTransient<Views.ConverterWindow>();
             services.AddTransient<Views.Update.UpdateWindow>();
+            services.AddTransient<Views.Update.UpdateBannerView>();
 
             _serviceProvider = services.BuildServiceProvider();
         }

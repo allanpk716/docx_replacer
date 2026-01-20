@@ -1,0 +1,129 @@
+<UserControl x:Class="DocuFiller.Views.UpdateBannerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:converters="clr-namespace:DocuFiller.Converters"
+             mc:Ignorable="d"
+             Height="48"
+             d:DesignHeight="48" d:DesignWidth="800">
+
+    <UserControl.Resources>
+        <!-- 文本链接样式 -->
+        <Style x:Key="TextLinkStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}">
+                            <ContentPresenter.Resources>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="#007ACC"/>
+                                    <Setter Property="TextDecorations" Value="Underline"/>
+                                    <Style.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Foreground" Value="#005A9E"/>
+                                        </Trigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ContentPresenter.Resources>
+                        </ContentPresenter>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="#007ACC" Padding="12,8">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="3" x:Name="DownloadProgressBarRow"/>
+            </Grid.RowDefinitions>
+
+            <!-- 主要内容区域 -->
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <!-- 第一列：图标和版本信息 -->
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <!-- 第二列：状态和进度 -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- 第三列：按钮 -->
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 图标和版本信息 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- 更新图标 -->
+                    <Path Data="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10-4.48 10-10S17.52,2 12,2zm-2,15l-5-5 1.41-1.41L10,14.17l7.59-7.59L19,8l-9,9z"
+                          Fill="White"
+                          Width="16"
+                          Height="16"
+                          Margin="0,0,8,0"/>
+
+                    <!-- 版本文本 -->
+                    <TextBlock Text="{Binding VersionInfo}"
+                               Foreground="White"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- 状态和进度 -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="{Binding StatusMessage}"
+                               Foreground="White"
+                               FontSize="13"
+                               VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding ProgressText}"
+                               Foreground="White"
+                               FontSize="13"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"
+                               Visibility="{Binding IsDownloading, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+                </StackPanel>
+
+                <!-- 按钮区域 -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- 更新按钮 -->
+                    <Button Content="更新"
+                            Command="{Binding UpdateCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            Width="60"
+                            Height="30"
+                            Margin="0,0,8,0"/>
+
+                    <!-- 稍后提醒按钮 -->
+                    <Button Content="稍后提醒"
+                            Click="RemindLater_Click"
+                            Style="{StaticResource TextLinkStyle}"
+                            Width="80"
+                            Height="30"
+                            Margin="0,0,8,0"/>
+
+                    <!-- 关闭按钮 -->
+                    <Button Content="×"
+                            Command="{Binding CloseCommand}"
+                            Style="{StaticResource TextLinkStyle}"
+                            Width="30"
+                            Height="30"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 下载进度条 -->
+            <ProgressBar Grid.Row="1"
+                         Value="{Binding DownloadProgress}"
+                         Maximum="100"
+                         Background="#005A9E"
+                         Foreground="White"
+                         BorderThickness="0"
+                         Visibility="{Binding IsDownloading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                         VerticalAlignment="Bottom"/>
+        </Grid>
+    </Border>
+</UserControl>

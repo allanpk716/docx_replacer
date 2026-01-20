@@ -46,6 +46,7 @@ namespace DocuFiller.ViewModels
         private DataStatistics _dataStatistics = new();
         private bool _isUpdateAvailable;
         private VersionInfo? _latestVersionInfo;
+        private UpdateBannerViewModel? _updateBannerViewModel;
         
         // 文件夹拖拽相关属性
         private string? _templateFolderPath;
@@ -75,7 +76,8 @@ namespace DocuFiller.ViewModels
             IDirectoryManager directoryManager,
             IExcelDataParser excelDataParser,
             IUpdateService updateService,
-            ILogger<MainWindowViewModel> logger)
+            ILogger<MainWindowViewModel> logger,
+            UpdateBannerViewModel? updateBannerViewModel = null)
         {
             _documentProcessor = documentProcessor ?? throw new ArgumentNullException(nameof(documentProcessor));
             _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
@@ -90,6 +92,9 @@ namespace DocuFiller.ViewModels
             InitializeCommands();
             SubscribeToProgressEvents();
             SubscribeToUpdateEvents();
+
+            // 初始化更新横幅（使用现有的 logger 创建临时 UpdateBannerViewModel）
+            UpdateBanner = updateBannerViewModel ?? new UpdateBannerViewModel(new LoggerFactory().CreateLogger<UpdateBannerViewModel>());
 
             // 设置默认输出目录
             _outputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出");
@@ -123,6 +128,95 @@ namespace DocuFiller.ViewModels
             {
                 _logger.LogError(ex, "启动时自动检查更新失败");
             }
+        }
+
+        /// <summary>
+        /// 检查更新并显示横幅
+        /// </summary>
+        /// <param name="isAutoCheck">是否为自动检查</param>
+        private async Task CheckForUpdatesAsync(bool isAutoCheck = false)
+        {
+            try
+            {
+                if (isAutoCheck)
+                {
+                    _logger.LogInformation("自动检查更新");
+                }
+                else
+                {
+                    _logger.LogInformation("用户手动检查更新");
+                    ProgressMessage = "正在检查更新...";
+                }
+
+                var currentVersion = UpdateService.GetCurrentVersion();
+                var channel = GetConfigValue("UpdateChannel", "stable");
+
+                var versionInfo = await _updateService.CheckForUpdateAsync(currentVersion, channel);
+
+                if (versionInfo != null)
+                {
+                    _logger.LogInformation("发现新版本: {Version}", versionInfo.Version);
+                    if (!isAutoCheck)
+                    {
+                        ProgressMessage = $"发现新版本: {versionInfo.Version}";
+                    }
+
+                    // 在 UI 线程上显示更新横幅
+                    await ShowUpdateBannerAsync(versionInfo);
+                }
+                else
+                {
+                    _logger.LogInformation("当前版本已是最新: {Version}", currentVersion);
+                    if (!isAutoCheck)
+                    {
+                        ProgressMessage = "当前版本已是最新";
+                        MessageBox.Show(
+                            $"当前版本 {currentVersion} 已是最新版本！",
+                            "检查更新",
+                            MessageBoxButton.OK,
+                            MessageBoxImage.Information);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查更新时发生错误");
+                if (!isAutoCheck)
+                {
+                    ProgressMessage = "检查更新失败";
+                    MessageBox.Show(
+                        $"检查更新时发生错误：{ex.Message}",
+                        "错误",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 显示更新横幅
+        /// </summary>
+        private async Task ShowUpdateBannerAsync(VersionInfo versionInfo)
+        {
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    _logger.LogInformation("显示更新横幅: {Version}", versionInfo.Version);
+
+                    // 设置更新横幅的版本信息
+                    UpdateBanner.VersionInfo = versionInfo;
+                    UpdateBanner.IsVisible = true;
+
+                    // 直接调用更新窗口（为了简化，我们直接显示更新窗口并隐藏横幅）
+                    ShowUpdateWindow(versionInfo);
+                    UpdateBanner.IsVisible = false; // 隐藏横幅
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "显示更新横幅时发生错误");
+                }
+            });
         }
 
         #region 属性
@@ -325,6 +419,15 @@ namespace DocuFiller.ViewModels
         {
             get => _latestVersionInfo;
             set => SetProperty(ref _latestVersionInfo, value);
+        }
+
+        /// <summary>
+        /// 更新横幅视图模型
+        /// </summary>
+        public UpdateBannerViewModel? UpdateBanner
+        {
+            get => _updateBannerViewModel;
+            private set => SetProperty(ref _updateBannerViewModel, value);
         }
         
         #endregion

@@ -3,6 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="clr-namespace:DocuFiller.Views"
+        xmlns:updateViews="clr-namespace:DocuFiller.Views.Update"
         mc:Ignorable="d"
         Title="DocuFiller - Word文档批量填充工具" Height="900" Width="1400"
         MinHeight="800" MinWidth="1200"
@@ -14,10 +16,17 @@
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
+        <!-- 更新横幅 -->
+        <updateViews:UpdateBannerView Grid.Row="0"
+                                     DataContext="{Binding UpdateBanner}"
+                                     Visibility="{Binding UpdateBanner.IsVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                     Margin="0,0,0,10"/>
+
         <!-- 标题栏 -->
-        <StackPanel Grid.Row="0" HorizontalAlignment="Center" Margin="0,0,0,25">
+        <StackPanel Grid.Row="1" HorizontalAlignment="Center" Margin="0,0,0,25">
             <TextBlock Text="Word文档批量填充工具" 
                        FontSize="28" FontWeight="Bold" 
                        HorizontalAlignment="Center" 

@@ -5,15 +5,9 @@ VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocuFiller", "DocuFiller.csproj", "{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExcelToWordVerifier", "ExcelToWordVerifier\ExcelToWordVerifier.csproj", "{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestFormattedSuperscript", "ExcelToWordVerifier\TestFormattedSuperscript.csproj", "{83453F17-A92F-46BA-93E7-A4CB9373051A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{EC085C92-0546-40EF-A46C-228A4A3469B8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelFormattedTestGenerator", "Tools\ExcelFormattedTestGenerator\ExcelFormattedTestGenerator.csproj", "{0E7F2198-6ECB-449C-9353-643C936DAE4D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CreateFormattedExcel", "ExcelToWordVerifier\CreateFormattedExcel.csproj", "{D0D35BDD-DED0-48C2-8E00-D39BFE877555}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocuFiller.Tests", "Tests\DocuFiller.Tests.csproj", "{952439E6-E192-4A15-8626-12530AD98DCE}"
 EndProject
@@ -43,22 +37,6 @@ Global
 		{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{11F9254E-B4B6-46EA-BCBF-30D99AFD3181}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7DA7B4C5-3B2C-42A1-BBF8-69542BA139D3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{83453F17-A92F-46BA-93E7-A4CB9373051A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0E7F2198-6ECB-449C-9353-643C936DAE4D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0E7F2198-6ECB-449C-9353-643C936DAE4D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0E7F2198-6ECB-449C-9353-643C936DAE4D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0E7F2198-6ECB-449C-9353-643C936DAE4D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D0D35BDD-DED0-48C2-8E00-D39BFE877555}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{D0D35BDD-DED0-48C2-8E00-D39BFE877555}.Debug|Any CPU.Build.0 = Debug|x64
-		{D0D35BDD-DED0-48C2-8E00-D39BFE877555}.Release|Any CPU.ActiveCfg = Release|x64
-		{D0D35BDD-DED0-48C2-8E00-D39BFE877555}.Release|Any CPU.Build.0 = Release|x64
 		{952439E6-E192-4A15-8626-12530AD98DCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{952439E6-E192-4A15-8626-12530AD98DCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{952439E6-E192-4A15-8626-12530AD98DCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
