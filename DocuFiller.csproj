@@ -128,4 +128,49 @@
     <Exec Command="echo 开始构建: $(ProjectName)" />
   </Target>
 
+  <!-- Update Client External Files -->
+  <ItemGroup>
+    <None Update="External\update-client.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>update-client.exe</Link>
+    </None>
+    <None Update="External\update-config.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>update-config.yaml</Link>
+    </None>
+  </ItemGroup>
+
+  <!-- PreBuild validation: Check if update-client files exist -->
+  <Target Name="ValidateUpdateClientFiles" BeforeTargets="BeforeBuild">
+    <PropertyGroup>
+      <UpdateClientPath>$(ProjectDir)External\update-client.exe</UpdateClientPath>
+      <UpdateConfigPath>$(ProjectDir)External\update-config.yaml</UpdateConfigPath>
+    </PropertyGroup>
+
+    <Error Text="&#x0A;╔═══════════════════════════════════════════════════════════════╗&#x0A;║  ❌ 构建失败：未找到 update-client.exe                           ║&#x0A;╠═══════════════════════════════════════════════════════════════╣&#x0A;║  请将 update-client.exe 放置在以下位置：                         ║&#x0A;║  $(UpdateClientPath)                                           ║&#x0A;║                                                                   ║&#x0A;║  获取方式：                                                        ║&#x0A;║  1. 登录 Update Server 管理后台                                  ║&#x0A;║  2. 进入程序详情页                                                ║&#x0A;║  3. 点击「下载更新端」                                             ║&#x0A;║  4. 解压并将文件复制到 External/ 目录                             ║&#x0A;║                                                                   ║&#x0A;║  参考文档：docs/EXTERNAL_SETUP.md                                  ║&#x0A;╚═══════════════════════════════════════════════════════════════╝"
+           Condition="!Exists('$(UpdateClientPath)')" />
+
+    <Error Text="&#x0A;╔═══════════════════════════════════════════════════════════════╗&#x0A;║  ❌ 构建失败：未找到 update-config.yaml                          ║&#x0A;╠═══════════════════════════════════════════════════════════════╣&#x0A;║  请将 update-config.yaml 放置在以下位置：                        ║&#x0A;║  $(UpdateConfigPath)                                            ║&#x0A;║                                                                   ║&#x0A;║  获取方式：                                                        ║&#x0A;║  1. 登录 Update Server 管理后台                                  ║&#x0A;║  2. 进入程序详情页                                                ║&#x0A;║  3. 点击「下载更新端」                                             ║&#x0A;║  4. 解压并将文件复制到 External/ 目录                             ║&#x0A;║                                                                   ║&#x0A;║  参考文档：docs/EXTERNAL_SETUP.md                                  ║&#x0A;╚═══════════════════════════════════════════════════════════════╝"
+           Condition="!Exists('$(UpdateConfigPath)')" />
+
+    <Message Text="&#x0A;╔═══════════════════════════════════════════════════════════════╗&#x0A;║  ✓ Update Client 文件验证通过                                   ║&#x0A;╚═══════════════════════════════════════════════════════════════╝"
+             Importance="high"
+             Condition="Exists('$(UpdateClientPath)') And Exists('$(UpdateConfigPath)')" />
+  </Target>
+
+  <!-- PostPublish validation: Verify files in publish output -->
+  <Target Name="ValidateReleaseFiles" AfterTargets="Publish">
+    <PropertyGroup>
+      <PublishDir>$(PublishDir)</PublishDir>
+    </PropertyGroup>
+
+    <Error Text="❌ 发布包缺少 update-client.exe"
+           Condition="!Exists('$(PublishDir)update-client.exe')" />
+
+    <Error Text="❌ 发布包缺少 update-config.yaml"
+           Condition="!Exists('$(PublishDir)update-config.yaml')" />
+
+    <Message Text="✓ 发布包验证完成" Importance="high" />
+  </Target>
+
 </Project>
