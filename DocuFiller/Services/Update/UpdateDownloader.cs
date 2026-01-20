@@ -34,13 +34,7 @@ namespace DocuFiller.Services.Update
                 PropertyNamingPolicy = JsonNamingPolicy.CamelCase
             };
 
-            // 验证 update-client.exe 是否存在
             string exePath = GetUpdateClientPath();
-            if (!File.Exists(exePath))
-            {
-                throw new FileNotFoundException($"更新客户端不存在: {exePath}", exePath);
-            }
-
             _logger.LogInformation("UpdateDownloader 初始化成功，客户端路径: {ExePath}", exePath);
         }
 
@@ -140,23 +134,16 @@ namespace DocuFiller.Services.Update
                 response.EnsureSuccessStatusCode();
 
                 var json = await response.Content.ReadAsStringAsync();
-                var daemonStatus = JsonSerializer.Deserialize<DaemonStatusInfo>(json, _jsonOptions);
+                var status = JsonSerializer.Deserialize<DownloadStatus>(json, _jsonOptions);
 
-                if (daemonStatus == null)
+                if (status == null)
                 {
                     _logger.LogWarning("无法解析状态响应");
                     return null;
                 }
 
-                var status = new DownloadStatus
-                {
-                    State = daemonStatus.State,
-                    Current = daemonStatus.Progress?.Current ?? 0,
-                    Total = daemonStatus.Progress?.Total ?? 0,
-                    Error = daemonStatus.Error
-                };
-
-                _logger.LogDebug("当前状态: {State}, 进度: {Current}/{Total}", status.State, status.Current, status.Total);
+                _logger.LogDebug("当前状态: {State}, 进度: {Downloaded}/{Total}",
+                    status.State, status.Progress?.Downloaded ?? 0, status.Progress?.Total ?? 0);
                 return status;
             }
             catch (Exception ex)
@@ -188,7 +175,7 @@ namespace DocuFiller.Services.Update
                     }
 
                     // 如果正在下载，触发进度回调
-                    if (status.State == "downloading" && onProgress != null)
+                    if (status.State == "downloading" && onProgress != null && status.Progress != null)
                     {
                         var progress = ConvertProgress(status);
                         onProgress(progress);
@@ -324,11 +311,14 @@ namespace DocuFiller.Services.Update
         /// </summary>
         private DownloadProgress ConvertProgress(DownloadStatus status)
         {
+            var downloaded = status.Progress?.Downloaded ?? 0;
+            var total = status.Progress?.Total ?? 0;
+
             return new DownloadProgress
             {
-                BytesReceived = status.Current,
-                TotalBytes = status.Total,
-                ProgressPercentage = status.Total > 0 ? (int)((double)status.Current / status.Total * 100) : 0,
+                BytesReceived = downloaded,
+                TotalBytes = total,
+                ProgressPercentage = total > 0 ? (int)((double)downloaded / total * 100) : 0,
                 Status = status.State
             };
         }
@@ -381,38 +371,4 @@ namespace DocuFiller.Services.Update
             _disposed = true;
         }
     }
-
-    #region Data Models
-
-    /// <summary>
-    /// 下载状态
-    /// </summary>
-    public class DownloadStatus
-    {
-        public string State { get; set; } = string.Empty;
-        public long Current { get; set; }
-        public long Total { get; set; }
-        public string? Error { get; set; }
-    }
-
-    /// <summary>
-    /// 守护进程状态信息（从 HTTP API 返回）
-    /// </summary>
-    internal class DaemonStatusInfo
-    {
-        public string State { get; set; } = string.Empty;
-        public DaemonProgressInfo? Progress { get; set; }
-        public string? Error { get; set; }
-    }
-
-    /// <summary>
-    /// 守护进程进度信息
-    /// </summary>
-    internal class DaemonProgressInfo
-    {
-        public long Current { get; set; }
-        public long Total { get; set; }
-    }
-
-    #endregion
 }
