@@ -50,3 +50,8 @@ docufiller-update-server/
 # ========== Release Configuration ==========
 # Release configuration (contains sensitive token)
 scripts/config/release-config.bat
+
+# ========== External Dependencies ==========
+# External tools and configuration (manually maintained)
+External/update-client.exe
+External/update-config.yaml
