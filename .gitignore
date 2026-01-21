@@ -5,6 +5,10 @@ bin/
 *.dll
 *.pdb
 
+# Exception: External update tools (needed for builds and releases)
+!External/update-client.exe
+!External/update-publisher.exe
+
 # ========== IDE & Editor ==========
 /.vs
 /.vscode

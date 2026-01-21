@@ -1,0 +1,43 @@
+# Update Client Configuration for DocuFiller
+# IMPORTANT: Copy this file to update-config.yaml and configure with your server settings
+#
+# Configuration will be automatically updated by sync-version.bat during builds:
+#   - current_version will be synchronized with git tag
+#
+# DO NOT commit update-config.yaml to git (it's in .gitignore)
+
+server:
+  # Update server URL (required)
+  # Replace with your actual update server address
+  url: http://localhost:8080
+  # Request timeout in seconds (default: 30)
+  timeout: 30
+
+program:
+  # Program identifier - used to query updates for DocuFiller (required)
+  id: docufiller
+  # Current version of the program (required)
+  # This field is automatically updated by sync-version.bat
+  # Format: x.y.z for stable releases
+  current_version: 1.0.0
+
+auth:
+  # API token for authenticated requests (optional)
+  # Leave empty if the server does not require authentication
+  token: ""
+
+download:
+  # Directory to save downloaded update packages (default: ./updates)
+  save_path: ./updates
+  # File naming strategy: "version" or "timestamp" (default: version)
+  naming: version
+  # Number of old versions to keep (default: 3, 0 to keep all)
+  keep: 3
+  # Automatically verify file hash after download (default: true)
+  auto_verify: true
+
+logging:
+  # Log level: trace, debug, info, warn, error (default: info)
+  level: info
+  # Log file path (default: update-client.log in current directory)
+  file: update-client.log
