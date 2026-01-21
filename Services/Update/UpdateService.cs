@@ -372,34 +372,6 @@ namespace DocuFiller.Services.Update
         }
 
         /// <summary>
-        /// 获取当前应用程序版本
-        /// </summary>
-        /// <returns>当前版本号</returns>
-        public static string GetCurrentVersion()
-        {
-            try
-            {
-                var assembly = Assembly.GetExecutingAssembly();
-                var assemblyName = assembly.GetName();
-                var version = assemblyName.Version?.ToString() ?? "1.0.0.0";
-
-                // 返回主版本.次版本.修订号（去掉构建号）
-                var parts = version.Split('.');
-                if (parts.Length >= 3)
-                {
-                    return $"{parts[0]}.{parts[1]}.{parts[2]}";
-                }
-
-                return version;
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"获取当前版本失败: {ex.Message}");
-                return "1.0.0";
-            }
-        }
-
-        /// <summary>
         /// 从配置获取值
         /// </summary>
         /// <param name="key">配置键</param>

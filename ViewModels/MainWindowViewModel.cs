@@ -13,6 +13,7 @@ using DocuFiller.Models;
 using DocuFiller.Models.Update;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Services.Update;
+using DocuFiller.Utils;
 using DocuFiller.Views.Update;
 using DocuFiller.ViewModels.Update;
 using Microsoft.Extensions.DependencyInjection;
@@ -148,7 +149,7 @@ namespace DocuFiller.ViewModels
                     ProgressMessage = "正在检查更新...";
                 }
 
-                var currentVersion = UpdateService.GetCurrentVersion();
+                var currentVersion = VersionHelper.GetCurrentVersion();
                 var channel = GetConfigValue("UpdateChannel", "stable");
 
                 var versionInfo = await _updateService.CheckForUpdateAsync(currentVersion, channel);
@@ -1187,7 +1188,7 @@ namespace DocuFiller.ViewModels
                     ProgressMessage = "正在检查更新...";
                 }
 
-                var currentVersion = UpdateService.GetCurrentVersion();
+                var currentVersion = VersionHelper.GetCurrentVersion();
                 var channel = GetConfigValue("UpdateChannel", "stable");
 
                 var versionInfo = await _updateService.CheckForUpdateAsync(currentVersion, channel);
