@@ -56,3 +56,4 @@ scripts/config/release-config.bat
 # Source: update-client.exe built from update-server repository
 # Note: .exe files are already excluded by global *.exe rule
 External/update-config.yaml
+.no-pushover
