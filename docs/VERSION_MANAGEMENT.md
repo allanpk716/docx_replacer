@@ -87,9 +87,18 @@ release.bat
 
 ## 构建系统 (Build System)
 
-### 自动版本同步 (Automatic Version Synchronization)
+### 版本同步 (Version Synchronization)
 
-每次运行 `dotnet build` 时，MSBuild 会自动调用 `scripts/sync-version.bat`：
+**重要**: 版本同步需要在发布前手动运行，不建议在每次构建时自动同步（避免文件锁定问题）。
+
+运行版本同步脚本：
+
+```bash
+# 从项目根目录运行
+scripts\sync-version.bat
+```
+
+脚本会执行以下操作：
 
 1. **读取 Git Tag**:
    - 有 tag: 使用 tag 版本（如 `v1.0.0` → `1.0.0`）
@@ -102,17 +111,16 @@ release.bat
 
 3. **更新 External/update-config.yaml**:
    ```yaml
-   app:
+   program:
      current_version: "1.0.0"
    ```
 
-### MSBuild 目标 (MSBuild Targets)
-
-```xml
-<!-- DocuFiller.csproj -->
-<Target Name="SynchronizeVersion" BeforeTargets="CoreBuild">
-  <Exec Command="call $(ProjectDir)scripts\sync-version.bat" />
-</Target>
+**注意**: 首次使用前需要从模板创建配置文件：
+```bash
+cd External
+copy update-config.yaml.template update-config.yaml
+# 编辑配置文件，设置服务器地址
+notepad update-config.yaml
 ```
 
 ## 发布流程 (Release Process)
@@ -129,7 +137,14 @@ git commit -m "feat: prepare for v1.0.0 release"
 git tag v1.0.0
 git push origin v1.0.0
 
-# 3. 运行发布脚本
+# 3. 同步版本号（重要！）
+scripts\sync-version.bat
+
+# 4. 验证版本号
+grep "<Version>" DocuFiller.csproj
+type External\update-config.yaml | findstr current_version
+
+# 5. 运行发布脚本
 cd scripts
 release.bat
 
@@ -278,11 +293,27 @@ git describe --tags --abbrev=0
 # 检查 External 目录
 dir External
 
-# 确保以下文件存在：
-# - update-client.exe
-# - update-config.yaml
-# - update-publisher.exe
+# 如果缺少 update-config.yaml：
+cd External
+copy update-config.yaml.template update-config.yaml
+notepad update-config.yaml
+
+# 然后运行版本同步
+cd ..
+scripts\sync-version.bat
+
+# 如果缺少 .exe 文件：
+# 1. 从 Update Server 管理后台下载
+# 2. 或从 update-server 仓库构建
+# 3. 放置在 External/ 目录
 ```
+
+**检查清单**:
+- [ ] `External/update-client.exe` 存在
+- [ ] `External/update-publisher.exe` 存在
+- [ ] `External/update-config.yaml` 存在（从模板创建）
+- [ ] `External/update-config.yaml` 已配置服务器地址
+- [ ] 已运行 `scripts\sync-version.bat` 同步版本号
 
 ## 最佳实践 (Best Practices)
 
@@ -300,6 +331,8 @@ dir External
 - ✅ 发布前更新 CHANGELOG.md
 - ✅ 使用 tag 标记发布版本
 - ✅ 推送 tag 到远程仓库
+- ✅ **运行 `scripts\sync-version.bat` 同步版本号**
+- ✅ 验证版本号已正确更新
 - ✅ 运行 `release.bat` 自动构建和上传
 
 ### 3. 开发流程 (Development Process)

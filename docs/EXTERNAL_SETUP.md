@@ -4,7 +4,56 @@
 
 External 目录包含更新系统所需的外部工具和配置文件。
 
-**重要**: 此目录中的 `update-config.yaml` 的 `current_version` 字段会在每次构建时自动更新，无需手动修改。
+**重要**:
+- `update-config.yaml` 的 `current_version` 字段会在每次构建时自动更新，无需手动修改
+- `update-config.yaml` 不应该提交到 git（已在 `.gitignore` 中排除）
+- 首次使用需要手动创建配置文件
+
+## 快速开始 (Quick Start)
+
+### 首次设置 (First-Time Setup)
+
+1. **获取更新客户端文件**：
+
+   从以下位置获取文件并放置在 `External/` 目录：
+   - `update-client.exe` - 更新客户端程序
+   - `update-publisher.exe` - 发布工具程序
+
+   获取方式：
+   - 从 Update Server 管理后台下载「下载更新端」
+   - 或者从 update-server 仓库自行构建
+
+2. **创建配置文件**：
+
+   ```bash
+   # 复制模板文件
+   cd External
+   copy update-config.yaml.template update-config.yaml
+
+   # 编辑配置文件，设置服务器地址
+   notepad update-config.yaml
+   ```
+
+3. **同步版本号**：
+
+   ```bash
+   # 运行版本同步脚本
+   cd ..
+   scripts\sync-version.bat
+   ```
+
+   这将会：
+   - 从 git tag 读取版本号
+   - 更新 `DocuFiller.csproj` 中的版本号
+   - 更新 `External/update-config.yaml` 中的 `current_version`
+
+4. **验证配置**：
+
+   ```bash
+   # 检查版本号是否正确同步
+   type External\update-config.yaml | findstr current_version
+   grep "<Version>" DocuFiller.csproj
+   ```
 
 ## 概述
 
@@ -23,8 +72,9 @@ DocuFiller 支持通过外部更新客户端进行自动更新检查。更新客
 
 | 文件 | 说明 | 是否提交到 git |
 |------|------|----------------|
-| update-config.yaml | update-client 使用的配置（current_version 会被构建脚本自动更新） | 否（.gitignore） |
-| update-client.config.yaml | update-client.exe 的配置示例 | 是 |
+| update-config.yaml | update-client 使用的实际配置文件（current_version 会被 sync-version.bat 自动更新） | 否（.gitignore） |
+| update-config.yaml.template | update-client 配置模板文件（首次使用时复制此文件） | 是 |
+| update-client.config.yaml | update-client.exe 的配置示例（旧格式，仅供参考） | 是 |
 
 ### 文档文件
 
@@ -161,7 +211,25 @@ dotnet publish -c Release -r win-x64 --self-contained
 
 ## 故障排除
 
-### 1. 更新客户端未找到
+### 1. 缺少 update-config.yaml
+
+**错误**: `System.IO.FileNotFoundException: Could not find file 'External/update-config.yaml'`
+
+**解决方案**:
+```bash
+# 从模板创建配置文件
+cd External
+copy update-config.yaml.template update-config.yaml
+
+# 编辑配置，设置服务器地址
+notepad update-config.yaml
+
+# 运行版本同步
+cd ..
+scripts\sync-version.bat
+```
+
+### 2. 更新客户端未找到
 
 **错误**: `System.IO.FileNotFoundException: Could not find file 'External/update-client.exe'`
 
@@ -169,6 +237,7 @@ dotnet publish -c Release -r win-x64 --self-contained
 - 确保 `update-client.exe` 文件存在于 `External/` 目录
 - 检查文件权限
 - 确认文件名拼写正确
+- 检查 `.gitignore` 是否正确配置（应该有 `!External/update-client.exe` 例外规则）
 
 ### 2. 配置文件格式错误
 
