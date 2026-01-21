@@ -35,15 +35,15 @@ if "!UPDATE_TOKEN!"=="" (
     exit /b 1
 )
 
-if "!UPLOAD_ADMIN_PATH!"=="" (
-    echo Error: UPLOAD_ADMIN_PATH not set in release-config.bat
+if "!UPDATE_PUBLISHER_PATH!"=="" (
+    echo Error: UPDATE_PUBLISHER_PATH not set in release-config.bat
     exit /b 1
 )
 
-REM Check upload-admin.exe exists
-if not exist "!UPLOAD_ADMIN_PATH!" (
-    echo Error: upload-admin.exe not found at: !UPLOAD_ADMIN_PATH!
-    echo Please check UPLOAD_ADMIN_PATH in release-config.bat
+REM Check update-publisher.exe exists
+if not exist "!UPDATE_PUBLISHER_PATH!" (
+    echo Error: update-publisher.exe not found at: !UPDATE_PUBLISHER_PATH!
+    echo Please check UPDATE_PUBLISHER_PATH in release-config.bat
     exit /b 1
 )
 
@@ -296,14 +296,15 @@ echo File: !BUILD_FILE!
 echo ========================================
 echo.
 
-REM Upload using upload-admin.exe
-"!UPLOAD_ADMIN_PATH!" upload ^
+REM Upload using update-publisher.exe
+"!UPDATE_PUBLISHER_PATH!" upload ^
   --program-id docufiller ^
   --channel !CHANNEL! ^
   --version !VERSION! ^
   --file "!BUILD_FILE!" ^
   --server !UPDATE_SERVER_URL! ^
-  --token !UPDATE_TOKEN!
+  --token !UPDATE_TOKEN! ^
+  --notes "!RELEASE_NOTES!"
 
 if errorlevel 1 (
     echo.
@@ -313,7 +314,7 @@ if errorlevel 1 (
     echo.
     echo The build file is available at: !BUILD_FILE!
     echo To retry manually, use your upload token from release-config.bat:
-    echo   "!UPLOAD_ADMIN_PATH!" upload --program-id docufiller --channel !CHANNEL! --version !VERSION! --file "!BUILD_FILE!" --server !UPDATE_SERVER_URL! --token %%UPDATE_TOKEN%%
+    echo   "!UPDATE_PUBLISHER_PATH!" upload --program-id docufiller --channel !CHANNEL! --version !VERSION! --file "!BUILD_FILE!" --server !UPDATE_SERVER_URL! --token %%UPDATE_TOKEN%% --notes "!RELEASE_NOTES!"
     echo.
     exit /b 1
 )
