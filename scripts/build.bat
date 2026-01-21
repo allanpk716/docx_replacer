@@ -38,6 +38,22 @@ if errorlevel 1 (
     exit /b 1
 )
 
+REM Copy External files to build output
+echo Copying External files...
+if exist "%PROJECT_ROOT%\External\update-client.exe" (
+    copy "%PROJECT_ROOT%\External\update-client.exe" "%SCRIPT_DIR%build\temp\" >nul
+    echo   - update-client.exe copied
+) else (
+    echo Warning: update-client.exe not found in External directory
+)
+
+if exist "%PROJECT_ROOT%\External\update-config.yaml" (
+    copy "%PROJECT_ROOT%\External\update-config.yaml" "%SCRIPT_DIR%build\temp\" >nul
+    echo   - update-config.yaml copied
+) else (
+    echo Warning: update-config.yaml not found in External directory
+)
+
 REM Create zip package
 echo Packaging...
 cd "%SCRIPT_DIR%build\temp"
