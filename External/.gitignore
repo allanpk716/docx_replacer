@@ -1,0 +1,13 @@
+# Generated files (do not commit - will be modified by sync-version.bat)
+update-config.yaml
+
+# User-specific configuration (do not commit)
+update-config.local.yaml
+
+# Keep executable files (they are in External directory)
+# update-client.exe - needed for builds
+# update-publisher.exe - needed for releases
+
+# Keep documentation files
+# *.usage.txt - usage documentation
+# *.config.yaml - configuration examples

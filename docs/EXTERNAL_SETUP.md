@@ -1,10 +1,37 @@
-# 外部更新客户端设置指南
+# External 目录说明
 
-本文档说明如何配置 DocuFiller 应用程序的外部更新客户端功能。
+## 目录用途
+
+External 目录包含更新系统所需的外部工具和配置文件。
+
+**重要**: 此目录中的 `update-config.yaml` 的 `current_version` 字段会在每次构建时自动更新，无需手动修改。
 
 ## 概述
 
 DocuFiller 支持通过外部更新客户端进行自动更新检查。更新客户端是独立的可执行文件，负责与更新服务器通信并通知应用程序有可用更新。
+
+## 文件说明
+
+### 可执行文件
+
+| 文件 | 说明 | 来源 |
+|------|------|------|
+| update-client.exe | 更新客户端，用于检查和下载更新 | Update Server 发布包 |
+| update-publisher.exe | 发布工具，用于上传版本到更新服务器 | Update Server 发布包 |
+
+### 配置文件
+
+| 文件 | 说明 | 是否提交到 git |
+|------|------|----------------|
+| update-config.yaml | update-client 使用的配置（current_version 会被构建脚本自动更新） | 否（.gitignore） |
+| update-client.config.yaml | update-client.exe 的配置示例 | 是 |
+
+### 文档文件
+
+| 文件 | 说明 |
+|------|------|
+| publish-client.usage.txt | publish-client（已弃用）的使用说明 |
+| update-publisher.usage.txt | update-publisher 的使用说明 |
 
 ## 获取更新客户端
 
@@ -244,3 +271,48 @@ server:
 - 操作系统信息
 - 错误日志
 - 重现步骤
+
+---
+
+## 版本自动同步
+
+### 自动版本管理
+
+DocuFiller 使用 Git Tag 作为单一数据源进行版本管理：
+
+1. **Git Tag 决定版本**：
+   - 有 tag（如 `v1.0.0`）→ 使用 tag 版本
+   - 无 tag → 使用 `1.0.0-dev.{commit-hash}` 格式
+
+2. **构建时自动同步**：
+   - 每次运行 `dotnet build` 或 `scripts\build.bat` 时
+   - `sync-version.bat` 自动运行
+   - 更新 `DocuFiller.csproj` 中的 `<Version>` 元素
+   - 更新 `External/update-config.yaml` 中的 `current_version` 字段
+
+3. **手动运行版本同步**：
+   ```bash
+   scripts\sync-version.bat
+   ```
+
+### 版本命名规范
+
+- **正式版本**: `v1.0.0`, `v1.2.3` 等
+- **Beta 版本**: `v1.0.0-beta01`, `v1.0.0-beta02` 等
+- **Alpha 版本**: `v1.0.0-alpha01` 等
+
+### 发布流程
+
+1. 创建 tag:
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. 运行发布脚本:
+   ```bash
+   cd scripts
+   release.bat
+   ```
+
+详见 [docs/VERSION_MANAGEMENT.md](VERSION_MANAGEMENT.md)
