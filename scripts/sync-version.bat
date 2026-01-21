@@ -32,8 +32,7 @@ powershell -Command "$content = Get-Content '%PS_CMD%'; $newVersion = '%VERSION%
 
 REM Update update-config.yaml (only the current_version field)
 if exist "%PROJECT_ROOT%\External\update-config.yaml" (
-    set "YAML_FILE=%PROJECT_ROOT%\External\update-config.yaml"
-    powershell -Command "$content = Get-Content '%YAML_FILE%'; $newVersion = '%VERSION%'; $content = $content -replace 'current_version: ''[^\']+''', ('current_version: ''' + $newVersion + ''''); Set-Content '%YAML_FILE%' $content -Encoding UTF8"
+    powershell -Command "$content = [System.IO.File]::ReadAllText('%PROJECT_ROOT%\External\update-config.yaml'); $newVersion = '%VERSION%'; $content = $content -replace 'current_version: \S+', ('current_version: ''' + $newVersion + ''''); [System.IO.File]::WriteAllText('%PROJECT_ROOT%\External\update-config.yaml', $content, [System.Text.Encoding]::UTF8)"
 )
 
 echo Version synchronized: !VERSION!
