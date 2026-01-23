@@ -498,7 +498,6 @@ namespace DocuFiller.ViewModels
         public ICommand ExitCommand { get; private set; } = null!;
         public ICommand OpenConverterCommand { get; private set; } = null!;
         public ICommand CheckForUpdateCommand { get; private set; } = null!;
-        public ICommand OpenKeywordEditorCommand { get; private set; } = null!;
         public ICommand OpenCleanupCommand { get; private set; } = null!;
 
         // 清理相关命令
@@ -529,7 +528,6 @@ namespace DocuFiller.ViewModels
             ExitCommand = new RelayCommand(ExitApplication);
             OpenConverterCommand = new RelayCommand(OpenConverter);
             CheckForUpdateCommand = new RelayCommand(async () => await CheckForUpdateAsync());
-            OpenKeywordEditorCommand = new RelayCommand(OpenKeywordEditor);
             OpenCleanupCommand = new RelayCommand(OpenCleanup);
 
             // 清理相关命令
@@ -1409,27 +1407,6 @@ namespace DocuFiller.ViewModels
 
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             return extension == ".docx" || extension == ".dotx";
-        }
-
-        /// <summary>
-        /// 打开关键词编辑器（网页版）
-        /// </summary>
-        private void OpenKeywordEditor()
-        {
-            try
-            {
-                string url = GetConfigValue("KeywordEditorUrl", "http://192.168.200.23:32200/");
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "打开关键词编辑器时发生错误");
-                MessageBox.Show($"打开关键词编辑器时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
 
         /// <summary>
