@@ -563,17 +563,13 @@ namespace DocuFiller
                         {
                             if (File.Exists(path) && IsDocxFile(path))
                             {
-                                // 添加单个文件
-                                AddCleanupFile(viewModel, path);
+                                // 单文件
+                                AddCleanupFile(viewModel, path, InputSourceType.SingleFile);
                             }
                             else if (Directory.Exists(path))
                             {
-                                // 添加文件夹中的所有 docx 文件
-                                var docxFiles = Directory.GetFiles(path, "*.docx", SearchOption.AllDirectories);
-                                foreach (var file in docxFiles)
-                                {
-                                    AddCleanupFile(viewModel, file);
-                                }
+                                // 文件夹
+                                AddCleanupFolder(viewModel, path);
                             }
                         }
 
@@ -601,7 +597,7 @@ namespace DocuFiller
         /// <summary>
         /// 添加清理文件到列表
         /// </summary>
-        private void AddCleanupFile(MainWindowViewModel viewModel, string filePath)
+        private void AddCleanupFile(MainWindowViewModel viewModel, string filePath, InputSourceType inputType)
         {
             // 检查重复
             if (viewModel.CleanupFileItems.Any(f => f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
@@ -612,7 +608,29 @@ namespace DocuFiller
             {
                 FilePath = filePath,
                 FileName = fileInfo.Name,
-                FileSize = fileInfo.Length
+                FileSize = fileInfo.Length,
+                InputType = inputType
+            };
+
+            viewModel.CleanupFileItems.Add(fileItem);
+        }
+
+        /// <summary>
+        /// 添加清理文件夹到列表
+        /// </summary>
+        private void AddCleanupFolder(MainWindowViewModel viewModel, string folderPath)
+        {
+            // 检查重复
+            if (viewModel.CleanupFileItems.Any(f => f.FilePath.Equals(folderPath, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            var dirInfo = new DirectoryInfo(folderPath);
+            var fileItem = new DocuFiller.Models.CleanupFileItem
+            {
+                FilePath = folderPath,
+                FileName = dirInfo.Name,
+                FileSize = 0,
+                InputType = InputSourceType.Folder
             };
 
             viewModel.CleanupFileItems.Add(fileItem);
