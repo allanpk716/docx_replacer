@@ -1462,6 +1462,13 @@ namespace DocuFiller.ViewModels
 
             try
             {
+                // 确保输出目录存在
+                if (!Directory.Exists(CleanupOutputDirectory))
+                {
+                    Directory.CreateDirectory(CleanupOutputDirectory);
+                    _logger.LogInformation($"创建输出目录: {CleanupOutputDirectory}");
+                }
+
                 for (int i = 0; i < CleanupFileItems.Count; i++)
                 {
                     var fileItem = CleanupFileItems[i];
@@ -1469,7 +1476,8 @@ namespace DocuFiller.ViewModels
                     CleanupProgressStatus = $"正在处理: {fileItem.FileName} ({i + 1}/{CleanupFileItems.Count})";
                     CleanupProgressPercent = (int)((i / (double)CleanupFileItems.Count) * 100);
 
-                    var result = await _cleanupService.CleanupAsync(fileItem);
+                    // 使用带输出目录的方法
+                    var result = await _cleanupService.CleanupAsync(fileItem, CleanupOutputDirectory);
 
                     if (result.Success)
                     {
@@ -1482,7 +1490,11 @@ namespace DocuFiller.ViewModels
                         else
                         {
                             fileItem.Status = CleanupFileStatus.Success;
-                            fileItem.StatusMessage = result.Message;
+                            // 显示输出路径
+                            string outputPath = result.InputType == InputSourceType.Folder
+                                ? result.OutputFolderPath
+                                : result.OutputFilePath;
+                            fileItem.StatusMessage = $"已清理 → {Path.GetFileName(outputPath)}";
                             successCount++;
                         }
                     }
@@ -1499,8 +1511,9 @@ namespace DocuFiller.ViewModels
 
                 _logger.LogInformation($"批量清理完成: {successCount} 成功, {failureCount} 失败, {skippedCount} 跳过");
 
+                var resultMessage = $"清理完成！\n\n成功: {successCount}\n失败: {failureCount}\n跳过: {skippedCount}\n\n输出目录: {CleanupOutputDirectory}";
                 MessageBox.Show(
-                    $"清理完成！\n\n成功: {successCount}\n失败: {failureCount}\n跳过: {skippedCount}",
+                    resultMessage,
                     "处理完成",
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
