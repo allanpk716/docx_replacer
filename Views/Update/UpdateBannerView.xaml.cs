@@ -11,16 +11,27 @@ namespace DocuFiller.Views.Update
     /// </summary>
     public partial class UpdateBannerView : Window
     {
-        public UpdateBannerView(UpdateBannerViewModel viewModel)
+        /// <summary>
+        /// 默认构造函数 - 支持 XAML 直接创建
+        /// ViewModel 将通过 DataContext 设置
+        /// </summary>
+        public UpdateBannerView()
         {
             InitializeComponent();
-            DataContext = viewModel;
 
             // 设置窗口属性
             WindowStartupLocation = WindowStartupLocation.Manual;
 
             // 允许拖动窗口
             MouseDown += Window_MouseDown;
+        }
+
+        /// <summary>
+        /// 带参数的构造函数 - 支持 DI 注入
+        /// </summary>
+        public UpdateBannerView(UpdateBannerViewModel viewModel) : this()
+        {
+            DataContext = viewModel;
         }
 
         /// <summary>
