@@ -31,6 +31,15 @@ namespace DocuFiller.Services.Interfaces
         /// <param name="cancellationToken">取消令牌</param>
         /// <returns>清理结果</returns>
         Task<CleanupResult> CleanupAsync(CleanupFileItem fileItem, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// 清理单个文档并输出到指定目录
+        /// </summary>
+        /// <param name="fileItem">清理文件项</param>
+        /// <param name="outputDirectory">输出目录</param>
+        /// <param name="cancellationToken">取消令牌</param>
+        /// <returns>清理结果</returns>
+        Task<CleanupResult> CleanupAsync(CleanupFileItem fileItem, string outputDirectory, CancellationToken cancellationToken = default);
     }
 
     /// <summary>
