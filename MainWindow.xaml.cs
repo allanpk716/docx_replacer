@@ -492,5 +492,132 @@ namespace DocuFiller
         }
 
         #endregion
+
+        #region 清理功能拖拽事件处理
+
+        /// <summary>
+        /// 清理功能拖拽进入事件
+        /// </summary>
+        private void CleanupDropZoneBorder_DragEnter(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+                if (sender is System.Windows.Controls.Border border)
+                {
+                    border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3));
+                    border.BorderThickness = new Thickness(3);
+                    border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3));
+                }
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        /// <summary>
+        /// 清理功能拖拽离开事件
+        /// </summary>
+        private void CleanupDropZoneBorder_DragLeave(object sender, DragEventArgs e)
+        {
+            if (sender is System.Windows.Controls.Border border)
+            {
+                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0xCC));
+                border.BorderThickness = new Thickness(2);
+                border.Background = new SolidColorBrush(Color.FromRgb(0xF9, 0xF9, 0xF9));
+            }
+        }
+
+        /// <summary>
+        /// 清理功能拖拽悬停事件
+        /// </summary>
+        private void CleanupDropZoneBorder_DragOver(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetDataPresent(DataFormats.FileDrop))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+            else
+            {
+                e.Effects = DragDropEffects.None;
+            }
+            e.Handled = true;
+        }
+
+        /// <summary>
+        /// 清理功能拖拽放置事件
+        /// </summary>
+        private void CleanupDropZoneBorder_Drop(object sender, DragEventArgs e)
+        {
+            try
+            {
+                if (e.Data.GetDataPresent(DataFormats.FileDrop) && DataContext is MainWindowViewModel viewModel)
+                {
+                    var files = (string[])e.Data.GetData(DataFormats.FileDrop);
+                    if (files != null && files.Length > 0)
+                    {
+                        // 处理每个文件或文件夹
+                        foreach (var path in files)
+                        {
+                            if (File.Exists(path) && IsDocxFile(path))
+                            {
+                                // 添加单个文件
+                                AddCleanupFile(viewModel, path);
+                            }
+                            else if (Directory.Exists(path))
+                            {
+                                // 添加文件夹中的所有 docx 文件
+                                var docxFiles = Directory.GetFiles(path, "*.docx", SearchOption.AllDirectories);
+                                foreach (var file in docxFiles)
+                                {
+                                    AddCleanupFile(viewModel, file);
+                                }
+                            }
+                        }
+
+                        // 刷新 CanStartCleanup 属性
+                        viewModel.OnPropertyChanged(nameof(viewModel.CanStartCleanup));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"处理拖拽文件时发生错误：{ex.Message}", "错误",
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                if (sender is System.Windows.Controls.Border border)
+                {
+                    border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0xCC));
+                    border.BorderThickness = new Thickness(2);
+                    border.Background = new SolidColorBrush(Color.FromRgb(0xF9, 0xF9, 0xF9));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 添加清理文件到列表
+        /// </summary>
+        private void AddCleanupFile(MainWindowViewModel viewModel, string filePath)
+        {
+            // 检查重复
+            if (viewModel.CleanupFileItems.Any(f => f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
+                return;
+
+            var fileInfo = new System.IO.FileInfo(filePath);
+            var fileItem = new DocuFiller.Models.CleanupFileItem
+            {
+                FilePath = filePath,
+                FileName = fileInfo.Name,
+                FileSize = fileInfo.Length
+            };
+
+            viewModel.CleanupFileItems.Add(fileItem);
+        }
+
+        #endregion
     }
 }

@@ -32,6 +32,7 @@ namespace DocuFiller.ViewModels
         private readonly IDirectoryManager _directoryManager;
         private readonly IExcelDataParser _excelDataParser;
         private readonly IUpdateService _updateService;
+        private readonly IDocumentCleanupService _cleanupService;
         private readonly ILogger<MainWindowViewModel> _logger;
         private CancellationTokenSource? _cancellationTokenSource;
         
@@ -62,11 +63,17 @@ namespace DocuFiller.ViewModels
 
         // 数据文件类型
         private DataFileType _dataFileType = DataFileType.Json;
-        
+
+        // 清理功能相关字段
+        private bool _isCleanupProcessing;
+        private string _cleanupProgressStatus = "等待处理...";
+        private int _cleanupProgressPercent;
+
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
         public ObservableCollection<ContentControlData> ContentControls { get; } = new();
         public ObservableCollection<DocuFiller.Models.FileInfo> TemplateFiles { get; } = new ObservableCollection<DocuFiller.Models.FileInfo>();
+        public ObservableCollection<CleanupFileItem> CleanupFileItems { get; } = new();
         
         public MainWindowViewModel(
             IDocumentProcessor documentProcessor,
@@ -77,6 +84,7 @@ namespace DocuFiller.ViewModels
             IDirectoryManager directoryManager,
             IExcelDataParser excelDataParser,
             IUpdateService updateService,
+            IDocumentCleanupService cleanupService,
             ILogger<MainWindowViewModel> logger,
             UpdateBannerViewModel? updateBannerViewModel = null)
         {
@@ -88,6 +96,7 @@ namespace DocuFiller.ViewModels
             _directoryManager = directoryManager ?? throw new ArgumentNullException(nameof(directoryManager));
             _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
             _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
+            _cleanupService = cleanupService ?? throw new ArgumentNullException(nameof(cleanupService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             InitializeCommands();
@@ -436,7 +445,45 @@ namespace DocuFiller.ViewModels
             get => _updateBannerViewModel;
             private set => SetProperty(ref _updateBannerViewModel, value);
         }
-        
+
+        /// <summary>
+        /// 清理功能处理状态
+        /// </summary>
+        public bool IsCleanupProcessing
+        {
+            get => _isCleanupProcessing;
+            set
+            {
+                if (SetProperty(ref _isCleanupProcessing, value))
+                {
+                    OnPropertyChanged(nameof(CanStartCleanup));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 清理进度状态文本
+        /// </summary>
+        public string CleanupProgressStatus
+        {
+            get => _cleanupProgressStatus;
+            set => SetProperty(ref _cleanupProgressStatus, value);
+        }
+
+        /// <summary>
+        /// 清理进度百分比
+        /// </summary>
+        public int CleanupProgressPercent
+        {
+            get => _cleanupProgressPercent;
+            set => SetProperty(ref _cleanupProgressPercent, value);
+        }
+
+        /// <summary>
+        /// 是否可以开始清理
+        /// </summary>
+        public bool CanStartCleanup => CleanupFileItems.Count > 0 && !IsCleanupProcessing;
+
         #endregion
         
         #region 命令
@@ -451,7 +498,14 @@ namespace DocuFiller.ViewModels
         public ICommand ExitCommand { get; private set; } = null!;
         public ICommand OpenConverterCommand { get; private set; } = null!;
         public ICommand CheckForUpdateCommand { get; private set; } = null!;
+        public ICommand OpenKeywordEditorCommand { get; private set; } = null!;
         public ICommand OpenCleanupCommand { get; private set; } = null!;
+
+        // 清理相关命令
+        public ICommand RemoveSelectedCleanupCommand { get; private set; } = null!;
+        public ICommand ClearCleanupListCommand { get; private set; } = null!;
+        public ICommand StartCleanupCommand { get; private set; } = null!;
+        public ICommand CloseCleanupCommand { get; private set; } = null!;
 
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -475,7 +529,14 @@ namespace DocuFiller.ViewModels
             ExitCommand = new RelayCommand(ExitApplication);
             OpenConverterCommand = new RelayCommand(OpenConverter);
             CheckForUpdateCommand = new RelayCommand(async () => await CheckForUpdateAsync());
+            OpenKeywordEditorCommand = new RelayCommand(OpenKeywordEditor);
             OpenCleanupCommand = new RelayCommand(OpenCleanup);
+
+            // 清理相关命令
+            RemoveSelectedCleanupCommand = new RelayCommand(RemoveSelectedCleanup);
+            ClearCleanupListCommand = new RelayCommand(ClearCleanupList);
+            StartCleanupCommand = new RelayCommand(async () => await StartCleanupAsync(), () => CanStartCleanup);
+            CloseCleanupCommand = new RelayCommand(CloseCleanup);
 
             // 文件夹拖拽相关命令
             SwitchToSingleModeCommand = new RelayCommand(() => IsFolderMode = false);
@@ -1132,7 +1193,7 @@ namespace DocuFiller.ViewModels
         
         public event PropertyChangedEventHandler? PropertyChanged;
         
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+        public virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -1348,6 +1409,126 @@ namespace DocuFiller.ViewModels
 
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             return extension == ".docx" || extension == ".dotx";
+        }
+
+        /// <summary>
+        /// 打开关键词编辑器（网页版）
+        /// </summary>
+        private void OpenKeywordEditor()
+        {
+            try
+            {
+                string url = GetConfigValue("KeywordEditorUrl", "http://192.168.200.23:32200/");
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = url,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "打开关键词编辑器时发生错误");
+                MessageBox.Show($"打开关键词编辑器时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 移除选中的清理项
+        /// </summary>
+        private void RemoveSelectedCleanup()
+        {
+            // 由于 XAML 中的 ListView 使用了 SelectionMode="Extended"
+            // 这个方法暂时留空，需要在 code-behind 中处理选中项
+            _logger.LogInformation("移除选中的清理项");
+        }
+
+        /// <summary>
+        /// 清空清理列表
+        /// </summary>
+        private void ClearCleanupList()
+        {
+            CleanupFileItems.Clear();
+            CleanupProgressStatus = "等待处理...";
+            CleanupProgressPercent = 0;
+            OnPropertyChanged(nameof(CanStartCleanup));
+        }
+
+        /// <summary>
+        /// 开始清理
+        /// </summary>
+        private async Task StartCleanupAsync()
+        {
+            IsCleanupProcessing = true;
+            CleanupProgressStatus = "准备处理...";
+            CleanupProgressPercent = 0;
+
+            int successCount = 0;
+            int failureCount = 0;
+            int skippedCount = 0;
+
+            try
+            {
+                for (int i = 0; i < CleanupFileItems.Count; i++)
+                {
+                    var fileItem = CleanupFileItems[i];
+                    fileItem.Status = CleanupFileStatus.Processing;
+                    CleanupProgressStatus = $"正在处理: {fileItem.FileName} ({i + 1}/{CleanupFileItems.Count})";
+                    CleanupProgressPercent = (int)((i / (double)CleanupFileItems.Count) * 100);
+
+                    var result = await _cleanupService.CleanupAsync(fileItem);
+
+                    if (result.Success)
+                    {
+                        if (result.Message.Contains("无需处理"))
+                        {
+                            fileItem.Status = CleanupFileStatus.Skipped;
+                            fileItem.StatusMessage = result.Message;
+                            skippedCount++;
+                        }
+                        else
+                        {
+                            fileItem.Status = CleanupFileStatus.Success;
+                            fileItem.StatusMessage = result.Message;
+                            successCount++;
+                        }
+                    }
+                    else
+                    {
+                        fileItem.Status = CleanupFileStatus.Failure;
+                        fileItem.StatusMessage = result.Message;
+                        failureCount++;
+                    }
+                }
+
+                CleanupProgressPercent = 100;
+                CleanupProgressStatus = $"处理完成: {successCount} 成功, {failureCount} 失败, {skippedCount} 跳过";
+
+                _logger.LogInformation($"批量清理完成: {successCount} 成功, {failureCount} 失败, {skippedCount} 跳过");
+
+                MessageBox.Show(
+                    $"清理完成！\n\n成功: {successCount}\n失败: {failureCount}\n跳过: {skippedCount}",
+                    "处理完成",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "批量清理时发生异常");
+                MessageBox.Show($"处理过程中发生错误: {ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsCleanupProcessing = false;
+            }
+        }
+
+        /// <summary>
+        /// 关闭清理功能（切换到其他 Tab）
+        /// </summary>
+        private void CloseCleanup()
+        {
+            // 清理功能现在在 Tab 页中，这个方法可以留空或用于重置状态
+            _logger.LogInformation("关闭清理功能");
         }
 
         #endregion
