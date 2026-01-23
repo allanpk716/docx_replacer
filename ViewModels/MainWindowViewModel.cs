@@ -68,6 +68,7 @@ namespace DocuFiller.ViewModels
         private bool _isCleanupProcessing;
         private string _cleanupProgressStatus = "等待处理...";
         private int _cleanupProgressPercent;
+        private string _cleanupOutputDirectory = string.Empty;
 
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
@@ -108,6 +109,9 @@ namespace DocuFiller.ViewModels
 
             // 设置默认输出目录
             _outputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出");
+
+            // 设置默认清理输出目录
+            _cleanupOutputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出", "清理");
 
             // 启动时自动检查更新（后台运行）
             Task.Run(async () => await OnInitializedAsync());
@@ -484,6 +488,15 @@ namespace DocuFiller.ViewModels
         /// </summary>
         public bool CanStartCleanup => CleanupFileItems.Count > 0 && !IsCleanupProcessing;
 
+        /// <summary>
+        /// 清理功能输出目录
+        /// </summary>
+        public string CleanupOutputDirectory
+        {
+            get => _cleanupOutputDirectory;
+            set => SetProperty(ref _cleanupOutputDirectory, value);
+        }
+
         #endregion
         
         #region 命令
@@ -505,6 +518,8 @@ namespace DocuFiller.ViewModels
         public ICommand ClearCleanupListCommand { get; private set; } = null!;
         public ICommand StartCleanupCommand { get; private set; } = null!;
         public ICommand CloseCleanupCommand { get; private set; } = null!;
+        public ICommand BrowseCleanupOutputCommand { get; private set; } = null!;
+        public ICommand OpenCleanupOutputFolderCommand { get; private set; } = null!;
 
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -535,6 +550,8 @@ namespace DocuFiller.ViewModels
             ClearCleanupListCommand = new RelayCommand(ClearCleanupList);
             StartCleanupCommand = new RelayCommand(async () => await StartCleanupAsync(), () => CanStartCleanup);
             CloseCleanupCommand = new RelayCommand(CloseCleanup);
+            BrowseCleanupOutputCommand = new RelayCommand(BrowseCleanupOutput);
+            OpenCleanupOutputFolderCommand = new RelayCommand(OpenCleanupOutputFolder);
 
             // 文件夹拖拽相关命令
             SwitchToSingleModeCommand = new RelayCommand(() => IsFolderMode = false);
@@ -1506,6 +1523,51 @@ namespace DocuFiller.ViewModels
         {
             // 清理功能现在在 Tab 页中，这个方法可以留空或用于重置状态
             _logger.LogInformation("关闭清理功能");
+        }
+
+        /// <summary>
+        /// 浏览并选择清理输出目录
+        /// </summary>
+        private void BrowseCleanupOutput()
+        {
+            var dialog = new OpenFileDialog
+            {
+                Title = "选择输出目录",
+                CheckFileExists = false,
+                CheckPathExists = true,
+                FileName = "选择文件夹",
+                Filter = "文件夹|*.folder"
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                CleanupOutputDirectory = Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 打开清理输出文件夹
+        /// </summary>
+        private void OpenCleanupOutputFolder()
+        {
+            try
+            {
+                if (!Directory.Exists(CleanupOutputDirectory))
+                {
+                    Directory.CreateDirectory(CleanupOutputDirectory);
+                }
+
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = CleanupOutputDirectory,
+                    UseShellExecute = true
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "打开输出文件夹时发生错误");
+                MessageBox.Show($"打开输出文件夹时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
         }
 
         #endregion
