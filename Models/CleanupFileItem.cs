@@ -77,6 +77,27 @@ namespace DocuFiller.Models
             set { _statusMessage = value; OnPropertyChanged(); }
         }
 
+        private string _outputPath = string.Empty;
+        private InputSourceType _inputType = InputSourceType.SingleFile;
+
+        /// <summary>
+        /// 处理后的输出路径（单文件时为文件路径，文件夹时为文件夹路径）
+        /// </summary>
+        public string OutputPath
+        {
+            get => _outputPath;
+            set { _outputPath = value; OnPropertyChanged(); }
+        }
+
+        /// <summary>
+        /// 输入类型标识
+        /// </summary>
+        public InputSourceType InputType
+        {
+            get => _inputType;
+            set { _inputType = value; OnPropertyChanged(); }
+        }
+
         /// <summary>
         /// 属性更改事件
         /// </summary>
