@@ -54,6 +54,7 @@ docufiller-update-server/
 # ========== Release Configuration ==========
 # Release configuration (contains sensitive token)
 scripts/config/release-config.bat
+scripts/config/publish-config.bat
 
 # ========== External Dependencies ==========
 # Update client files placed manually by users or deployment
