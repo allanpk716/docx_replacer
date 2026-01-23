@@ -28,182 +28,370 @@
         <!-- 主要内容区域 -->
         <TabControl Grid.Row="1" Margin="0,0,0,10" FontSize="16">
             
-            <!-- 文件设置选项卡 -->
+            <!-- 关键词替换选项卡 -->
             <TabItem Header="关键词替换" FontSize="16">
-                <ScrollViewer VerticalScrollBarVisibility="Auto" 
-                              HorizontalScrollBarVisibility="Disabled"
-                              Margin="5">
-                    <Grid Margin="10">
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                            <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                    
-                    <!-- 模板文件选择 -->
-                    <GroupBox Grid.Row="0" Header="模板文件/文件夹" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
-                        <Grid Margin="15">
+                <StackPanel>
+                    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled"
+                                  Margin="5">
+                        <Grid Margin="10">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
 
-                            <!-- 路径显示 -->
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
-                                <TextBox x:Name="TemplatePathTextBox"
-                                         Style="{StaticResource TextBoxStyle}"
-                                         Text="{Binding TemplatePath, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="True" FontSize="14"/>
-                            </Grid>
-                            
-                            <!-- 文件拖拽区域 -->
-                            <Border Grid.Row="1" x:Name="TemplateDropBorder"
-                                    BorderBrush="#BDC3C7" BorderThickness="2"
-                                    CornerRadius="4" Height="80"
-                                    AllowDrop="True"
-                                    Drop="TemplateDropBorder_Drop"
-                                    DragEnter="TemplateDropBorder_DragEnter"
-                                    DragLeave="TemplateDropBorder_DragLeave"
-                                    DragOver="TemplateDropBorder_DragOver">
-                                <Grid>
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock x:Name="TemplateDropHint"
-                                                   Text="拖拽单个 docx 文件或包含 docx 文件的文件夹到此处"
-                                                   Foreground="#95A5A6"
-                                                   FontStyle="Italic"
-                                                   HorizontalAlignment="Center"
-                                                   TextWrapping="Wrap"
-                                                   Margin="10,5"/>
-                                        <TextBlock Text="{Binding TemplateFolderPath}" 
-                                                   Foreground="#2C3E50" 
-                                                   FontWeight="Medium"
-                                                   HorizontalAlignment="Center"
-                                                   TextWrapping="Wrap"
-                                                   Margin="10,0"
-                                                   Visibility="{Binding TemplateFolderPath, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                        <TextBlock Text="找到 {Binding FoundDocxFilesCount} 个DOCX文件" 
-                                                   Foreground="#27AE60" 
-                                                   FontWeight="Bold"
-                                                   HorizontalAlignment="Center"
-                                                   Margin="10,5"
-                                                   Visibility="{Binding FoundDocxFilesCount, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                    </StackPanel>
+                            <!-- 模板文件选择 -->
+                            <GroupBox Grid.Row="0" Header="模板文件/文件夹" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
+                                <Grid Margin="15">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- 路径显示 -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                                        <TextBox x:Name="TemplatePathTextBox"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 Text="{Binding TemplatePath, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsReadOnly="True" FontSize="14"/>
+                                    </Grid>
+
+                                    <!-- 文件拖拽区域 -->
+                                    <Border Grid.Row="1" x:Name="TemplateDropBorder"
+                                            BorderBrush="#BDC3C7" BorderThickness="2"
+                                            CornerRadius="4" Height="80"
+                                            AllowDrop="True"
+                                            Drop="TemplateDropBorder_Drop"
+                                            DragEnter="TemplateDropBorder_DragEnter"
+                                            DragLeave="TemplateDropBorder_DragLeave"
+                                            DragOver="TemplateDropBorder_DragOver">
+                                        <Grid>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock x:Name="TemplateDropHint"
+                                                           Text="拖拽单个 docx 文件或包含 docx 文件的文件夹到此处"
+                                                           Foreground="#95A5A6"
+                                                           FontStyle="Italic"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="Wrap"
+                                                           Margin="10,5"/>
+                                                <TextBlock Text="{Binding TemplateFolderPath}"
+                                                           Foreground="#2C3E50"
+                                                           FontWeight="Medium"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="Wrap"
+                                                           Margin="10,0"
+                                                           Visibility="{Binding TemplateFolderPath, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                                <TextBlock Text="找到 {Binding FoundDocxFilesCount} 个DOCX文件"
+                                                           Foreground="#27AE60"
+                                                           FontWeight="Bold"
+                                                           HorizontalAlignment="Center"
+                                                           Margin="10,5"
+                                                           Visibility="{Binding FoundDocxFilesCount, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
-                            </Border>
-                        </Grid>
-                    </GroupBox>
-                    
-                    <!-- 数据文件选择 -->
-                    <GroupBox Grid.Row="1" Header="数据文件" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
-                        <Grid Margin="15">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
+                            </GroupBox>
 
-                            <!-- 路径显示 -->
-                            <Grid Grid.Row="0">
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto"/>
-                                    <RowDefinition Height="Auto"/>
-                                </Grid.RowDefinitions>
-                                <TextBox Grid.Row="0"
-                                         Style="{StaticResource TextBoxStyle}"
-                                         Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="True" FontSize="14"/>
-                                <TextBlock Grid.Row="1"
-                                           Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
-                                           Margin="0,5,0,0"
-                                           FontSize="12"
-                                           Foreground="#7F8C8D"
-                                           Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
-                            </Grid>
+                            <!-- 数据文件选择 -->
+                            <GroupBox Grid.Row="1" Header="数据文件" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
+                                <Grid Margin="15">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
 
-                            <!-- 数据文件拖拽区域 -->
-                            <Border Grid.Row="1" x:Name="DataFileDropBorder"
-                                    BorderBrush="#BDC3C7" BorderThickness="2"
-                                    CornerRadius="4" Height="70" Margin="0,0,0,10"
-                                    AllowDrop="True"
-                                    Drop="DataFileDropBorder_Drop"
-                                    DragEnter="DataFileDropBorder_DragEnter"
-                                    DragLeave="DataFileDropBorder_DragLeave"
-                                    DragOver="DataFileDropBorder_DragOver">
-                                <Grid>
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock x:Name="DataFileDropHint"
-                                                   Text="拖拽 JSON 或 Excel 数据文件到此处"
-                                                   Foreground="#95A5A6"
-                                                   FontStyle="Italic"
-                                                   HorizontalAlignment="Center"
-                                                   TextWrapping="Wrap"
-                                                   Margin="10,5"/>
-                                        <TextBlock Text="{Binding DataPath}"
-                                                   Foreground="#2C3E50"
-                                                   FontWeight="Medium"
-                                                   HorizontalAlignment="Center"
-                                                   TextWrapping="Wrap"
-                                                   Margin="10,0"
+                                    <!-- 路径显示 -->
+                                    <Grid Grid.Row="0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <TextBox Grid.Row="0"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsReadOnly="True" FontSize="14"/>
+                                        <TextBlock Grid.Row="1"
+                                                   Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
+                                                   Margin="0,5,0,0"
+                                                   FontSize="12"
+                                                   Foreground="#7F8C8D"
                                                    Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                            
+                                    </Grid>
 
+                                    <!-- 数据文件拖拽区域 -->
+                                    <Border Grid.Row="1" x:Name="DataFileDropBorder"
+                                            BorderBrush="#BDC3C7" BorderThickness="2"
+                                            CornerRadius="4" Height="70" Margin="0,0,0,10"
+                                            AllowDrop="True"
+                                            Drop="DataFileDropBorder_Drop"
+                                            DragEnter="DataFileDropBorder_DragEnter"
+                                            DragLeave="DataFileDropBorder_DragLeave"
+                                            DragOver="DataFileDropBorder_DragOver">
+                                        <Grid>
+                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                                                <TextBlock x:Name="DataFileDropHint"
+                                                           Text="拖拽 JSON 或 Excel 数据文件到此处"
+                                                           Foreground="#95A5A6"
+                                                           FontStyle="Italic"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="Wrap"
+                                                           Margin="10,5"/>
+                                                <TextBlock Text="{Binding DataPath}"
+                                                           Foreground="#2C3E50"
+                                                           FontWeight="Medium"
+                                                           HorizontalAlignment="Center"
+                                                           TextWrapping="Wrap"
+                                                           Margin="10,0"
+                                                           Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- 输出设置 -->
+                            <GroupBox Grid.Row="2" Header="输出设置" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10" FontSize="16">
+                                <Grid Margin="15">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- 输出目录 -->
+                                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0" Text="输出目录:"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" FontWeight="Medium"/>
+
+                                        <TextBox Grid.Column="1"
+                                                 Style="{StaticResource TextBoxStyle}"
+                                                 Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                                 IsReadOnly="True" Margin="0,0,15,0" FontSize="14"/>
+
+                                        <Button Grid.Column="2" Content="浏览..."
+                                                Style="{StaticResource PrimaryButton}"
+                                                Command="{Binding BrowseOutputCommand}"
+                                                Width="90" Height="40" FontSize="14"/>
+                                    </Grid>
+                                </Grid>
+                            </GroupBox>
                         </Grid>
-                    </GroupBox>
-                    
-                    <!-- 输出设置 -->
-                    <GroupBox Grid.Row="2" Header="输出设置" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10" FontSize="16">
+                    </ScrollViewer>
+
+                    <!-- 进度显示区域 -->
+                    <GroupBox Header="处理进度" Style="{StaticResource GroupBoxStyle}" Margin="10,0,0,10" FontSize="16">
                         <Grid Margin="15">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
-                            
-                            <!-- 输出目录 -->
-                            <Grid Grid.Row="0" Margin="0,0,0,10">
+
+                            <Grid Grid.Row="0" Margin="0,0,0,5">
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                
-                                <TextBlock Grid.Column="0" Text="输出目录:" 
-                                           VerticalAlignment="Center" 
-                                           Margin="0,0,10,0" FontWeight="Medium"/>
-                                
-                                <TextBox Grid.Column="1" 
-                                         Style="{StaticResource TextBoxStyle}"
-                                         Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                         IsReadOnly="True" Margin="0,0,15,0" FontSize="14"/>
-                                
-                                <Button Grid.Column="2" Content="浏览..." 
-                                        Style="{StaticResource PrimaryButton}"
-                                        Command="{Binding BrowseOutputCommand}"
-                                        Width="90" Height="40" FontSize="14"/>
-                            </Grid>
-                            
 
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding ProgressMessage}"
+                                           VerticalAlignment="Center" FontSize="14"/>
+
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding ProgressText}"
+                                           VerticalAlignment="Center"
+                                           FontWeight="Bold" FontSize="14"/>
+                            </Grid>
+
+                            <ProgressBar Grid.Row="1"
+                                         Value="{Binding ProgressPercentage}"
+                                         Maximum="100"
+                                         Height="25"
+                                         Background="#ECF0F1"
+                                         Foreground="#3498DB"/>
                         </Grid>
                     </GroupBox>
-                    
-                    <!-- 文件信息显示 - 已隐藏以节省空间 -->
-                    <!--
-                    <GroupBox Grid.Row="3" Header="文件信息" Style="{StaticResource GroupBoxStyle}" Height="150" FontSize="16">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="15">
-                            <StackPanel>
-                                <TextBlock Text="{Binding FileInfoText}" 
-                                           TextWrapping="Wrap" 
-                                           FontFamily="Consolas" 
-                                           FontSize="14" 
-                                           Foreground="#34495E"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </GroupBox>
-                    -->
+
+                    <!-- 操作按钮区域 -->
+                    <Grid Margin="10,10,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="1" Content="开始处理"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding StartProcessCommand}"
+                                Width="120" Height="45" FontSize="16" Margin="0,0,15,0"/>
+
+                        <Button Grid.Column="2" Content="取消处理"
+                                Style="{StaticResource ProcessButton}"
+                                Command="{Binding CancelProcessCommand}"
+                                Width="120" Height="45" FontSize="16" Margin="0,0,15,0"/>
+
+                        <Button Grid.Column="3" Content="退出"
+                                Style="{StaticResource ProcessButton}"
+                                Command="{Binding ExitCommand}"
+                                Width="100" Height="45" FontSize="16"/>
                     </Grid>
-                </ScrollViewer>
+                </StackPanel>
+            </TabItem>
+
+            <!-- 审核清理选项卡 -->
+            <TabItem Header="审核清理" FontSize="16">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 拖放区域 + 文件列表 -->
+                    <Border Grid.Row="0" Grid.RowSpan="2" BorderBrush="#DDDDDD" BorderThickness="1" Padding="10" CornerRadius="5">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- 拖放提示 -->
+                            <Border Grid.Row="0" x:Name="CleanupDropZoneBorder"
+                                     BorderBrush="#CCCCCC" BorderThickness="2"
+                                     Padding="30" Background="#F9F9F9"
+                                     AllowDrop="True"
+                                     Margin="0,0,0,10">
+                                <StackPanel HorizontalAlignment="Center">
+                                    <TextBlock Text="将文件或文件夹拖放到此处" FontSize="14" Foreground="#666666" HorizontalAlignment="Center"/>
+                                    <TextBlock Text="支持 .docx 文件" FontSize="12" Foreground="#999999" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- 文件列表 -->
+                            <Grid Grid.Row="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ListView Grid.Column="0" ItemsSource="{Binding CleanupFileItems}" SelectionMode="Extended">
+                                    <ListView.View>
+                                        <GridView>
+                                            <GridViewColumn Width="40" Header=""/>
+                                            <GridViewColumn Width="300" Header="文件名" DisplayMemberBinding="{Binding FileName}"/>
+                                            <GridViewColumn Width="100" Header="大小" DisplayMemberBinding="{Binding FileSizeDisplay}"/>
+                                            <GridViewColumn Width="150" Header="状态" DisplayMemberBinding="{Binding StatusDisplay}"/>
+                                        </GridView>
+                                    </ListView.View>
+                                </ListView>
+
+                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                                    <Button Content="移除选中" Width="100" Height="30" Margin="0,0,0,5" Command="{Binding RemoveSelectedCleanupCommand}"/>
+                                    <Button Content="清空列表" Width="100" Height="30" Command="{Binding ClearCleanupListCommand}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Border>
+
+                    <!-- 进度 -->
+                    <StackPanel Grid.Row="2" Margin="0,10,0,10">
+                        <TextBlock Text="{Binding CleanupProgressStatus}" Margin="0,0,0,5"/>
+                        <ProgressBar Height="25" Value="{Binding CleanupProgressPercent}" Maximum="100"/>
+                    </StackPanel>
+
+                    <!-- 按钮 -->
+                    <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="开始清理" Width="120" Height="35" Margin="0,0,10,0"
+                                IsEnabled="{Binding CanStartCleanup}" Command="{Binding StartCleanupCommand}"
+                                Style="{StaticResource PrimaryButton}"/>
+                        <Button Content="关闭" Width="100" Height="35" Command="{Binding CloseCleanupCommand}"
+                                Style="{StaticResource ProcessButton}"/>
+                    </StackPanel>
+                </Grid>
+            </TabItem>
+
+            <!-- 工具选项卡 -->
+            <TabItem Header="工具" FontSize="16">
+                <Grid Margin="30">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 关键词编辑器 -->
+                    <Border Grid.Row="0" BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="8" Margin="0,0,0,15"
+                            Background="White" Cursor="Hand">
+                        <Border.InputBindings>
+                            <MouseBinding Command="{Binding OpenKeywordEditorCommand}" MouseAction="LeftClick"/>
+                        </Border.InputBindings>
+                        <Grid Margin="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="📝" FontSize="48" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="关键词编辑器" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
+                                <TextBlock Text="管理和编辑文档关键词" FontSize="14" Foreground="#7F8C8D"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- JSON转Excel转换工具 -->
+                    <Border Grid.Row="1" BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="8" Margin="0,0,0,15"
+                            Background="White" Cursor="Hand">
+                        <Border.InputBindings>
+                            <MouseBinding Command="{Binding OpenConverterCommand}" MouseAction="LeftClick"/>
+                        </Border.InputBindings>
+                        <Grid Margin="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="🔄" FontSize="48" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="JSON转Excel转换工具" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
+                                <TextBlock Text="将JSON数据文件转换为Excel格式" FontSize="14" Foreground="#7F8C8D"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- 检查更新 -->
+                    <Border Grid.Row="2" BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="8"
+                            Background="White" Cursor="Hand">
+                        <Border.InputBindings>
+                            <MouseBinding Command="{Binding CheckForUpdateCommand}" MouseAction="LeftClick"/>
+                        </Border.InputBindings>
+                        <Grid Margin="20">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="🔔" FontSize="48" VerticalAlignment="Center" Margin="0,0,20,0"/>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="检查更新" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
+                                <TextBlock Text="检查并下载最新版本" FontSize="14" Foreground="#7F8C8D"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </Grid>
             </TabItem>
         </TabControl>
     </Grid>
