@@ -62,5 +62,20 @@ namespace DocuFiller.Services.Interfaces
         /// 处理的文件路径
         /// </summary>
         public string FilePath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 输入类型（单文件或文件夹）
+        /// </summary>
+        public InputSourceType InputType { get; set; }
+
+        /// <summary>
+        /// 单文件模式：输出文件的完整路径
+        /// </summary>
+        public string OutputFilePath { get; set; } = string.Empty;
+
+        /// <summary>
+        /// 文件夹模式：输出文件夹的完整路径
+        /// </summary>
+        public string OutputFolderPath { get; set; } = string.Empty;
     }
 }
