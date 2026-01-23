@@ -5,7 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="审核清理" Height="600" Width="800"
-        AllowDrop="True" Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave"
         WindowStartupLocation="CenterOwner">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
@@ -35,13 +34,15 @@
                 <Border Grid.Row="0" x:Name="DropZoneBorder"
                          BorderBrush="#CCCCCC" BorderThickness="2"
                          Padding="30" Background="#F9F9F9"
-                         Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave"
                          AllowDrop="True"
+                         Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave" DragOver="OnDragOver"
                          Margin="0,0,0,10">
-                    <StackPanel HorizontalAlignment="Center">
-                        <TextBlock Text="将文件或文件夹拖放到此处" FontSize="14" Foreground="#666666" HorizontalAlignment="Center"/>
-                        <TextBlock Text="支持 .docx 文件" FontSize="12" Foreground="#999999" HorizontalAlignment="Center" Margin="0,5,0,0"/>
-                    </StackPanel>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="将文件或文件夹拖放到此处" FontSize="14" Foreground="#666666" HorizontalAlignment="Center"/>
+                            <TextBlock Text="支持 .docx 文件" FontSize="12" Foreground="#999999" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                        </StackPanel>
+                    </Grid>
                 </Border>
 
                 <!-- 文件列表 -->
