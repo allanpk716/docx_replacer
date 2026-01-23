@@ -3,7 +3,7 @@
 
 server:
   # Update server URL (required)
-  url: http://localhost:8080
+  url: http://172.18.200.47:58100
   # Request timeout in seconds (default: 30)
   timeout: 30
 
