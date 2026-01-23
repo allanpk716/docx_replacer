@@ -29,7 +29,7 @@
         <TabControl Grid.Row="1" Margin="0,0,0,10" FontSize="16">
             
             <!-- 文件设置选项卡 -->
-            <TabItem Header="文件设置" FontSize="16">
+            <TabItem Header="关键词替换" FontSize="16">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" 
                               HorizontalScrollBarVisibility="Disabled"
                               Margin="5">
