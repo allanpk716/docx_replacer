@@ -112,6 +112,12 @@ namespace DocuFiller
             // 注册更新服务（UpdateClientService 直接调用 update-client.exe，不需要 HttpClient）
             services.AddSingleton<IUpdateService, UpdateClientService>();
 
+            // 注册清理服务
+            services.AddTransient<CleanupCommentProcessor>();
+            services.AddTransient<CleanupControlProcessor>();
+            services.AddTransient<IDocumentCleanupService, DocumentCleanupService>();
+            services.AddTransient<CleanupViewModel>();
+
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
             services.AddSingleton<CommentManager>();
@@ -126,6 +132,7 @@ namespace DocuFiller
             // 注册主窗口
             services.AddTransient<MainWindow>();
             services.AddTransient<Views.ConverterWindow>();
+            services.AddTransient<Views.CleanupWindow>();
             services.AddTransient<Views.Update.UpdateWindow>();
             services.AddTransient<Views.Update.UpdateBannerView>();
 

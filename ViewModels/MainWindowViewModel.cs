@@ -445,6 +445,7 @@ namespace DocuFiller.ViewModels
         public ICommand ExitCommand { get; private set; } = null!;
         public ICommand OpenConverterCommand { get; private set; } = null!;
         public ICommand CheckForUpdateCommand { get; private set; } = null!;
+        public ICommand OpenCleanupCommand { get; private set; } = null!;
 
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -468,6 +469,7 @@ namespace DocuFiller.ViewModels
             ExitCommand = new RelayCommand(ExitApplication);
             OpenConverterCommand = new RelayCommand(OpenConverter);
             CheckForUpdateCommand = new RelayCommand(async () => await CheckForUpdateAsync());
+            OpenCleanupCommand = new RelayCommand(OpenCleanup);
 
             // 文件夹拖拽相关命令
             SwitchToSingleModeCommand = new RelayCommand(() => IsFolderMode = false);
@@ -767,6 +769,23 @@ namespace DocuFiller.ViewModels
             {
                 _logger.LogError(ex, "打开转换器窗口时发生错误");
                 MessageBox.Show($"打开转换器窗口时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        private void OpenCleanup()
+        {
+            try
+            {
+                var app = (App)Application.Current;
+                IServiceProvider serviceProvider = app.ServiceProvider;
+                var cleanupWindow = serviceProvider.GetRequiredService<Views.CleanupWindow>();
+                cleanupWindow.Owner = Application.Current.MainWindow;
+                cleanupWindow.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "打开清理窗口时发生错误");
+                MessageBox.Show($"打开清理窗口时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
         

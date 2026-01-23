@@ -18,6 +18,13 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <!-- 菜单栏 -->
+        <Menu Grid.Row="0">
+            <MenuItem Header="工具">
+                <MenuItem Header="审核清理" Command="{Binding OpenCleanupCommand}"/>
+            </MenuItem>
+        </Menu>
         
         <!-- 更新横幅 -->
         <updateViews:UpdateBannerView Grid.Row="0"
