@@ -206,12 +206,18 @@ namespace DocuFiller.ViewModels
                     _logger.LogInformation("显示更新横幅: {Version}", versionInfo.Version);
 
                     // 设置更新横幅的版本信息
-                    UpdateBanner.VersionInfo = versionInfo;
-                    UpdateBanner.IsVisible = true;
+                    if (UpdateBanner != null)
+                    {
+                        UpdateBanner.VersionInfo = versionInfo;
+                        UpdateBanner.IsVisible = true;
+                    }
 
                     // 直接调用更新窗口（为了简化，我们直接显示更新窗口并隐藏横幅）
                     ShowUpdateWindow(versionInfo);
-                    UpdateBanner.IsVisible = false; // 隐藏横幅
+                    if (UpdateBanner != null)
+                    {
+                        UpdateBanner.IsVisible = false; // 隐藏横幅
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 
@@ -18,7 +19,11 @@ namespace CompareDocumentStructure
             Console.WriteLine("=== 文档结构比较工具 ===\n");
 
             // 确保输出目录存在
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
+            var outputDir = Path.GetDirectoryName(outputPath);
+            if (!string.IsNullOrEmpty(outputDir))
+            {
+                Directory.CreateDirectory(outputDir);
+            }
 
             // 读取 JSON 数据
             var jsonContent = File.ReadAllText(dataPath);
@@ -58,9 +63,28 @@ namespace CompareDocumentStructure
                             Console.WriteLine($"    处理控件: {tag}");
 
                             // 模拟替换操作 - 设置一个测试文本
-                            var contentContainer = control.Descendants<SdtContentRun>().FirstOrDefault()
-                                ?? control.Descendants<SdtContentBlock>().FirstOrDefault()
-                                ?? control.Descendants<SdtContentCell>().FirstOrDefault();
+                            OpenXmlCompositeElement? contentContainer = null;
+                            Type? contentType = null;
+
+                            var sdtContentRun = control.Descendants<SdtContentRun>().FirstOrDefault();
+                            var sdtContentBlock = control.Descendants<SdtContentBlock>().FirstOrDefault();
+                            var sdtContentCell = control.Descendants<SdtContentCell>().FirstOrDefault();
+
+                            if (sdtContentRun != null)
+                            {
+                                contentContainer = sdtContentRun;
+                                contentType = typeof(SdtRun);
+                            }
+                            else if (sdtContentBlock != null)
+                            {
+                                contentContainer = sdtContentBlock;
+                                contentType = typeof(SdtBlock);
+                            }
+                            else if (sdtContentCell != null)
+                            {
+                                contentContainer = sdtContentCell;
+                                contentType = typeof(SdtCell);
+                            }
 
                             if (contentContainer != null)
                             {
@@ -68,7 +92,7 @@ namespace CompareDocumentStructure
                                 contentContainer.RemoveAllChildren();
 
                                 // 添加新内容
-                                if (control is SdtBlock)
+                                if (sdtContentBlock != null)
                                 {
                                     var paragraph = new Paragraph(
                                         new Run(

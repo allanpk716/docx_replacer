@@ -14,7 +14,7 @@ namespace DocuFiller.Views
         public CleanupWindow()
         {
             InitializeComponent();
-            _viewModel = App.Current.Services.GetRequiredService<CleanupViewModel>();
+            _viewModel = App.Current.ServiceProvider.GetRequiredService<CleanupViewModel>();
             DataContext = _viewModel;
         }
 

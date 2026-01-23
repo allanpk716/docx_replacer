@@ -78,9 +78,9 @@ namespace DocuFiller.Services
         /// </summary>
         /// <param name="document">Word 文档对象</param>
         /// <param name="commentId">批注 ID</param>
-        private void ChangeCommentedRunsColorToBlack(WordprocessingDocument document, string commentId)
+        private void ChangeCommentedRunsColorToBlack(WordprocessingDocument document, string? commentId)
         {
-            if (document.MainDocumentPart?.Document == null)
+            if (string.IsNullOrEmpty(commentId) || document.MainDocumentPart?.Document == null)
                 return;
 
             // 找到所有批注范围开始标记

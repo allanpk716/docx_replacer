@@ -12,7 +12,9 @@ namespace DocuFiller.Services
         private readonly CleanupCommentProcessor _commentProcessor;
         private readonly CleanupControlProcessor _controlProcessor;
 
+#pragma warning disable CS0067 // 事件在接口中定义，为未来扩展预留
         public event EventHandler<CleanupProgressEventArgs>? ProgressChanged;
+#pragma warning restore CS0067
 
         public DocumentCleanupService(
             ILogger<DocumentCleanupService> logger,
@@ -94,7 +96,6 @@ namespace DocuFiller.Services
 
                 // 保存文档
                 document.MainDocumentPart.Document.Save();
-                document.Close();
 
                 result.Success = true;
                 result.Message = $"清理完成：删除 {result.CommentsRemoved} 个批注，解包 {result.ControlsUnwrapped} 个控件";

@@ -1,5 +1,6 @@
 using System.Linq;
 using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocuFiller.Utils;
 using Microsoft.Extensions.Logging;

@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.ViewModels
 {
-    public class CleanupViewModel : ViewModelBase
+    public class CleanupViewModel : ObservableObject
     {
         private readonly IDocumentCleanupService _cleanupService;
         private readonly ILogger<CleanupViewModel> _logger;
@@ -60,7 +60,7 @@ namespace DocuFiller.ViewModels
                 if (FileItems.Any(f => f.FilePath.Equals(filePath, StringComparison.OrdinalIgnoreCase)))
                     continue;
 
-                var fileInfo = new FileInfo(filePath);
+                var fileInfo = new System.IO.FileInfo(filePath);
                 var fileItem = new CleanupFileItem
                 {
                     FilePath = filePath,

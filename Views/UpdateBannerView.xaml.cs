@@ -31,10 +31,10 @@ namespace DocuFiller.Views
 
                         if (canExecuteMethod != null && executeMethod != null)
                         {
-                            var canExecute = (bool)canExecuteMethod.Invoke(command, new object[] { null });
-                            if (canExecute)
+                            var canExecuteResult = canExecuteMethod.Invoke(command, new object?[] { null });
+                            if (canExecuteResult is bool canExecute && canExecute)
                             {
-                                executeMethod.Invoke(command, new object[] { null });
+                                executeMethod.Invoke(command, new object?[] { null });
                             }
                         }
                     }

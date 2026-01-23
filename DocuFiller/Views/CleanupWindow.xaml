@@ -33,7 +33,7 @@
 
                 <!-- 拖放提示 -->
                 <Border Grid.Row="0" x:Name="DropZoneBorder"
-                         BorderBrush="#CCCCCC" BorderThickness="2" BorderDashStyle="Dash"
+                         BorderBrush="#CCCCCC" BorderThickness="2"
                          Padding="30" Background="#F9F9F9"
                          Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave"
                          AllowDrop="True"

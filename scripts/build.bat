@@ -47,11 +47,11 @@ if exist "%PROJECT_ROOT%\External\update-client.exe" (
     echo Warning: update-client.exe not found in External directory
 )
 
-if exist "%PROJECT_ROOT%\External\update-config.yaml" (
-    copy "%PROJECT_ROOT%\External\update-config.yaml" "%SCRIPT_DIR%build\temp\" >nul
-    echo   - update-config.yaml copied
+if exist "%PROJECT_ROOT%\External\update-client.config.yaml" (
+    copy "%PROJECT_ROOT%\External\update-client.config.yaml" "%SCRIPT_DIR%build\temp\" >nul
+    echo   - update-client.config.yaml copied
 ) else (
-    echo Warning: update-config.yaml not found in External directory
+    echo Warning: update-client.config.yaml not found in External directory
 )
 
 REM Create zip package

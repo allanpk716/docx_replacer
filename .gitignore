@@ -61,3 +61,4 @@ scripts/config/release-config.bat
 # Note: .exe files are already excluded by global *.exe rule
 External/update-config.yaml
 .no-pushover
+External/update-client.exe
