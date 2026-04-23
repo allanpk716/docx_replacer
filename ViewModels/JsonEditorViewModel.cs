@@ -59,7 +59,7 @@ namespace DocuFiller.ViewModels
         public void Initialize()
         {
             // 执行初始化逻辑
-            Console.WriteLine("[DEBUG] JsonEditorViewModel 初始化完成");
+            _logger.LogDebug("JsonEditorViewModel 初始化完成");
             
             // 可以在这里添加其他初始化逻辑
             // 例如：加载默认设置、检查文件权限等

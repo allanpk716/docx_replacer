@@ -620,18 +620,22 @@ namespace DocuFiller.ViewModels
         
         private void BrowseOutput()
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                Title = "选择输出目录",
-                CheckFileExists = false,
-                CheckPathExists = true,
-                FileName = "选择文件夹",
-                Filter = "文件夹|*.folder"
+                Title = "选择输出目录"
             };
-            
+
             if (dialog.ShowDialog() == true)
             {
-                OutputDirectory = System.IO.Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+                var selectedPath = dialog.FolderName;
+                if (string.IsNullOrEmpty(selectedPath))
+                {
+                    _logger.LogDebug("BrowseOutput: 用户未选择文件夹");
+                    return;
+                }
+
+                OutputDirectory = selectedPath;
+                _logger.LogInformation("输出目录已选择: {Path}", selectedPath);
             }
         }
         
@@ -728,30 +732,21 @@ namespace DocuFiller.ViewModels
             try
             {
                 // 添加调试信息
-                _logger.LogInformation($"[调试] 开始处理文档");
-                _logger.LogInformation($"[调试] 模板路径: '{TemplatePath}'");
-                _logger.LogInformation($"[调试] 数据路径: '{DataPath}'");
-                _logger.LogInformation($"[调试] 输出目录: '{OutputDirectory}'");
-                _logger.LogInformation($"[调试] 是否为文件夹模式: {IsFolderMode}");
-                
-                // 同时输出到控制台
-                Console.WriteLine($"[调试] 开始处理文档");
-                Console.WriteLine($"[调试] 模板路径: '{TemplatePath}'");
-                Console.WriteLine($"[调试] 数据路径: '{DataPath}'");
-                Console.WriteLine($"[调试] 输出目录: '{OutputDirectory}'");
-                Console.WriteLine($"[调试] 是否为文件夹模式: {IsFolderMode}");
+                _logger.LogInformation("[调试] 开始处理文档");
+                _logger.LogInformation("[调试] 模板路径: '{TemplatePath}'", TemplatePath);
+                _logger.LogInformation("[调试] 数据路径: '{DataPath}'", DataPath);
+                _logger.LogInformation("[调试] 输出目录: '{OutputDirectory}'", OutputDirectory);
+                _logger.LogInformation("[调试] 是否为文件夹模式: {IsFolderMode}", IsFolderMode);
                 
                 // 检查处理模式
                 if (IsFolderMode)
                 {
-                    _logger.LogInformation($"[调试] 进入文件夹模式处理");
-                    Console.WriteLine($"[调试] 进入文件夹模式处理");
+                    _logger.LogInformation("[调试] 进入文件夹模式处理");
                     await ProcessFolderAsync();
                     return;
                 }
                 
-                _logger.LogInformation($"[调试] 进入单文件模式处理");
-                Console.WriteLine($"[调试] 进入单文件模式处理");
+                _logger.LogInformation("[调试] 进入单文件模式处理");
                 
                 IsProcessing = true;
                 _cancellationTokenSource = new CancellationTokenSource();
@@ -988,11 +983,10 @@ namespace DocuFiller.ViewModels
             try
             {
                 _logger.LogInformation("开始处理文件夹拖拽: {FolderPath}", folderPath);
-                Console.WriteLine($"[DEBUG] HandleFolderDropAsync 被调用，文件夹路径: {folderPath}");
                 
                 if (!_fileScanner.IsValidFolder(folderPath))
                 {
-                    Console.WriteLine($"[DEBUG] 无效的文件夹路径: {folderPath}");
+                    _logger.LogWarning("无效的文件夹路径: {FolderPath}", folderPath);
                     MessageBox.Show("无效的文件夹路径", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
@@ -1014,10 +1008,6 @@ namespace DocuFiller.ViewModels
                 
                 // 更新找到的文件数量
                 FoundDocxFilesCount = folderStructure.TotalDocxCount.ToString();
-                Console.WriteLine($"[DEBUG] 设置TemplateFolderPath: {TemplateFolderPath}");
-                Console.WriteLine($"[DEBUG] 设置TemplatePath: {TemplatePath}");
-                Console.WriteLine($"[DEBUG] 设置FoundDocxFilesCount: {FoundDocxFilesCount}");
-                Console.WriteLine($"[DEBUG] 设置IsFolderMode: {IsFolderMode}");
                 
                 // 更新模板文件列表
                 UpdateTemplateFilesList();
@@ -1114,10 +1104,10 @@ namespace DocuFiller.ViewModels
                     ExtractTemplateFiles(FolderStructure, templateFiles);
                 }
                 
-                Console.WriteLine($"[DEBUG] ProcessFolderAsync - 提取到的模板文件数量: {templateFiles.Count}");
+                _logger.LogDebug("ProcessFolderAsync - 提取到的模板文件数量: {Count}", templateFiles.Count);
                 foreach (var file in templateFiles)
                 {
-                    Console.WriteLine($"[DEBUG] 模板文件: {file.FullPath}");
+                    _logger.LogDebug("模板文件: {FilePath}", file.FullPath);
                 }
                 
                 var request = new FolderProcessRequest
@@ -1129,9 +1119,8 @@ namespace DocuFiller.ViewModels
                     TemplateFiles = templateFiles
                 };
                 
-                Console.WriteLine($"[DEBUG] FolderProcessRequest - TemplateFolderPath: {request.TemplateFolderPath}");
-                Console.WriteLine($"[DEBUG] FolderProcessRequest - DataFilePath: {request.DataFilePath}");
-                Console.WriteLine($"[DEBUG] FolderProcessRequest - TemplateFiles.Count: {request.TemplateFiles?.Count ?? 0}");
+                _logger.LogDebug("FolderProcessRequest - TemplateFolderPath: {Path}, DataFilePath: {DataPath}, TemplateFiles.Count: {Count}", 
+                    request.TemplateFolderPath, request.DataFilePath, request.TemplateFiles?.Count ?? 0);
                 
                 ProgressMessage = "开始批量处理文件夹...";
 
@@ -1245,29 +1234,27 @@ namespace DocuFiller.ViewModels
         /// </summary>
         private void BrowseTemplateFolder()
         {
-            // 使用 OpenFileDialog 作为临时方案，用户可以选择文件夹中的任意文件
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                Title = "选择包含模板文件的文件夹（选择文件夹中的任意文件）",
-                Filter = "Word文档 (*.docx;*.dotx)|*.docx;*.dotx|所有文件 (*.*)|*.*",
-                CheckFileExists = true,
-                CheckPathExists = true,
-                Multiselect = false
+                Title = "选择包含模板文件的文件夹"
             };
 
-            var result = dialog.ShowDialog();
-            if (result == true && !string.IsNullOrEmpty(dialog.FileName))
+            if (dialog.ShowDialog() == true)
             {
-                // 获取文件所在目录
-                var directory = System.IO.Path.GetDirectoryName(dialog.FileName);
-                if (!string.IsNullOrEmpty(directory))
+                var selectedPath = dialog.FolderName;
+                if (string.IsNullOrEmpty(selectedPath))
                 {
-                    // 异步处理文件夹扫描
-                    Task.Run(async () =>
-                    {
-                        await HandleFolderDropAsync(directory);
-                    });
+                    _logger.LogDebug("BrowseTemplateFolder: 用户未选择文件夹");
+                    return;
                 }
+
+                _logger.LogInformation("模板文件夹已选择: {Path}", selectedPath);
+
+                // 异步处理文件夹扫描
+                Task.Run(async () =>
+                {
+                    await HandleFolderDropAsync(selectedPath);
+                });
             }
         }
 
@@ -1543,18 +1530,22 @@ namespace DocuFiller.ViewModels
         /// </summary>
         private void BrowseCleanupOutput()
         {
-            var dialog = new OpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                Title = "选择输出目录",
-                CheckFileExists = false,
-                CheckPathExists = true,
-                FileName = "选择文件夹",
-                Filter = "文件夹|*.folder"
+                Title = "选择清理输出目录"
             };
 
             if (dialog.ShowDialog() == true)
             {
-                CleanupOutputDirectory = Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+                var selectedPath = dialog.FolderName;
+                if (string.IsNullOrEmpty(selectedPath))
+                {
+                    _logger.LogDebug("BrowseCleanupOutput: 用户未选择文件夹");
+                    return;
+                }
+
+                CleanupOutputDirectory = selectedPath;
+                _logger.LogInformation("清理输出目录已选择: {Path}", selectedPath);
             }
         }
 
@@ -1579,6 +1570,22 @@ namespace DocuFiller.ViewModels
             catch (Exception ex)
             {
                 _logger.LogError(ex, "打开输出文件夹时发生错误");
+                MessageBox.Show($"打开输出文件夹时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// 数据文件类型
+    /// </summary>
+    public enum DataFileType
+    {
+        Json,
+        Excel
+    }
+}�错误");
                 MessageBox.Show($"打开输出文件夹时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }

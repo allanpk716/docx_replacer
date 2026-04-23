@@ -5,23 +5,26 @@ using System.Windows.Media;
 using System.Windows.Threading;
 using DocuFiller.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.Views
 {
     public partial class CleanupWindow : Window
     {
         private readonly CleanupViewModel _viewModel;
+        private readonly ILogger<CleanupWindow> _logger;
 
-        public CleanupWindow()
+        public CleanupWindow(ILogger<CleanupWindow> logger)
         {
             InitializeComponent();
+            _logger = logger;
             _viewModel = App.Current.ServiceProvider.GetRequiredService<CleanupViewModel>();
             DataContext = _viewModel;
         }
 
         private void OnDragEnter(object sender, DragEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("[CleanupWindow] OnDragEnter triggered");
+            _logger.LogDebug("CleanupWindow OnDragEnter triggered");
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
                 e.Effects = DragDropEffects.Copy;
@@ -30,7 +33,7 @@ namespace DocuFiller.Views
                     border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3));
                     border.BorderThickness = new Thickness(3);
                     border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3));
-                    System.Diagnostics.Debug.WriteLine("[CleanupWindow] Border style updated");
+                    _logger.LogDebug("CleanupWindow Border style updated");
                 }
             }
             else

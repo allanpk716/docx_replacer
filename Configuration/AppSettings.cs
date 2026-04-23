@@ -138,5 +138,10 @@ namespace DocuFiller.Configuration
         /// 窗口默认高度
         /// </summary>
         public int WindowHeight { get; set; } = 700;
+
+        /// <summary>
+        /// 关键词编辑器URL
+        /// </summary>
+        public string KeywordEditorUrl { get; set; } = "http://192.168.200.23:32200/";
     }
 }

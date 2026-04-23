@@ -1,4 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using DocuFiller.Configuration;
 using DocuFiller.ViewModels;
 using DocuFiller.Models;
 using System;
@@ -15,9 +18,14 @@ namespace DocuFiller
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
+        private readonly ILogger<MainWindow> _logger;
+        private readonly UISettings _uiSettings;
+
+        public MainWindow(ILogger<MainWindow> logger, IOptions<UISettings> uiSettings)
         {
             InitializeComponent();
+            _logger = logger;
+            _uiSettings = uiSettings.Value;
             
             // 从依赖注入容器获取ViewModel
             var app = (App)Application.Current;
@@ -31,19 +39,19 @@ namespace DocuFiller
         {
             try
             {
-                string url = "http://192.168.200.23:32200/";
+                string url = _uiSettings.KeywordEditorUrl;
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = url,
                     UseShellExecute = true
                 });
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] 打开关键词编辑器: {url}");
+                _logger.LogDebug("打开关键词编辑器: {Url}", url);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"无法打开关键词编辑器：{ex.Message}", "错误",
                     MessageBoxButton.OK, MessageBoxImage.Error);
-                System.Diagnostics.Debug.WriteLine($"[DEBUG] 打开关键词编辑器失败: {ex.Message}");
+                _logger.LogDebug(ex, "打开关键词编辑器失败");
             }
         }
 
@@ -133,18 +141,18 @@ namespace DocuFiller
                         border.BorderThickness = new Thickness(3);
                         border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3)); // 半透明蓝色
                     }
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 数据文件拖拽进入: {files[0]}");
+                    _logger.LogDebug("数据文件拖拽进入: {FilePath}", files[0]);
                 }
                 else
                 {
                     e.Effects = DragDropEffects.None;
-                    System.Diagnostics.Debug.WriteLine($"[DEBUG] 非数据文件或多文件拖拽: {string.Join(", ", files)}");
+                    _logger.LogDebug("非数据文件或多文件拖拽: {Files}", string.Join(", ", files));
                 }
             }
             else
             {
                 e.Effects = DragDropEffects.None;
-                System.Diagnostics.Debug.WriteLine("[DEBUG] 拖拽数据不是文件格式");
+                _logger.LogDebug("拖拽数据不是文件格式");
             }
             e.Handled = true;
         }
@@ -213,9 +221,9 @@ namespace DocuFiller
                             // 设置数据路径并自动预览
                             if (DataContext is MainWindowViewModel viewModel)
                             {
-                                Console.WriteLine($"[DEBUG] 数据文件拖放 - 设置DataPath: {filePath}");
+                                _logger.LogDebug("数据文件拖放 - 设置DataPath: {FilePath}", filePath);
                                 viewModel.DataPath = filePath;
-                                Console.WriteLine($"[DEBUG] 数据文件拖放 - DataPath已设置为: {viewModel.DataPath}");
+                                _logger.LogDebug("数据文件拖放 - DataPath已设置为: {DataPath}", viewModel.DataPath);
                                 // 自动触发预览
                                 viewModel.PreviewDataCommand?.Execute(null);
                             }
