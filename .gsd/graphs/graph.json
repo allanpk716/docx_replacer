@@ -8,50 +8,6 @@
       "sourceFile": "STATE.md"
     },
     {
-      "id": "milestone:M001",
-      "label": "M001",
-      "type": "milestone",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "id": "slice:M001:S01",
-      "label": "S01: 三列格式解析与 ID 唯一性校验",
-      "type": "slice",
-      "confidence": "EXTRACTED",
-      "sourceFile": "milestones/M001/slices/S01/S01-PLAN.md"
-    },
-    {
-      "id": "task:M001:S01:T01",
-      "label": "T01: Add DuplicateRowIds model field and 3-column format detection + parsing",
-      "type": "task",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "id": "task:M001:S01:T02",
-      "label": "T02: Add ID uniqueness validation and basic 3-column tests",
-      "type": "task",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "id": "slice:M001:S02",
-      "label": "S02: 测试覆盖验证",
-      "type": "slice",
-      "confidence": "EXTRACTED",
-      "sourceFile": "milestones/M001/slices/S02/S02-PLAN.md"
-    },
-    {
-      "id": "task:M001:S02:T01",
-      "label": "T01: Add edge case unit tests for 3-column format detection and parsing",
-      "type": "task",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "id": "task:M001:S02:T02",
-      "label": "T02: Add 3-column integration test and verify full suite passes",
-      "type": "task",
-      "confidence": "EXTRACTED"
-    },
-    {
       "id": "milestone:M002",
       "label": "M002",
       "type": "milestone",
@@ -88,45 +44,78 @@
       "label": "T01: Replace three OpenFileDialog folder hacks with OpenFolderDialog",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M003",
+      "label": "M003",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M003:S01",
+      "label": "S01: 产品需求 + 技术架构文档重写与迁移",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M003/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M003:S01:T01",
+      "label": "T01: 撰写 DocuFiller 产品需求文档并迁移到 docs/",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M003:S01:T02",
+      "label": "T02: 撰写 DocuFiller 技术架构文档并迁移到 docs/",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M003:S01:T03",
+      "label": "T03: 删除 .trae/documents/ 下的 4 份旧文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M003:S02",
+      "label": "S02: README.md + CLAUDE.md 更新",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M003/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M003:S02:T01",
+      "label": "T01: 重写 README.md 反映完整功能列表、14 个服务接口、准确项目结构和使用方法",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M003:S02:T02",
+      "label": "T02: 更新 CLAUDE.md 的服务层架构、数据模型、Excel 处理路径和开发指南",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M003:S03",
+      "label": "S03: 功能级文档更新",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M003/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M003:S03:T01",
+      "label": "T01: 更新 Excel 用户指南增加三列格式说明",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M003:S03:T02",
+      "label": "T02: 修正页眉页脚文档并校验批注功能说明",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
-    {
-      "from": "milestone:M001",
-      "to": "slice:M001:S01",
-      "type": "contains",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "from": "slice:M001:S01",
-      "to": "task:M001:S01:T01",
-      "type": "contains",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "from": "slice:M001:S01",
-      "to": "task:M001:S01:T02",
-      "type": "contains",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "from": "milestone:M001",
-      "to": "slice:M001:S02",
-      "type": "contains",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "from": "slice:M001:S02",
-      "to": "task:M001:S02:T01",
-      "type": "contains",
-      "confidence": "EXTRACTED"
-    },
-    {
-      "from": "slice:M001:S02",
-      "to": "task:M001:S02:T02",
-      "type": "contains",
-      "confidence": "EXTRACTED"
-    },
     {
       "from": "milestone:M002",
       "to": "slice:M002:S01",
@@ -156,7 +145,67 @@
       "to": "task:M002:S02:T01",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M003",
+      "to": "slice:M003:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S01",
+      "to": "task:M003:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S01",
+      "to": "task:M003:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S01",
+      "to": "task:M003:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M003",
+      "to": "slice:M003:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S02",
+      "to": "task:M003:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S02",
+      "to": "task:M003:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M003",
+      "to": "slice:M003:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S03",
+      "to": "task:M003:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M003:S03",
+      "to": "task:M003:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-04-23T08:26:58.871Z"
+  "builtAt": "2026-04-23T10:45:26.254Z"
 }

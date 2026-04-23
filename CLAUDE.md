@@ -46,7 +46,7 @@ The project includes debug configurations in Visual Studio 2022 and supports hot
 
 ## Architecture Overview
 
-DocuFiller is a WPF desktop application built with .NET 8 that follows the MVVM (Model-View-ViewModel) pattern with dependency injection and layered architecture.
+DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，遵循 MVVM 模式 + 依赖注入 + 分层架构，提供文档批量填充、富文本替换、批注追踪、审核清理和格式转换 6 大功能模块。
 
 ### Core Architecture Components
 
@@ -59,31 +59,73 @@ DocuFiller is a WPF desktop application built with .NET 8 that follows the MVVM 
    - Services are registered in `App.xaml.cs:ConfigureServices()`
    - Uses Microsoft.Extensions.DependencyInjection
    - Services are resolved via constructor injection
+   - 大部分服务为 Singleton，清理服务和窗口为 Transient
 
-3. **Service Layer Architecture**:
-   - **Document Processing**: `IDocumentProcessor` handles Word document manipulation using OpenXML
-   - **Data Parsing**: `IDataParser` processes JSON data files
-   - **File Operations**: `IFileService` manages file I/O operations
-   - **Progress Reporting**: `IProgressReporter` tracks and reports processing progress
-   - **File Scanning**: `IFileScanner` discovers template files in directories
-   - **Directory Management**: `IDirectoryManager` handles folder operations
+3. **Configuration System**:
+   - 使用 `appsettings.json` 作为主配置文件
+   - 通过 `IOptions<T>` 选项模式访问配置
+   - 支持 `App.config` 向后兼容
+   - 配置类：`AppSettings`, `LoggingSettings`, `FileProcessingSettings`, `PerformanceSettings`, `UISettings`
 
-4. **Configuration System**:
-   - Uses `App.config` for application settings
-   - Configuration values accessed via `ConfigurationManager.AppSettings`
-   - Supports runtime configuration updates
+### Service Layer Architecture (14 个服务接口 + 2 个处理器)
 
-### Key Models and Data Flow
+| 服务 | 接口 | 实现类 | 职责 |
+|------|------|--------|------|
+| 文档处理 | `IDocumentProcessor` | `DocumentProcessorService` | 批量文档处理主入口（JSON/Excel 双数据源） |
+| JSON 数据解析 | `IDataParser` | `DataParserService` | JSON 文件解析、验证、预览、统计 |
+| Excel 数据解析 | `IExcelDataParser` | `ExcelDataParserService` | Excel 文件解析（两列/三列格式自动检测） |
+| 文件操作 | `IFileService` | `FileService` | 文件读写、复制、验证 |
+| 进度报告 | `IProgressReporter` | `ProgressReporterService` | 处理进度追踪与报告 |
+| 文件扫描 | `IFileScanner` | `FileScannerService` | 文件夹中 .docx 文件递归发现 |
+| 目录管理 | `IDirectoryManager` | `DirectoryManagerService` | 输出目录创建、时间戳文件夹、镜像目录结构 |
+| JSON↔Excel 转换 | `IExcelToWordConverter` | `ExcelToWordConverterService` | JSON 与 Excel 格式互转（批量） |
+| 安全文本替换 | `ISafeTextReplacer` | `SafeTextReplacer` | 保留表格结构的文本替换（三种策略） |
+| 格式化内容替换 | `ISafeFormattedContentReplacer` | `SafeFormattedContentReplacer` | 保留富文本格式的内容替换（上标/下标） |
+| 模板缓存 | `ITemplateCacheService` | `TemplateCacheService` | 模板验证结果与控件信息缓存（含过期清理） |
+| 关键词验证 | `IKeywordValidationService` | — (静态工具) | 关键词格式、重复性验证、建议生成 |
+| 文档清理 | `IDocumentCleanupService` | `DocumentCleanupService` | 去除批注痕迹、内容控件正常化（解包 SdtElement） |
+| JSON 编辑器 | `IJsonEditorService` | — | JSON 项目文件加载/保存/验证/格式化 |
+| 更新服务 | `IUpdateService` | `UpdateClientService` | 应用自动更新检查与下载 |
 
-1. **ProcessRequest**: Encapsulates all data needed for document processing
-2. **ProcessResult**: Contains results and statistics from processing operations
-3. **ProgressEventArgs**: Carries progress information during long-running operations
-4. **ContentControlData**: Represents Word document content controls that can be filled with data
+非接口核心处理器：
+
+| 处理器 | 类名 | 职责 |
+|--------|------|------|
+| 内容控件处理 | `ContentControlProcessor` | 协调内容控件处理流程（正文/页眉/页脚差异化 + 批注） |
+| 批注管理 | `CommentManager` | Word 文档批注的创建与管理 |
+
+### DI 生命周期选择
+
+| 生命周期 | 适用场景 | 服务示例 |
+|----------|----------|----------|
+| **Singleton** | 无状态服务、全局缓存、线程安全服务 | IFileService, IDataParser, ITemplateCacheService, ContentControlProcessor |
+| **Transient** | 有状态服务、每次使用需新建实例 | IDocumentCleanupService, CleanupCommentProcessor, CleanupControlProcessor, ViewModels, Windows |
+
+### Key Data Models
+
+| 模型 | 用途 |
+|------|------|
+| `ProcessRequest` | 单文件处理请求（模板路径、数据路径、输出目录、命名模式） |
+| `FolderProcessRequest` | 文件夹批量处理请求（含子文件夹扫描、目录结构保持、时间戳文件夹选项） |
+| `ProcessResult` | 处理结果和统计信息（成功率、生成文件列表、错误/警告） |
+| `ProgressEventArgs` | 进度事件参数（百分比、当前文件、完成/错误状态） |
+| `ContentControlData` | 内容控件信息（Tag、标题、值、类型、位置：Body/Header/Footer） |
+| `FormattedCellValue` | 带格式的单元格值（包含 TextFragment 列表） |
+| `TextFragment` | 单个文本片段（文本 + IsSuperscript/IsSubscript 标记） |
+| `JsonKeywordItem` | JSON 关键词项（键名、值、来源文件、创建/修改时间） |
+| `JsonProjectModel` | JSON 项目数据（项目名、关键词集合、文件路径、未保存变更标记） |
+| `CleanupFileItem` | 清理文件项（文件路径、大小、状态：Pending/Processing/Success/Failure/Skipped） |
+| `CleanupResult` | 清理结果（移除批注数、解包控件数） |
+| `CleanupProgressEventArgs` | 清理进度事件（总数、已处理、成功/失败/跳过计数） |
+| `ExcelValidationResult` | Excel 数据验证结果（错误、警告、摘要） |
+| `ExcelFileSummary` | Excel 文件摘要（总行数、有效行数、重复关键词、无效格式关键词） |
+| `InputSourceType` | 输入来源类型枚举（None/SingleFile/Folder） |
+| `FolderStructure` | 文件夹结构信息（文件列表、子文件夹、.docx 总数） |
 
 ### Document Processing Pipeline
 
-1. Template file selection (.docx/.dotx)
-2. JSON data file parsing and validation
+1. Template file selection (.docx)
+2. JSON/Excel 数据解析和验证
 3. Content control extraction from template
 4. Data mapping and validation
 5. Batch document generation with progress tracking
@@ -91,11 +133,24 @@ DocuFiller is a WPF desktop application built with .NET 8 that follows the MVVM 
 
 ## Important Implementation Details
 
+### Excel 双格式处理路径
+
+Excel 数据解析由 `ExcelDataParserService` 实现，通过内部的 `DetectExcelFormat` 方法自动检测格式：
+
+- **两列格式**：第一列为关键词（`#xxx#` 格式），第二列为替换值
+- **三列格式**：第一列为行标识 ID，第二列为关键词，第三列为替换值
+- **检测机制**：读取第一个非空行的第一列值，如果匹配 `#xxx#` 模式则为两列格式，否则为三列格式
+- **EPPlus 使用**：通过 Officeonerge.Excel.Epplus 包操作 Excel（非 EPPlus 官方包）
+- **富文本支持**：解析单元格内的上标/下标格式，生成 `FormattedCellValue` 供格式化替换使用
+
+**已知问题**：`ParseExcelFileAsync` 在空工作表（`worksheet.Dimension` 为 null）时会抛出 NullReferenceException。仅 `ValidateExcelFileAsync` 做了防护检查。
+
 ### OpenXML Integration
 The application uses DocumentFormat.OpenXml SDK to manipulate Word documents:
 - Content controls are identified by their tags/aliases
 - Data is mapped to controls based on matching field names
 - Supports text content replacement in structured documents
+- 支持正文、页眉、页脚三个位置的内容控件替换
 
 #### Table Content Control Handling (表格内容控件处理)
 表格中的内容控件替换需要特别处理以保持表格结构不变。`SafeTextReplacer` 服务实现了三种替换策略：
@@ -114,6 +169,27 @@ The application uses DocumentFormat.OpenXml SDK to manipulate Word documents:
 **相关文件**：
 - `Services/SafeTextReplacer.cs`: 核心替换逻辑实现
 - `Utils/OpenXmlTableCellHelper.cs`: 表格单元格位置检测工具
+
+#### 富文本格式替换
+`ISafeFormattedContentReplacer` 处理带有上标/下标等格式的文本，将 `FormattedCellValue` 中的 `TextFragment` 列表转换为带格式的 OpenXML Run 元素。
+
+#### 内容控件处理协调
+`ContentControlProcessor` 协调整个内容控件处理流程：
+- 遍历文档主体、所有页眉、所有页脚中的内容控件
+- 对于嵌套控件，通过 `HasAncestorWithSameTag` 检测，只处理最外层控件
+- 正文区域添加批注追踪，页眉/页脚区域跳过批注（OpenXML 不支持）
+
+#### 批注追踪
+`CommentManager` 管理 Word 文档批注：
+- 批注格式：`此字段（正文）已于 YYYY年M月D日 HH:mm:ss 更新。标签：#关键词#，旧值：[旧值]，新值：新值`
+- 仅正文区域添加批注，页眉/页脚不添加
+
+### 审核清理功能
+`IDocumentCleanupService` + `CleanupCommentProcessor` + `CleanupControlProcessor` 实现文档审核清理：
+- 将批注标记的文本颜色恢复为黑色
+- 删除批注范围标记和批注内容
+- 解包内容控件（移除 SdtElement 包装，保留内部内容）
+- 清理服务注册为 Transient（每次操作创建新实例）
 
 ### JSON Data Structure
 Expected JSON format is an array of objects where each object represents one document:
@@ -139,11 +215,53 @@ Expected JSON format is an array of objects where each object represents one doc
 
 ## File Structure Notes
 
-- `Examples/`: Contains sample JSON data files
-- `Templates/`: Word template files (.docx/.dotx)
-- `Output/`: Generated documents are saved here
-- `Logs/`: Application log files
-- `Services/`: Core business logic implementations
-- `ViewModels/`: MVVM view models
-- `Models/`: Data model classes
-- `Utils/`: Helper utilities and common functionality
+```
+docx_replacer/                         # 主项目根目录
+├── App.xaml.cs                        # 应用入口，DI 注册配置
+├── DocuFiller.csproj                  # 项目文件
+├── Configuration/                     # 配置类（AppSettings, LoggingSettings 等）
+├── Models/                            # 数据模型
+│   └── Update/                        # 更新相关模型
+├── ViewModels/                        # 视图模型
+│   └── Update/                        # 更新相关 ViewModel
+├── Views/                             # XAML 视图
+│   └── Update/                        # 更新相关窗口
+├── Services/                          # 业务服务
+│   ├── Interfaces/                    # 14 个服务接口定义
+│   └── Update/                        # 更新服务实现
+├── External/                          # 外部工具配置（update-client）
+├── Converters/                        # WPF 值转换器
+├── Utils/                             # 工具类（OpenXmlTableCellHelper 等）
+├── Exceptions/                        # 自定义异常
+├── DocuFiller/                        # WPF 资源字典和样式
+│   ├── Services/                      # 资源相关服务
+│   ├── Utils/                         # 资源工具
+│   ├── ViewModels/                    # 资源 ViewModel
+│   └── Views/                         # 资源视图
+├── Tools/                             # 诊断和测试工具
+│   ├── E2ETest/                       # 端到端测试
+│   ├── ExcelToWordVerifier/           # Excel 转 Word 验证工具
+│   ├── ExcelFormattedTestGenerator/   # Excel 格式化测试生成器
+│   ├── CompareDocumentStructure/      # 文档结构比较工具
+│   ├── ControlRelationshipAnalyzer/   # 控件关系分析器
+│   ├── DeepDiagnostic/                # 深度诊断工具
+│   ├── DiagnoseTableStructure/        # 表格结构诊断
+│   ├── StepByStepSimulator/           # 逐步模拟器
+│   ├── TableCellTest/                 # 表格单元格测试
+│   └── TableStructureAnalyzer/        # 表格结构分析器
+├── Tests/                             # 单元测试和集成测试
+│   ├── DocuFiller.Tests/              # 主测试项目
+│   ├── Integration/                   # 集成测试
+│   ├── Data/                          # 测试数据
+│   └── Templates/                     # 测试模板
+├── scripts/                           # 构建和发布脚本
+│   └── config/                        # 脚本配置
+├── docs/                              # 项目文档
+│   ├── features/                      # 功能说明文档
+│   ├── plans/                         # 开发计划文档
+│   └── *.md                           # 其他文档
+├── Examples/                          # 示例数据文件（输出目录）
+├── Templates/                         # 模板文件（输出目录）
+├── Logs/                              # 日志文件（输出目录）
+└── Output/                            # 生成的文档（输出目录）
+```

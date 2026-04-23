@@ -42,25 +42,37 @@ DocuFiller 现在支持替换 Word 文档中页眉和页脚里的内容控件。
 
 ### 批注支持
 
-页眉和页脚中的控件替换会添加位置标识到批注中：
-- "此字段（页眉）于 [时间] 更新..."
-- "此字段（页脚）于 [时间] 更新..."
-- "此字段（正文）于 [时间] 更新..."
+**仅正文区域支持批注，页眉页脚不支持批注功能。**
 
-**批注存储**：
-- 所有批注（包括页眉、页脚、正文）都统一存储在 `MainDocumentPart.WordprocessingCommentsPart`
-- 这是由于 OpenXML SDK 的限制，不允许在 HeaderPart 或 FooterPart 上添加 WordprocessingCommentsPart
-- 批注引用（CommentRangeStart、CommentRangeEnd、CommentReference）添加到对应位置的 Run 元素上
+在 `ContentControlProcessor.ProcessContentControl` 方法中，批注添加逻辑根据控件位置进行区分：
 
-**批注 ID 管理**：
-- 所有批注（包括页眉页脚）共享全局唯一 ID 序列
-- 确保文档中所有批注引用正确且无冲突
+- **正文（Body）**：替换内容后自动添加批注，记录旧值、新值、修改时间和位置信息
+- **页眉（Header）/ 页脚（Footer）**：跳过批注添加，仅记录调试日志
 
-**架构说明**：
-根据 OpenXML SDK 的限制，`WordprocessingCommentsPart` 只能作为 `MainDocumentPart` 的子部分，不能添加到 `HeaderPart` 或 `FooterPart`。因此，所有批注定义（Comment 元素）都存储在主文档的批注部分中，但批注引用（CommentRangeStart、CommentRangeEnd、CommentReference）可以正确添加到页眉页脚的 Run 元素上。这确保了：
-- 批注在页眉页脚中仍然可见
-- 批注 ID 在整个文档中保持唯一
-- 符合 OpenXML 标准规范
+批注内容格式：
+```
+此字段（正文）已于 {时间} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}
+```
+
+**技术原因**：
+
+根据 OOXML 规范（ISO/IEC 29500），Comments 部分只能与 Main Document Part 建立关系，Header 和 Footer 部分无法建立与 Comments 部分的关系。Microsoft Word 在页眉页脚编辑模式下也会禁用批注功能。
+
+**相关代码**（`ContentControlProcessor.cs`）：
+
+```csharp
+// 添加批注（仅正文区域支持，页眉页脚不支持批注）
+if (location == ContentControlLocation.Body)
+{
+    AddProcessingComment(document, control, tag, value, oldValue, location);
+}
+else
+{
+    _logger.LogDebug($"跳过批注添加（页眉页脚不支持批注功能），标签: '{tag}', 位置: {location}");
+}
+```
+
+详细的批注功能说明请参阅 [批注功能说明](../批注功能说明.md)。
 
 ## 代码示例
 

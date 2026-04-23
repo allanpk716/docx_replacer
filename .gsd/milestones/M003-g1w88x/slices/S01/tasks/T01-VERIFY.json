@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M003-g1w88x/S01/T01",
+  "timestamp": 1776938895147,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "test -f docs/DocuFiller产品需求文档.md",
+      "exitCode": 1,
+      "durationMs": 59,
+      "verdict": "fail"
+    },
+    {
+      "command": "grep -q \"Excel\" docs/DocuFiller产品需求文档.md",
+      "exitCode": 1,
+      "durationMs": 20,
+      "verdict": "fail"
+    },
+    {
+      "command": "grep -q \"审核清理\" docs/DocuFiller产品需求文档.md",
+      "exitCode": 1,
+      "durationMs": 18,
+      "verdict": "fail"
+    },
+    {
+      "command": "grep -q \"页眉\" docs/DocuFiller产品需求文档.md",
+      "exitCode": 1,
+      "durationMs": 18,
+      "verdict": "fail"
+    },
+    {
+      "command": "grep -q \"批注\" docs/DocuFiller产品需求文档.md",
+      "exitCode": 1,
+      "durationMs": 19,
+      "verdict": "fail"
+    },
+    {
+      "command": "grep -q \"转换\" docs/DocuFiller产品需求文档.md",
+      "exitCode": 1,
+      "durationMs": 19,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}
