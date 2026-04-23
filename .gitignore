@@ -88,6 +88,22 @@ External/update-client.exe
 .gsd/DISCUSSION-MANIFEST.json
 .gsd/milestones/**/*-CONTINUE.md
 .gsd/milestones/**/continue.md
+.gsd/audit/
+.gsd/audit-log.jsonl
+.gsd/notifications.jsonl
+.gsd/exec/
+.gsd/reports/
+.gsd/graphs/
+.gsd/QUEUE.md
+
+# ── Build artifacts ──
+publish/
+Tests/TestResults/
+err.txt
+help_output.txt
+help_output2.txt
+out.txt
+test_data.xlsx
 
 # ── GSD baseline (auto-generated) ──
 .mcp.json
