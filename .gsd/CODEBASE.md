@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-23T16:35:47Z | Files: 149 | Described: 0/149
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-23T16:35:47Z","fingerprint":"4c5f4e475dcfc8035ca4630f4f12260fb738b916","fileCount":149,"truncated":false} -->
+Generated: 2026-04-23T22:57:33Z | Files: 114 | Described: 0/114
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-23T22:57:33Z","fingerprint":"27b189ad408a5eee08c2418117573c3a613f1634","fileCount":114,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -14,16 +14,11 @@ Generated: 2026-04-23T16:35:47Z | Files: 149 | Described: 0/149
 - `Directory.Build.props`
 - `DocuFiller.csproj`
 - `DocuFiller.sln`
-- `err.txt`
-- `help_output.txt`
-- `help_output2.txt`
 - `MainWindow.xaml`
 - `MainWindow.xaml.cs`
-- `out.txt`
 - `Program.cs`
 - `README.md`
 - `run_e2e_test.ps1`
-- `test_data.xlsx`
 
 ### "docs/DocuFiller\344\272\247\345\223\201\351\234\200\346\261\202\346\226\207\346\241/
 - `"docs/DocuFiller\344\272\247\345\223\201\351\234\200\346\261\202\346\226\207\346\241\243.md"`
@@ -148,10 +143,6 @@ Generated: 2026-04-23T16:35:47Z | Files: 149 | Described: 0/149
 ### Tests/Templates/
 - `Tests/Templates/README.md`
 
-### Tests/TestResults/
-- `Tests/TestResults/cli-test-results.trx`
-- `Tests/TestResults/test-results.trx`
-
 ### Utils/
 - `Utils/GlobalExceptionHandler.cs`
 - `Utils/LoggerConfiguration.cs`
@@ -175,48 +166,6 @@ Generated: 2026-04-23T16:35:47Z | Files: 149 | Described: 0/149
 - `docs/plans/2025-01-23-cleanup-output-directory.md`
 - `docs/plans/2025-01-23-mainwindow-layout-refactor-design.md`
 - `docs/plans/2025-01-23-mainwindow-layout-refactor.md`
-
-### publish/
-- `publish/App.config`
-- `publish/appsettings.Development.json`
-- `publish/appsettings.json`
-- `publish/coverlet.collector.deps.json`
-- `publish/coverlet.collector.targets`
-- `publish/DocuFiller.deps.json`
-- `publish/DocuFiller.dll.config`
-- `publish/DocuFiller.runtimeconfig.json`
-- `publish/DocuFiller.Tests.deps.json`
-- `publish/DocuFiller.Tests.runtimeconfig.json`
-- `publish/DocuFiller.xml`
-- `publish/help.txt`
-- `publish/Microsoft.CodeCoverage.props`
-- `publish/Microsoft.CodeCoverage.targets`
-- `publish/ThirdPartyNotices.txt`
-
-### publish/CodeCoverage/
-- `publish/CodeCoverage/CodeCoverage.config`
-- `publish/CodeCoverage/VanguardInstrumentationProfiler_x86.config`
-
-### publish/CodeCoverage/amd64/
-- `publish/CodeCoverage/amd64/VanguardInstrumentationProfiler_x64.config`
-
-### publish/CodeCoverage/arm64/
-- `publish/CodeCoverage/arm64/VanguardInstrumentationProfiler_arm64.config`
-
-### publish/InstrumentationEngine/alpine/x64/
-- `publish/InstrumentationEngine/alpine/x64/libCoverageInstrumentationMethod.so`
-- `publish/InstrumentationEngine/alpine/x64/libInstrumentationEngine.so`
-- `publish/InstrumentationEngine/alpine/x64/VanguardInstrumentationProfiler_x64.config`
-
-### publish/InstrumentationEngine/macos/x64/
-- `publish/InstrumentationEngine/macos/x64/libCoverageInstrumentationMethod.dylib`
-- `publish/InstrumentationEngine/macos/x64/libInstrumentationEngine.dylib`
-- `publish/InstrumentationEngine/macos/x64/VanguardInstrumentationProfiler_x64.config`
-
-### publish/InstrumentationEngine/ubuntu/x64/
-- `publish/InstrumentationEngine/ubuntu/x64/libCoverageInstrumentationMethod.so`
-- `publish/InstrumentationEngine/ubuntu/x64/libInstrumentationEngine.so`
-- `publish/InstrumentationEngine/ubuntu/x64/VanguardInstrumentationProfiler_x64.config`
 
 ### scripts/
 - `scripts/build-and-publish.bat`
