@@ -15,7 +15,7 @@
 - [x] **S01: S01** `risk:low` `depends:[]`
   > After this: 生产代码中所有调试日志使用 ILogger，关键词编辑器 URL 从配置读取，grep 扫描确认零残留
 
-- [ ] **S02: S02** `risk:medium` `depends:[]`
+- [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: BrowseOutput、BrowseTemplateFolder、BrowseCleanupOutput 三个按钮打开真正的系统文件夹选择对话框，dotnet test 全部通过
 
 ## Boundary Map

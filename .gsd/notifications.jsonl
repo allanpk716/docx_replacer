@@ -23,3 +23,5 @@
 {"id":"317371e1-2cd7-4e5a-a60e-6f352342a496","ts":"2026-04-23T08:09:14.343Z","severity":"warning","message":"Verification failed (cd \"C:/WorkSpace/agent/docx_replacer/.gsd/worktrees/M002-ahlnua\") — auto-fix attempt 1/2","source":"notify","read":false}
 {"id":"e70e540a-008a-4635-9e34-1f33ab1ee520","ts":"2026-04-23T08:09:14.654Z","severity":"warning","message":"Web search: Set BRAVE_API_KEY or use an Anthropic model for built-in search","source":"notify","read":false}
 {"id":"b0fbf363-3a42-4781-b609-3332179f5185","ts":"2026-04-23T08:15:57.161Z","severity":"warning","message":"Web search: Set BRAVE_API_KEY or use an Anthropic model for built-in search","source":"notify","read":false}
+{"id":"b82363fc-a363-46f2-8ccf-47755a721519","ts":"2026-04-23T08:24:06.007Z","severity":"info","message":"Committed: feat: Replace three OpenFileDialog folder-selection hacks with OpenFold…","source":"notify","read":false}
+{"id":"84a556ee-d508-46dd-a2fc-d4e083bdfc3c","ts":"2026-04-23T08:24:06.542Z","severity":"warning","message":"Web search: Set BRAVE_API_KEY or use an Anthropic model for built-in search","source":"notify","read":false}
