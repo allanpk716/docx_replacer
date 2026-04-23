@@ -1585,4 +1585,20 @@ namespace DocuFiller.ViewModels
         Json,
         Excel
     }
+}�错误");
+                MessageBox.Show($"打开输出文件夹时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// 数据文件类型
+    /// </summary>
+    public enum DataFileType
+    {
+        Json,
+        Excel
+    }
 }
