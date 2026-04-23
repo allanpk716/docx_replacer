@@ -26,5 +26,10 @@ namespace DocuFiller.Models
         /// 格式不正确的关键词列表
         /// </summary>
         public List<string> InvalidFormatKeywords { get; set; } = new();
+
+        /// <summary>
+        /// 重复的行 ID 列表（三列模式下第一列为 ID）
+        /// </summary>
+        public List<string> DuplicateRowIds { get; set; } = new();
     }
 }

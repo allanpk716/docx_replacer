@@ -14,6 +14,17 @@ using OfficeOpenXml.Style;
 namespace DocuFiller.Services
 {
     /// <summary>
+    /// Excel 列格式类型
+    /// </summary>
+    internal enum ExcelFormat
+    {
+        /// <summary>两列模式：关键词 | 值</summary>
+        TwoColumn,
+        /// <summary>三列模式：ID | 关键词 | 值</summary>
+        ThreeColumn
+    }
+
+    /// <summary>
     /// Excel 数据解析服务实现
     /// </summary>
     public class ExcelDataParserService : IExcelDataParser
@@ -70,13 +81,20 @@ namespace DocuFiller.Services
                         throw new InvalidOperationException($"Excel 文件过大，最多支持 {MaxRows} 行数据");
                     }
 
+                    // 自动检测列格式
+                    var format = DetectExcelFormat(worksheet, rowCount);
+
+                    // 根据格式确定关键词列和值列的索引
+                    int keywordCol = format == ExcelFormat.ThreeColumn ? 2 : 1;
+                    int valueCol = format == ExcelFormat.ThreeColumn ? 3 : 2;
+
                     for (int row = 1; row <= rowCount; row++)
                     {
                         // 检查取消请求
                         cancellationToken.ThrowIfCancellationRequested();
 
-                        var keyCell = worksheet.Cells[row, 1];
-                        var valueCell = worksheet.Cells[row, 2];
+                        var keyCell = worksheet.Cells[row, keywordCol];
+                        var valueCell = worksheet.Cells[row, valueCol];
 
                         if (keyCell == null || string.IsNullOrEmpty(keyCell.Text))
                             continue;
@@ -146,16 +164,44 @@ namespace DocuFiller.Services
 
                     // 验证每一行
                     var rowCount = worksheet.Dimension.Rows;
+
+                    // 自动检测列格式
+                    var format = DetectExcelFormat(worksheet, rowCount);
+
+                    // 根据格式确定关键词列和值列的索引
+                    int keywordCol = format == ExcelFormat.ThreeColumn ? 2 : 1;
+                    int valueCol = format == ExcelFormat.ThreeColumn ? 3 : 2;
+
                     var seenKeywords = new HashSet<string>();
+                    var seenRowIds = new HashSet<string>();
 
                     result.Summary.TotalRows = rowCount;
 
                     for (int row = 1; row <= rowCount; row++)
                     {
-                        var keyCell = worksheet.Cells[row, 1];
-                        var valueCell = worksheet.Cells[row, 2];
+                        var keyCell = worksheet.Cells[row, keywordCol];
+                        var valueCell = worksheet.Cells[row, valueCol];
 
-                        // 检查第一列是否为空
+                        // 三列模式下检查 ID 列唯一性
+                        if (format == ExcelFormat.ThreeColumn)
+                        {
+                            var idCell = worksheet.Cells[row, 1];
+                            if (idCell != null && !string.IsNullOrEmpty(idCell.Text))
+                            {
+                                var rowId = idCell.Text.Trim();
+                                if (seenRowIds.Contains(rowId))
+                                {
+                                    result.Summary.DuplicateRowIds.Add(rowId);
+                                    _logger.LogWarning($"三列模式 ID 重复: {rowId}（第 {row} 行）");
+                                }
+                                else
+                                {
+                                    seenRowIds.Add(rowId);
+                                }
+                            }
+                        }
+
+                        // 检查关键词列是否为空
                         if (keyCell == null || string.IsNullOrEmpty(keyCell.Text))
                         {
                             continue; // 跳过空行
@@ -179,7 +225,7 @@ namespace DocuFiller.Services
                             seenKeywords.Add(keyword);
                         }
 
-                        // 检查第二列是否为空（警告）
+                        // 检查值列是否为空（警告）
                         if (valueCell == null || string.IsNullOrEmpty(valueCell.Text))
                         {
                             result.AddWarning($"第 {row} 行: 值列为空（关键词: {keyword}）");
@@ -199,6 +245,12 @@ namespace DocuFiller.Services
                     {
                         var examples = result.Summary.DuplicateKeywords.Take(Math.Min(5, result.Summary.DuplicateKeywords.Count));
                         result.AddError($"存在 {result.Summary.DuplicateKeywords.Count} 个重复关键词。示例: {string.Join(", ", examples)}");
+                    }
+
+                    if (result.Summary.DuplicateRowIds.Count > 0)
+                    {
+                        var examples = result.Summary.DuplicateRowIds.Take(Math.Min(5, result.Summary.DuplicateRowIds.Count));
+                        result.AddError($"存在 {result.Summary.DuplicateRowIds.Count} 个重复 ID。示例: {string.Join(", ", examples)}");
                     }
 
                     if (result.Summary.ValidKeywordRows == 0)
@@ -306,6 +358,35 @@ namespace DocuFiller.Services
             }
 
             return formattedValue;
+        }
+
+        /// <summary>
+        /// 检测 Excel 文件的列格式（两列或三列）
+        /// 读取第一个非空行的第一列内容，如果匹配 #xxx# 格式则为两列模式，否则为三列模式
+        /// </summary>
+        private ExcelFormat DetectExcelFormat(ExcelWorksheet worksheet, int rowCount)
+        {
+            for (int row = 1; row <= rowCount; row++)
+            {
+                var cell = worksheet.Cells[row, 1];
+                if (cell != null && !string.IsNullOrEmpty(cell.Text))
+                {
+                    var text = cell.Text.Trim();
+                    if (KeywordRegex.IsMatch(text))
+                    {
+                        _logger.LogInformation("检测到 Excel 格式: 两列模式（关键词 | 值）");
+                        return ExcelFormat.TwoColumn;
+                    }
+                    else
+                    {
+                        _logger.LogInformation("检测到 Excel 格式: 三列模式（ID | 关键词 | 值）");
+                        return ExcelFormat.ThreeColumn;
+                    }
+                }
+            }
+
+            _logger.LogInformation("Excel 文件为空，默认使用两列模式");
+            return ExcelFormat.TwoColumn;
         }
 
         private static string NormalizeLineEndings(string text)
