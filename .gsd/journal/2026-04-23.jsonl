@@ -1,0 +1,2 @@
+{"ts":"2026-04-23T08:42:17.943Z","flowId":"113afa98-f5e0-4c0d-b2e0-74386d4aef37","seq":0,"eventType":"worktree-merge-failed","data":{"milestoneId":"M002-ahlnua","error":"Squash merge of milestone/M002-ahlnua rejected: working tree has dirty or untracked files that conflict with the merge. Dirty files:\n  .gsd/CODEBASE.md\n  .gsd/PROJECT.md\n  .gsd/audit/events.jsonl\n  .gsd/notifications.jsonl"}}
+{"ts":"2026-04-23T08:42:17.956Z","flowId":"4697376c-4646-4fd5-a00e-94b693650d7b","seq":0,"eventType":"worktree-merge-start","data":{"milestoneId":"M002-ahlnua","mode":"worktree"}}

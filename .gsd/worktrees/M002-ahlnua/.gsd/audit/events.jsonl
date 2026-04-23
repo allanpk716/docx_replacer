@@ -1,0 +1,1 @@
+{"eventId":"47b269e6-6a92-4e49-9b00-95e03444f855","traceId":"81b452bf-c911-473e-8381-6f77f1d64e64","turnId":"f74d57de-e1f5-4772-8c22-f7e9c8111c31","category":"orchestration","type":"turn-result","ts":"2026-04-23T08:42:18.969Z","payload":{"status":"stopped","failureClass":"manual-attention","error":"pre-dispatch-break","phaseCount":1}}
