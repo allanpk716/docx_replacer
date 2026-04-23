@@ -66,6 +66,19 @@ External/update-client.exe
 
 # ── GSD baseline (auto-generated) ──
 .gsd-id
+
+# ── GSD runtime (not tracked) ──
+.gsd/gsd.db
+.gsd/gsd.db-shm
+.gsd/gsd.db-wal
+.gsd/STATE.md
+.gsd/audit-log.jsonl
+.gsd/audit/
+.gsd/journal/
+.gsd/notifications.jsonl
+.gsd/runtime/
+.gsd/graphs/
+.gsd/worktrees/
 .mcp.json
 .bg-shell/
 .DS_Store
