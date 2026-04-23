@@ -620,18 +620,22 @@ namespace DocuFiller.ViewModels
         
         private void BrowseOutput()
         {
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                Title = "选择输出目录",
-                CheckFileExists = false,
-                CheckPathExists = true,
-                FileName = "选择文件夹",
-                Filter = "文件夹|*.folder"
+                Title = "选择输出目录"
             };
-            
+
             if (dialog.ShowDialog() == true)
             {
-                OutputDirectory = System.IO.Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+                var selectedPath = dialog.FolderName;
+                if (string.IsNullOrEmpty(selectedPath))
+                {
+                    _logger.LogDebug("BrowseOutput: 用户未选择文件夹");
+                    return;
+                }
+
+                OutputDirectory = selectedPath;
+                _logger.LogInformation("输出目录已选择: {Path}", selectedPath);
             }
         }
         
@@ -1230,29 +1234,27 @@ namespace DocuFiller.ViewModels
         /// </summary>
         private void BrowseTemplateFolder()
         {
-            // 使用 OpenFileDialog 作为临时方案，用户可以选择文件夹中的任意文件
-            var dialog = new Microsoft.Win32.OpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                Title = "选择包含模板文件的文件夹（选择文件夹中的任意文件）",
-                Filter = "Word文档 (*.docx;*.dotx)|*.docx;*.dotx|所有文件 (*.*)|*.*",
-                CheckFileExists = true,
-                CheckPathExists = true,
-                Multiselect = false
+                Title = "选择包含模板文件的文件夹"
             };
 
-            var result = dialog.ShowDialog();
-            if (result == true && !string.IsNullOrEmpty(dialog.FileName))
+            if (dialog.ShowDialog() == true)
             {
-                // 获取文件所在目录
-                var directory = System.IO.Path.GetDirectoryName(dialog.FileName);
-                if (!string.IsNullOrEmpty(directory))
+                var selectedPath = dialog.FolderName;
+                if (string.IsNullOrEmpty(selectedPath))
                 {
-                    // 异步处理文件夹扫描
-                    Task.Run(async () =>
-                    {
-                        await HandleFolderDropAsync(directory);
-                    });
+                    _logger.LogDebug("BrowseTemplateFolder: 用户未选择文件夹");
+                    return;
                 }
+
+                _logger.LogInformation("模板文件夹已选择: {Path}", selectedPath);
+
+                // 异步处理文件夹扫描
+                Task.Run(async () =>
+                {
+                    await HandleFolderDropAsync(selectedPath);
+                });
             }
         }
 
@@ -1528,18 +1530,22 @@ namespace DocuFiller.ViewModels
         /// </summary>
         private void BrowseCleanupOutput()
         {
-            var dialog = new OpenFileDialog
+            var dialog = new OpenFolderDialog
             {
-                Title = "选择输出目录",
-                CheckFileExists = false,
-                CheckPathExists = true,
-                FileName = "选择文件夹",
-                Filter = "文件夹|*.folder"
+                Title = "选择清理输出目录"
             };
 
             if (dialog.ShowDialog() == true)
             {
-                CleanupOutputDirectory = Path.GetDirectoryName(dialog.FileName) ?? string.Empty;
+                var selectedPath = dialog.FolderName;
+                if (string.IsNullOrEmpty(selectedPath))
+                {
+                    _logger.LogDebug("BrowseCleanupOutput: 用户未选择文件夹");
+                    return;
+                }
+
+                CleanupOutputDirectory = selectedPath;
+                _logger.LogInformation("清理输出目录已选择: {Path}", selectedPath);
             }
         }
 
