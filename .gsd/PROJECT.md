@@ -29,3 +29,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] M001-a60bo7: Excel 行 ID 列支持 ✅ — 三列格式（ID | 关键词 | 值）自动检测、ID 唯一性校验、完全向后兼容、71 tests pass
   - [x] S01: 三列格式解析与 ID 唯一性校验 (R001, R002, R003 validated)
   - [x] S02: 测试覆盖验证 (R004 validated, 71 tests pass)
+- [ ] M002-ahlnua: 目录结构审查与文档更新 — 依赖 M001 完成；全面审查目录结构、更新 README.md/CLAUDE.md/docs 文档
