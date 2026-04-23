@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-23T12:57:49Z","fingerprint":"88672937c9fc86a24218d9778001e59620a53d24","fileCount":184,"truncated":false} -->
+Generated: 2026-04-23T15:11:02Z | Files: 104 | Described: 0/104
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-23T15:11:02Z","fingerprint":"d49c75b8e03770d456c43642b9a16ac8625dcb2c","fileCount":104,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -43,9 +43,6 @@ Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
 - `DocuFiller/Services/CleanupControlProcessor.cs`
 - `DocuFiller/Services/DocumentCleanupService.cs`
 
-### DocuFiller/Services/Update/
-- `DocuFiller/Services/Update/UpdateDownloader.cs`
-
 ### DocuFiller/Utils/
 - `DocuFiller/Utils/OpenXmlTableCellHelper.cs`
 
@@ -61,16 +58,11 @@ Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
 - `Exceptions/DocumentProcessingException.cs`
 - `Exceptions/TemplateValidationException.cs`
 
-### External/
-- `External/.gitignore`
-- `External/.gitkeep`
-- `External/publish-client.usage.txt`
-- `External/update-client.config.yaml`
-
 ### Models/
 - `Models/CleanupFileItem.cs`
 - `Models/CleanupProgressEventArgs.cs`
 - `Models/ContentControlData.cs`
+- `Models/DataStatistics.cs`
 - `Models/ExcelFileSummary.cs`
 - `Models/ExcelValidationResult.cs`
 - `Models/FileInfo.cs`
@@ -78,58 +70,35 @@ Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
 - `Models/FolderStructure.cs`
 - `Models/FormattedCellValue.cs`
 - `Models/InputSourceType.cs`
-- `Models/JsonKeywordItem.cs`
-- `Models/JsonProjectModel.cs`
 - `Models/ProcessRequest.cs`
 - `Models/ProcessResult.cs`
 - `Models/ProgressEventArgs.cs`
 - `Models/TextFragment.cs`
 
-### Models/Update/
-- `Models/Update/DaemonProgressInfo.cs`
-- `Models/Update/DownloadProgress.cs`
-- `Models/Update/DownloadStatus.cs`
-- `Models/Update/UpdateClientResponseModels.cs`
-- `Models/Update/UpdateConfig.cs`
-- `Models/Update/VersionInfo.cs`
-
 ### Services/
 - `Services/CommentManager.cs`
 - `Services/ContentControlProcessor.cs`
-- `Services/DataParserService.cs`
 - `Services/DirectoryManagerService.cs`
 - `Services/DocumentProcessorService.cs`
 - `Services/ExcelDataParserService.cs`
-- `Services/ExcelToWordConverterService.cs`
 - `Services/FileScannerService.cs`
 - `Services/FileService.cs`
-- `Services/JsonEditorService.cs`
-- `Services/KeywordValidationService.cs`
 - `Services/ProgressReporterService.cs`
 - `Services/SafeFormattedContentReplacer.cs`
 - `Services/SafeTextReplacer.cs`
 - `Services/TemplateCacheService.cs`
 
 ### Services/Interfaces/
-- `Services/Interfaces/IDataParser.cs`
 - `Services/Interfaces/IDirectoryManager.cs`
 - `Services/Interfaces/IDocumentCleanupService.cs`
 - `Services/Interfaces/IDocumentProcessor.cs`
 - `Services/Interfaces/IExcelDataParser.cs`
-- `Services/Interfaces/IExcelToWordConverter.cs`
 - `Services/Interfaces/IFileScanner.cs`
 - `Services/Interfaces/IFileService.cs`
-- `Services/Interfaces/IJsonEditorService.cs`
-- `Services/Interfaces/IKeywordValidationService.cs`
 - `Services/Interfaces/IProgressReporter.cs`
 - `Services/Interfaces/ISafeFormattedContentReplacer.cs`
 - `Services/Interfaces/ISafeTextReplacer.cs`
 - `Services/Interfaces/ITemplateCacheService.cs`
-
-### Services/Update/
-- `Services/Update/IUpdateService.cs`
-- `Services/Update/UpdateClientService.cs`
-- `Services/Update/UpdateService.cs`
 
 ### Tests/
 - `Tests/ContentControlProcessorTests.cs`
@@ -139,9 +108,6 @@ Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
 - `Tests/FormattedCellValueTests.cs`
 - `Tests/HeaderFooterCommentTests.cs`
 - `Tests/verify-templates.bat`
-
-### Tests/Data/
-- `Tests/Data/test-data.json`
 
 ### Tests/DocuFiller.Tests/
 - `Tests/DocuFiller.Tests/HeaderFooterIntegrationTests.cs`
@@ -161,69 +127,6 @@ Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
 ### Tests/Templates/
 - `Tests/Templates/README.md`
 
-### Tools/CompareDocumentStructure/
-- `Tools/CompareDocumentStructure/CompareDocumentStructure.csproj`
-- `Tools/CompareDocumentStructure/Program.cs`
-
-### Tools/ControlRelationshipAnalyzer/
-- `Tools/ControlRelationshipAnalyzer/ControlRelationshipAnalyzer.csproj`
-- `Tools/ControlRelationshipAnalyzer/Program.cs`
-
-### Tools/DeepDiagnostic/
-- `Tools/DeepDiagnostic/DeepDiagnostic.csproj`
-- `Tools/DeepDiagnostic/Program.cs`
-
-### Tools/DiagnoseTableStructure/
-- `Tools/DiagnoseTableStructure/DiagnoseTableStructure.csproj`
-- `Tools/DiagnoseTableStructure/Program.cs`
-
-### Tools/E2ETest/
-- `Tools/E2ETest/appsettings.json`
-- `Tools/E2ETest/E2ETest.csproj`
-- `Tools/E2ETest/Program.cs`
-
-### Tools/ExcelFormattedTestGenerator/
-- `Tools/ExcelFormattedTestGenerator/ExcelFormattedTestGenerator.csproj`
-- `Tools/ExcelFormattedTestGenerator/Program.cs`
-
-### Tools/ExcelFormattedTestGenerator/TestFiles/
-- `Tools/ExcelFormattedTestGenerator/TestFiles/FormattedSuperscriptTest.xlsx`
-
-### Tools/ExcelToWordVerifier/
-- `Tools/ExcelToWordVerifier/create_formatted_excel.bat`
-- `Tools/ExcelToWordVerifier/create_test_excel.py`
-- `Tools/ExcelToWordVerifier/CreateFormattedExcel.csproj`
-- `Tools/ExcelToWordVerifier/ExcelToWordVerifier.csproj`
-- `Tools/ExcelToWordVerifier/Program.cs`
-- `Tools/ExcelToWordVerifier/TestFormattedSuperscript.cs`
-- `Tools/ExcelToWordVerifier/TestFormattedSuperscript.csproj`
-
-### Tools/ExcelToWordVerifier/Models/
-- `Tools/ExcelToWordVerifier/Models/FormattedText.cs`
-- `Tools/ExcelToWordVerifier/Models/TextRun.cs`
-
-### Tools/ExcelToWordVerifier/Services/
-- `Tools/ExcelToWordVerifier/Services/ExcelReaderService.cs`
-- `Tools/ExcelToWordVerifier/Services/IExcelReader.cs`
-- `Tools/ExcelToWordVerifier/Services/IWordWriter.cs`
-- `Tools/ExcelToWordVerifier/Services/WordWriterService.cs`
-
-### Tools/ExcelToWordVerifier/TestFiles/
-- `Tools/ExcelToWordVerifier/TestFiles/FormattedSuperscriptTest.xlsx`
-- `Tools/ExcelToWordVerifier/TestFiles/FormattedTextTest.xlsx`
-
-### Tools/StepByStepSimulator/
-- `Tools/StepByStepSimulator/Program.cs`
-- `Tools/StepByStepSimulator/StepByStepSimulator.csproj`
-
-### Tools/TableCellTest/
-- `Tools/TableCellTest/Program.cs`
-- `Tools/TableCellTest/TableCellTest.csproj`
-
-### Tools/TableStructureAnalyzer/
-- `Tools/TableStructureAnalyzer/Program.cs`
-- `Tools/TableStructureAnalyzer/TableStructureAnalyzer.csproj`
-
 ### Utils/
 - `Utils/GlobalExceptionHandler.cs`
 - `Utils/LoggerConfiguration.cs`
@@ -231,44 +134,17 @@ Generated: 2026-04-23T12:57:49Z | Files: 184 | Described: 0/184
 - `Utils/VersionHelper.cs`
 
 ### ViewModels/
-- `ViewModels/ConverterWindowViewModel.cs`
-- `ViewModels/JsonEditorViewModel.cs`
 - `ViewModels/MainWindowViewModel.cs`
 - `ViewModels/ObservableObject.cs`
 - `ViewModels/RelayCommand.cs`
 
-### ViewModels/Update/
-- `ViewModels/Update/UpdateBannerViewModel.cs`
-- `ViewModels/Update/UpdateViewModel.cs`
-
-### Views/
-- `Views/ConverterWindow.xaml`
-- `Views/ConverterWindow.xaml.cs`
-- `Views/JsonEditorWindow.xaml`
-- `Views/JsonEditorWindow.xaml.cs`
-- `Views/UpdateBannerView.xaml`
-- `Views/UpdateBannerView.xaml.cs`
-
-### Views/Update/
-- `Views/Update/UpdateBannerView.xaml`
-- `Views/Update/UpdateBannerView.xaml.cs`
-- `Views/Update/UpdateWindow.xaml`
-- `Views/Update/UpdateWindow.xaml.cs`
-
 ### docs/
-- `docs/deployment-guide.md`
 - `docs/excel-data-user-guide.md`
-- `docs/EXTERNAL_SETUP.md`
-- `docs/VERSION_MANAGEMENT.md`
 
 ### docs/features/
 - `docs/features/header-footer-support.md`
 
 ### docs/plans/
-- `docs/plans/2025-01-20-update-client-design-notes.md`
-- `docs/plans/2025-01-20-update-client-integration.md`
-- `docs/plans/2025-01-21-version-management-design.md`
-- `docs/plans/2025-01-21-version-management-implementation.md`
 - `docs/plans/2025-01-23-build-scripts-design.md`
 - `docs/plans/2025-01-23-cleanup-feature.md`
 - `docs/plans/2025-01-23-cleanup-output-directory.md`

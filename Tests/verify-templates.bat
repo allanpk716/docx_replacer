@@ -27,13 +27,5 @@ if exist "Templates\template-odd-even.docx" (
 )
 
 echo.
-echo Test data files:
-if exist "Data\test-data.json" (
-    echo [OK] test-data.json
-) else (
-    echo [MISSING] test-data.json
-)
-
-echo.
 echo Please refer to Templates/README.md for instructions on creating test templates
 pause

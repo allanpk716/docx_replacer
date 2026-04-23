@@ -2,6 +2,19 @@
 
 This file is the explicit capability and coverage contract for the project.
 
+## Active
+
+### R021 — 更新 CLAUDE.md（移除 JSON/更新/转换器相关架构描述）、README.md（移除 JSON/更新/转换器/Tools 描述）、docs/ 相关文档同步
+- Class: core-capability
+- Status: active
+- Description: 更新 CLAUDE.md（移除 JSON/更新/转换器相关架构描述）、README.md（移除 JSON/更新/转换器/Tools 描述）、docs/ 相关文档同步
+- Why it matters: 文档与代码不一致会误导未来的开发和 AI 辅助编码
+- Source: inferred
+- Primary owning slice: M004-l08k3s/S03
+- Supporting slices: none
+- Validation: unmapped
+- Notes: 需要在代码清理完成后更新
+
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -125,6 +138,83 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: .trae/documents/ 目录已删除（4 份旧文件全部清理），DocuFiller 两份文档已迁移到 docs/，JSON 编辑器两份文档已按 D004 直接删除
 - Notes: JSON 编辑器文档不迁移，直接删除
 
+### R014 — 移除所有在线更新相关代码：Services/Update/*、DocuFiller/Services/Update/*、Models/Update/*、ViewModels/Update/*、Views/Update/*、External/*（update-client.exe、publish-client.exe、config.yaml）、csproj PreBuild 门禁、App.xaml.cs DI 注册、MainWindowViewModel 更新逻辑和命令、MainWindow.xaml 更新按钮和横幅 UI
+- Class: core-capability
+- Status: validated
+- Description: 移除所有在线更新相关代码：Services/Update/*、DocuFiller/Services/Update/*、Models/Update/*、ViewModels/Update/*、Views/Update/*、External/*（update-client.exe、publish-client.exe、config.yaml）、csproj PreBuild 门禁、App.xaml.cs DI 注册、MainWindowViewModel 更新逻辑和命令、MainWindow.xaml 更新按钮和横幅 UI
+- Why it matters: 在线更新功能不再需要，代码和外部依赖（update-client.exe）增加维护负担，PreBuild 门禁阻止无外部文件时构建
+- Source: user
+- Primary owning slice: M004-l08k3s/S01
+- Supporting slices: none
+- Validation: All online update code removed: csproj PreBuild/PostPublish gates deleted, External/ directory deleted, 19 update service/model/viewmodel/view files deleted, App.xaml.cs DI registrations removed, MainWindowViewModel/MainWindow.xaml/MainWindow.xaml.cs update references removed. dotnet build passes with 0 errors. grep confirms 0 matches for IUpdateService, UpdateViewModel, UpdateBannerView, UpdateWindow, ValidateUpdateClientFiles, ValidateReleaseFiles, update-client.
+- Notes: csproj 中有 PreBuild 验证检查 update-client.exe 是否存在，必须最先处理
+
+### R015 — 移除 JSON 编辑器相关遗留文件：JsonEditorService、IJsonEditorService、JsonEditorViewModel、KeywordValidationService、IKeywordValidationService、Models/JsonKeywordItem.cs、Models/JsonProjectModel.cs。这些文件无 DI 注册、无活跃引用。
+- Class: core-capability
+- Status: validated
+- Description: 移除 JSON 编辑器相关遗留文件：JsonEditorService、IJsonEditorService、JsonEditorViewModel、KeywordValidationService、IKeywordValidationService、Models/JsonKeywordItem.cs、Models/JsonProjectModel.cs。这些文件无 DI 注册、无活跃引用。
+- Why it matters: JSON 编辑器功能已从代码中移除，但遗留文件仍在仓库中，增加代码噪音
+- Source: user
+- Primary owning slice: M004-l08k3s/S01
+- Supporting slices: none
+- Validation: All 9 JSON editor orphaned files deleted: JsonEditorService.cs, IJsonEditorService.cs, KeywordValidationService.cs, IKeywordValidationService.cs, JsonKeywordItem.cs, JsonProjectModel.cs, JsonEditorViewModel.cs, JsonEditorWindow.xaml, JsonEditorWindow.xaml.cs. No remaining JSON editor files in codebase. dotnet build passes.
+- Notes: JsonEditorService 未在 App.xaml.cs 中注册，KeywordValidationService 仅被 JsonEditor 相关代码引用
+
+### R016 — 移除 DataParserService、IDataParser 接口、MainWindowViewModel 中 JSON 预览/统计逻辑、DocumentProcessorService 中 IDataParser 依赖和 JSON 处理分支、文件选择对话框中 .json 过滤器、DataFileType.Json 枚举值
+- Class: core-capability
+- Status: validated
+- Description: 移除 DataParserService、IDataParser 接口、MainWindowViewModel 中 JSON 预览/统计逻辑、DocumentProcessorService 中 IDataParser 依赖和 JSON 处理分支、文件选择对话框中 .json 过滤器、DataFileType.Json 枚举值
+- Why it matters: JSON 数据源不再使用，只保留 Excel 作为唯一数据输入方式，简化代码和用户界面
+- Source: user
+- Primary owning slice: M004-l08k3s/S02
+- Supporting slices: none
+- Validation: grep confirms 0 real IDataParser/DataParserService references in core files. DataFileType enum is Excel-only. DocumentProcessorService has no JSON processing branch. dotnet build and dotnet test pass.
+- Notes: DocumentProcessorService 的 else 分支（JSON 模式）整个可移除，构造函数需要去掉 IDataParser 参数
+
+### R017 — 移除 Views/ConverterWindow、ViewModels/ConverterWindowViewModel、ExcelToWordConverterService、IExcelToWordConverter、MainWindow.xaml 中转换器按钮、DI 注册
+- Class: core-capability
+- Status: validated
+- Description: 移除 Views/ConverterWindow、ViewModels/ConverterWindowViewModel、ExcelToWordConverterService、IExcelToWordConverter、MainWindow.xaml 中转换器按钮、DI 注册
+- Why it matters: 转换器窗口做的是 JSON→Excel 转换，JSON 数据源清理后无存在意义
+- Source: user
+- Primary owning slice: M004-l08k3s/S02
+- Supporting slices: none
+- Validation: All 5 converter files deleted. grep confirms 0 references to IExcelToWordConverter, ConverterWindow, ConverterWindowViewModel, OpenConverter in any source file. DI registrations removed. dotnet build and test pass.
+- Notes: 实际服务名虽为 ExcelToWordConverterService 但功能是 JSON→Excel 转换
+
+### R018 — 移除 appsettings.json 中的 KeywordEditorUrl、AppSettings.cs 中的属性、MainWindow.xaml.cs 中打开浏览器逻辑、MainWindow.xaml 中的 UI 入口
+- Class: core-capability
+- Status: validated
+- Description: 移除 appsettings.json 中的 KeywordEditorUrl、AppSettings.cs 中的属性、MainWindow.xaml.cs 中打开浏览器逻辑、MainWindow.xaml 中的 UI 入口
+- Why it matters: KeywordEditorUrl 指向内部 Web 服务（192.168.200.23:32200），JSON 编辑器已废弃后无用途
+- Source: user
+- Primary owning slice: M004-l08k3s/S02
+- Supporting slices: none
+- Validation: KeywordEditorUrl removed from appsettings.json and AppSettings.cs UISettings class. KeywordEditorHyperlink_Click and ConverterHyperlink_Click handlers removed from MainWindow.xaml.cs. IOptions<UISettings> constructor parameter removed. dotnet build and test pass.
+- Notes: 硬编码的内网 IP 地址
+
+### R019 — 删除 Tools 目录下全部 10 个诊断工具项目：CompareDocumentStructure、ControlRelationshipAnalyzer、DeepDiagnostic、DiagnoseTableStructure、E2ETest、ExcelFormattedTestGenerator、ExcelToWordVerifier、StepByStepSimulator、TableCellTest、TableStructureAnalyzer
+- Class: core-capability
+- Status: validated
+- Description: 删除 Tools 目录下全部 10 个诊断工具项目：CompareDocumentStructure、ControlRelationshipAnalyzer、DeepDiagnostic、DiagnoseTableStructure、E2ETest、ExcelFormattedTestGenerator、ExcelToWordVerifier、StepByStepSimulator、TableCellTest、TableStructureAnalyzer
+- Why it matters: 这些是开发阶段的调试工具，不再需要。已通过 csproj 的 Compile Remove 排除在主构建之外。
+- Source: user
+- Primary owning slice: M004-l08k3s/S02
+- Supporting slices: none
+- Validation: Tools/ directory deleted (confirmed not present on disk). All 10 tool project entries removed from DocuFiller.sln. Compile/EmbeddedResource/None Remove entries removed from DocuFiller.csproj. grep confirms 0 residual references to any tool project name. dotnet build and test pass.
+- Notes: Tools 目录已被 `<Compile Remove="Tools\**" />` 排除，不影响编译
+
+### R020 — 清理后 `dotnet test` 全部通过。受影响的测试需要重写或移除：HeaderFooterCommentIntegrationTests（使用 DataParserService 和 JSON 数据）、ExcelIntegrationTests（注册 IDataParser）、DocumentProcessorServiceIntegrationTests（有 MockDataParser）
+- Class: quality-attribute
+- Status: validated
+- Description: 清理后 `dotnet test` 全部通过。受影响的测试需要重写或移除：HeaderFooterCommentIntegrationTests（使用 DataParserService 和 JSON 数据）、ExcelIntegrationTests（注册 IDataParser）、DocumentProcessorServiceIntegrationTests（有 MockDataParser）
+- Why it matters: 回归安全底线，确保清理不破坏核心 Excel 处理管道
+- Source: inferred
+- Primary owning slice: M004-l08k3s/S03
+- Supporting slices: M004-l08k3s/S02
+- Validation: All 71 tests pass after S01/S02 feature removal. T01 removed ValidateJsonFormat (sole Newtonsoft.Json consumer) and test-data.json. dotnet test --no-build --verbosity minimal: 71 passed, 0 failed. No Newtonsoft.Json references remain in .cs/.csproj files.
+- Notes: JSON 相关测试数据文件（test-data.json、test_data/*.json）可一并清理
+
 ## Out of Scope
 
 ### R012 — 不更新 docs/VERSION_MANAGEMENT.md、docs/EXTERNAL_SETUP.md、docs/deployment-guide.md
@@ -166,10 +256,18 @@ This file is the explicit capability and coverage contract for the project.
 | R011 | operability | validated | M003-g1w88x/S01 | none | .trae/documents/ 目录已删除（4 份旧文件全部清理），DocuFiller 两份文档已迁移到 docs/，JSON 编辑器两份文档已按 D004 直接删除 |
 | R012 | operability | out-of-scope | none | none | n/a |
 | R013 | core-capability | out-of-scope | none | none | n/a |
+| R014 | core-capability | validated | M004-l08k3s/S01 | none | All online update code removed: csproj PreBuild/PostPublish gates deleted, External/ directory deleted, 19 update service/model/viewmodel/view files deleted, App.xaml.cs DI registrations removed, MainWindowViewModel/MainWindow.xaml/MainWindow.xaml.cs update references removed. dotnet build passes with 0 errors. grep confirms 0 matches for IUpdateService, UpdateViewModel, UpdateBannerView, UpdateWindow, ValidateUpdateClientFiles, ValidateReleaseFiles, update-client. |
+| R015 | core-capability | validated | M004-l08k3s/S01 | none | All 9 JSON editor orphaned files deleted: JsonEditorService.cs, IJsonEditorService.cs, KeywordValidationService.cs, IKeywordValidationService.cs, JsonKeywordItem.cs, JsonProjectModel.cs, JsonEditorViewModel.cs, JsonEditorWindow.xaml, JsonEditorWindow.xaml.cs. No remaining JSON editor files in codebase. dotnet build passes. |
+| R016 | core-capability | validated | M004-l08k3s/S02 | none | grep confirms 0 real IDataParser/DataParserService references in core files. DataFileType enum is Excel-only. DocumentProcessorService has no JSON processing branch. dotnet build and dotnet test pass. |
+| R017 | core-capability | validated | M004-l08k3s/S02 | none | All 5 converter files deleted. grep confirms 0 references to IExcelToWordConverter, ConverterWindow, ConverterWindowViewModel, OpenConverter in any source file. DI registrations removed. dotnet build and test pass. |
+| R018 | core-capability | validated | M004-l08k3s/S02 | none | KeywordEditorUrl removed from appsettings.json and AppSettings.cs UISettings class. KeywordEditorHyperlink_Click and ConverterHyperlink_Click handlers removed from MainWindow.xaml.cs. IOptions<UISettings> constructor parameter removed. dotnet build and test pass. |
+| R019 | core-capability | validated | M004-l08k3s/S02 | none | Tools/ directory deleted (confirmed not present on disk). All 10 tool project entries removed from DocuFiller.sln. Compile/EmbeddedResource/None Remove entries removed from DocuFiller.csproj. grep confirms 0 residual references to any tool project name. dotnet build and test pass. |
+| R020 | quality-attribute | validated | M004-l08k3s/S03 | M004-l08k3s/S02 | All 71 tests pass after S01/S02 feature removal. T01 removed ValidateJsonFormat (sole Newtonsoft.Json consumer) and test-data.json. dotnet test --no-build --verbosity minimal: 71 passed, 0 failed. No Newtonsoft.Json references remain in .cs/.csproj files. |
+| R021 | core-capability | active | M004-l08k3s/S03 | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 0
-- Mapped to slices: 0
-- Validated: 11 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011)
+- Active requirements: 1
+- Mapped to slices: 1
+- Validated: 18 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R014, R015, R016, R017, R018, R019, R020)
 - Unmapped active requirements: 0

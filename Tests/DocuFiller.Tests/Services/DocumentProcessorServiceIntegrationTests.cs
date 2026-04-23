@@ -49,7 +49,6 @@ namespace DocuFiller.Tests.Services
 
             var logger = new NullLogger<DocumentProcessorService>();
             var progressLogger = new NullLogger<ProgressReporterService>();
-            var dataParser = new MockDataParser();
             var excelDataParser = new MockExcelDataParser();
             var fileService = new FileService();
             var progressReporter = new ProgressReporterService(progressLogger);
@@ -64,7 +63,7 @@ namespace DocuFiller.Tests.Services
             var serviceProvider = new MockServiceProvider();
 
             var processor = new DocumentProcessorService(
-                logger, dataParser, excelDataParser, fileService, progressReporter,
+                logger, excelDataParser, fileService, progressReporter,
                 contentControlProcessor, commentManager, serviceProvider,
                 safeFormattedContentReplacer
             );
@@ -172,42 +171,6 @@ namespace DocuFiller.Tests.Services
             }
 
             await Task.CompletedTask;
-        }
-
-        /// <summary>
-        /// Mock 数据解析器
-        /// </summary>
-        private class MockDataParser : IDataParser
-        {
-            public Task<List<Dictionary<string, object>>> ParseJsonFileAsync(string filePath)
-            {
-                return Task.FromResult(new List<Dictionary<string, object>>());
-            }
-
-            public List<Dictionary<string, object>> ParseJsonString(string jsonContent)
-            {
-                return new List<Dictionary<string, object>>();
-            }
-
-            public Task<ValidationResult> ValidateJsonFileAsync(string filePath)
-            {
-                return Task.FromResult(new ValidationResult { IsValid = true });
-            }
-
-            public ValidationResult ValidateJsonString(string jsonContent)
-            {
-                return new ValidationResult { IsValid = true };
-            }
-
-            public Task<List<Dictionary<string, object>>> GetDataPreviewAsync(string filePath, int maxRecords = 10)
-            {
-                return Task.FromResult(new List<Dictionary<string, object>>());
-            }
-
-            public Task<DataStatistics> GetDataStatisticsAsync(string filePath)
-            {
-                return Task.FromResult(new DataStatistics());
-            }
         }
 
         /// <summary>

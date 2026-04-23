@@ -55,9 +55,6 @@
     <!-- OpenXML SDK -->
     <PackageReference Include="DocumentFormat.OpenXml" Version="3.0.1" />
 
-    <!-- JSON处理 -->
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-
     <!-- Excel处理 -->
     <PackageReference Include="EPPlus" Version="7.5.2" />
 
@@ -103,16 +100,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- 排除测试项目和工具项目 -->
+    <!-- 排除测试项目 -->
     <Compile Remove="Tests\**" />
-    <Compile Remove="ExcelToWordVerifier\**" />
-    <Compile Remove="Tools\**" />
     <EmbeddedResource Remove="Tests\**" />
-    <EmbeddedResource Remove="ExcelToWordVerifier\**" />
-    <EmbeddedResource Remove="Tools\**" />
     <None Remove="Tests\**" />
-    <None Remove="ExcelToWordVerifier\**" />
-    <None Remove="Tools\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -128,49 +119,5 @@
     <Exec Command="echo 开始构建: $(ProjectName)" />
   </Target>
 
-  <!-- Update Client External Files -->
-  <ItemGroup>
-    <None Update="External\update-client.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>update-client.exe</Link>
-    </None>
-    <None Update="External\update-client.config.yaml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <Link>update-client.config.yaml</Link>
-    </None>
-  </ItemGroup>
-
-  <!-- PreBuild validation: Check if update-client files exist -->
-  <Target Name="ValidateUpdateClientFiles" BeforeTargets="BeforeBuild">
-    <PropertyGroup>
-      <UpdateClientPath>$(ProjectDir)External\update-client.exe</UpdateClientPath>
-      <UpdateConfigPath>$(ProjectDir)External\update-client.config.yaml</UpdateConfigPath>
-    </PropertyGroup>
-
-    <Error Text="&#x0A;╔═══════════════════════════════════════════════════════════════╗&#x0A;║  ❌ 构建失败：未找到 update-client.exe                           ║&#x0A;╠═══════════════════════════════════════════════════════════════╣&#x0A;║  请将 update-client.exe 放置在以下位置：                         ║&#x0A;║  $(UpdateClientPath)                                           ║&#x0A;║                                                                   ║&#x0A;║  获取方式：                                                        ║&#x0A;║  1. 登录 Update Server 管理后台                                  ║&#x0A;║  2. 进入程序详情页                                                ║&#x0A;║  3. 点击「下载更新端」                                             ║&#x0A;║  4. 解压并将文件复制到 External/ 目录                             ║&#x0A;║                                                                   ║&#x0A;║  参考文档：docs/EXTERNAL_SETUP.md                                  ║&#x0A;╚═══════════════════════════════════════════════════════════════╝"
-           Condition="!Exists('$(UpdateClientPath)')" />
-
-    <Error Text="&#x0A;╔═══════════════════════════════════════════════════════════════╗&#x0A;║  ❌ 构建失败：未找到 update-client.config.yaml                    ║&#x0A;╠═══════════════════════════════════════════════════════════════╣&#x0A;║  请将 update-client.config.yaml 放置在以下位置：                  ║&#x0A;║  $(UpdateConfigPath)                                            ║&#x0A;║                                                                   ║&#x0A;║  获取方式：                                                        ║&#x0A;║  1. 登录 Update Server 管理后台                                  ║&#x0A;║  2. 进入程序详情页                                                ║&#x0A;║  3. 点击「下载更新端」                                             ║&#x0A;║  4. 解压并将文件复制到 External/ 目录                             ║&#x0A;║                                                                   ║&#x0A;║  参考文档：docs/EXTERNAL_SETUP.md                                  ║&#x0A;╚═══════════════════════════════════════════════════════════════╝"
-           Condition="!Exists('$(UpdateConfigPath)')" />
-
-    <Message Text="&#x0A;╔═══════════════════════════════════════════════════════════════╗&#x0A;║  ✓ Update Client 文件验证通过                                   ║&#x0A;╚═══════════════════════════════════════════════════════════════╝"
-             Importance="high"
-             Condition="Exists('$(UpdateClientPath)') And Exists('$(UpdateConfigPath)')" />
-  </Target>
-
-  <!-- PostPublish validation: Verify files in publish output -->
-  <Target Name="ValidateReleaseFiles" AfterTargets="Publish">
-    <PropertyGroup>
-      <PublishDir>$(PublishDir)</PublishDir>
-    </PropertyGroup>
-
-    <Error Text="❌ 发布包缺少 update-client.exe"
-           Condition="!Exists('$(PublishDir)update-client.exe')" />
-
-    <Error Text="❌ 发布包缺少 update-client.config.yaml"
-           Condition="!Exists('$(PublishDir)update-client.config.yaml')" />
-
-    <Message Text="✓ 发布包验证完成" Importance="high" />
-  </Target>
 
 </Project>

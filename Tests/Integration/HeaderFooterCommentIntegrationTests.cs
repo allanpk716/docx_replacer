@@ -46,20 +46,16 @@ namespace DocuFiller.Tests.Integration
             // Arrange
             string templatePath = Path.Combine(_testDir, "template.docx");
             string outputPath = Path.Combine(_testDir, "output.docx");
-            string dataPath = Path.Combine(_testDir, "data.json");
 
             CreateTestTemplate(templatePath);
-            File.WriteAllText(dataPath, @"[{""HeaderField"":""新页眉"",""BodyField"":""新正文"",""FooterField"":""新页脚""}]");
 
             var fileService = new FileService();
-            var dataParser = new DataParserService(_loggerFactory.CreateLogger<DataParserService>(), fileService);
             var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
                 .BuildServiceProvider();
             var processor = new DocumentProcessorService(
                 _loggerFactory.CreateLogger<DocumentProcessorService>(),
-                dataParser,
                 excelDataParser,
                 fileService,
                 new ProgressReporterService(_loggerFactory.CreateLogger<ProgressReporterService>()),
@@ -72,10 +68,16 @@ namespace DocuFiller.Tests.Integration
                 new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
             // Act
+            var data = new System.Collections.Generic.Dictionary<string, object>
+            {
+                { "HeaderField", "新页眉" },
+                { "BodyField", "新正文" },
+                { "FooterField", "新页脚" }
+            };
             bool success = await processor.ProcessSingleDocumentAsync(
                 templatePath,
                 outputPath,
-                (await dataParser.ParseJsonFileAsync(dataPath)).First());
+                data);
 
             // Assert
             Assert.True(success);
@@ -105,20 +107,16 @@ namespace DocuFiller.Tests.Integration
         {
             string templatePath = Path.Combine(_testDir, "template-nested-header.docx");
             string outputPath = Path.Combine(_testDir, "output-nested-header.docx");
-            string dataPath = Path.Combine(_testDir, "data-nested-header.json");
 
             CreateNestedHeaderTemplate(templatePath);
-            File.WriteAllText(dataPath, @"[{""HeaderField"":""新页眉""}]");
 
             var fileService = new FileService();
-            var dataParser = new DataParserService(_loggerFactory.CreateLogger<DataParserService>(), fileService);
             var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
                 .BuildServiceProvider();
             var processor = new DocumentProcessorService(
                 _loggerFactory.CreateLogger<DocumentProcessorService>(),
-                dataParser,
                 excelDataParser,
                 fileService,
                 new ProgressReporterService(_loggerFactory.CreateLogger<ProgressReporterService>()),
@@ -130,10 +128,14 @@ namespace DocuFiller.Tests.Integration
                 serviceProvider,
                 new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
+            var data = new System.Collections.Generic.Dictionary<string, object>
+            {
+                { "HeaderField", "新页眉" }
+            };
             bool success = await processor.ProcessSingleDocumentAsync(
                 templatePath,
                 outputPath,
-                (await dataParser.ParseJsonFileAsync(dataPath)).First());
+                data);
 
             Assert.True(success);
             Assert.True(File.Exists(outputPath));
@@ -148,20 +150,16 @@ namespace DocuFiller.Tests.Integration
         {
             string templatePath = Path.Combine(_testDir, "template-header-oldtext.docx");
             string outputPath = Path.Combine(_testDir, "output-header-oldtext.docx");
-            string dataPath = Path.Combine(_testDir, "data-header-oldtext.json");
 
             CreateHeaderTemplateWithNestedUntaggedContent(templatePath);
-            File.WriteAllText(dataPath, @"[{""HeaderField"":""456""}]");
 
             var fileService = new FileService();
-            var dataParser = new DataParserService(_loggerFactory.CreateLogger<DataParserService>(), fileService);
             var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
                 .BuildServiceProvider();
             var processor = new DocumentProcessorService(
                 _loggerFactory.CreateLogger<DocumentProcessorService>(),
-                dataParser,
                 excelDataParser,
                 fileService,
                 new ProgressReporterService(_loggerFactory.CreateLogger<ProgressReporterService>()),
@@ -173,10 +171,14 @@ namespace DocuFiller.Tests.Integration
                 serviceProvider,
                 new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
+            var data = new System.Collections.Generic.Dictionary<string, object>
+            {
+                { "HeaderField", "456" }
+            };
             bool success = await processor.ProcessSingleDocumentAsync(
                 templatePath,
                 outputPath,
-                (await dataParser.ParseJsonFileAsync(dataPath)).First());
+                data);
 
             Assert.True(success);
             using var document = WordprocessingDocument.Open(outputPath, false);

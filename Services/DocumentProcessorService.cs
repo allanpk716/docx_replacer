@@ -21,7 +21,6 @@ namespace DocuFiller.Services
     public class DocumentProcessorService : IDocumentProcessor, IDisposable
     {
         private readonly ILogger<DocumentProcessorService> _logger;
-        private readonly IDataParser _dataParser;
         private readonly IExcelDataParser _excelDataParser;
         private readonly IFileService _fileService;
         private readonly IProgressReporter _progressReporter;
@@ -36,7 +35,6 @@ namespace DocuFiller.Services
 
         public DocumentProcessorService(
             ILogger<DocumentProcessorService> logger,
-            IDataParser dataParser,
             IExcelDataParser excelDataParser,
             IFileService fileService,
             IProgressReporter progressReporter,
@@ -46,7 +44,6 @@ namespace DocuFiller.Services
             ISafeFormattedContentReplacer safeFormattedContentReplacer)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
             _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
             _progressReporter = progressReporter ?? throw new ArgumentNullException(nameof(progressReporter));
@@ -88,20 +85,8 @@ namespace DocuFiller.Services
                     return result;
                 }
 
-                // 根据文件扩展名选择解析器
-                string dataExtension = Path.GetExtension(request.DataFilePath)?.ToLowerInvariant() ?? "";
-                _logger.LogInformation($"数据文件扩展名: {dataExtension}");
-
-                if (dataExtension == ".xlsx")
-                {
-                    // 使用 Excel 解析器处理
-                    return await ProcessExcelDataAsync(request);
-                }
-                else
-                {
-                    // 使用 JSON 解析器处理
-                    return await ProcessJsonDataAsync(request);
-                }
+                // 使用 Excel 解析器处理
+                return await ProcessExcelDataAsync(request);
             }
             catch (Exception ex)
             {
@@ -187,137 +172,7 @@ namespace DocuFiller.Services
             return result;
         }
 
-        /// <summary>
-        /// 处理 JSON 数据文件
-        /// </summary>
-        private async Task<ProcessResult> ProcessJsonDataAsync(ProcessRequest request)
-        {
-            ProcessResult result = new ProcessResult { StartTime = DateTime.Now };
 
-            try
-            {
-                _logger.LogInformation("使用 JSON 解析器处理数据");
-
-                // 解析 JSON 数据文件
-                List<Dictionary<string, object>> dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
-                if (dataList == null || !dataList.Any())
-                {
-                    result.AddError("数据文件为空或解析失败");
-                    return result;
-                }
-
-                result.TotalRecords = dataList.Count;
-                _cancellationTokenSource = new CancellationTokenSource();
-
-                // 确保输出目录存在
-                try
-                {
-                    _ = _fileService.EnsureDirectoryExists(request.OutputDirectory);
-                }
-                catch (Exception ex)
-                {
-                    result.AddError($"无法创建输出目录: {request.OutputDirectory}, 错误: {ex.Message}");
-                    return result;
-                }
-
-                // 使用并行处理批量处理文档
-                await ProcessDocumentsInParallelAsync(request, dataList, result, _cancellationTokenSource.Token);
-
-                _progressReporter.ReportCompleted(dataList.Count,
-                    $"处理完成，成功: {result.SuccessfulRecords}，失败: {result.FailedRecords}");
-
-                result.IsSuccess = result.SuccessfulRecords > 0;
-                result.Message = $"批量处理完成，成功处理 {result.SuccessfulRecords} 个文档";
-
-                _logger.LogInformation($"批量处理完成，成功: {result.SuccessfulRecords}，失败: {result.FailedRecords}");
-            }
-            catch (Exception ex)
-            {
-                result.AddError($"JSON 数据处理过程中发生异常: {ex.Message}");
-                _logger.LogError(ex, "JSON 数据处理异常");
-            }
-
-            return result;
-        }
-
-        /// <summary>
-        /// 并行处理文档
-        /// </summary>
-        private async Task ProcessDocumentsInParallelAsync(ProcessRequest request, List<Dictionary<string, object>> dataList, ProcessResult result, CancellationToken cancellationToken)
-        {
-            const int maxConcurrency = 4; // 限制并发数避免资源竞争
-            SemaphoreSlim semaphore = new(maxConcurrency, maxConcurrency);
-
-            try
-            {
-                var tasks = dataList.Select(async (data, index) =>
-                {
-                    await semaphore.WaitAsync(cancellationToken);
-                    try
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        string templateFileName = Path.GetFileNameWithoutExtension(request.TemplateFilePath);
-                        string outputFileName = GenerateOutputFileNameWithTimestamp(templateFileName);
-                        string outputPath = Path.Combine(request.OutputDirectory, outputFileName);
-
-                        _logger.LogDebug($"开始处理第 {index + 1} 个文档: {outputFileName}");
-
-                        // 更新进度
-                        _progressReporter.ReportProgress(index + 1, dataList.Count,
-                            $"正在处理第 {index + 1} 个文档", outputFileName);
-
-                        bool success = await ProcessSingleDocumentAsync(request.TemplateFilePath, outputPath, data, cancellationToken);
-
-                        lock (result) // 线程安全地更新结果
-                        {
-                            if (success)
-                            {
-                                result.SuccessfulRecords++;
-                                result.AddGeneratedFile(outputPath);
-                                _logger.LogDebug($"成功处理文档: {outputPath}");
-                            }
-                            else
-                            {
-                                result.AddError($"处理文档失败: {outputFileName}");
-                            }
-                        }
-
-                        return (index, success, outputPath);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger.LogDebug($"处理第 {index + 1} 个文档被取消");
-                        throw;
-                    }
-                    catch (Exception ex)
-                    {
-                        lock (result)
-                        {
-                            string outputFileName = GenerateOutputFileNameWithTimestamp(Path.GetFileNameWithoutExtension(request.TemplateFilePath));
-                            result.AddError($"处理文档时发生异常: {ex.Message}");
-                        }
-                        _logger.LogError(ex, $"处理文档异常");
-                        return (index, false, string.Empty);
-                    }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
-                });
-
-                await Task.WhenAll(tasks);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogInformation("批量处理被用户取消");
-                result.AddWarning("处理被用户取消");
-            }
-            finally
-            {
-                semaphore.Dispose();
-            }
-        }
 
         public async Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath,
             Dictionary<string, object> data, CancellationToken cancellationToken = default)
@@ -676,222 +531,100 @@ namespace DocuFiller.Services
                     return result;
                 }
 
-                // 根据文件扩展名选择解析器
-                string dataExtension = Path.GetExtension(request.DataFilePath)?.ToLowerInvariant() ?? "";
-                _logger.LogInformation($"数据文件扩展名: {dataExtension}");
+                // Excel模式：解析为格式化数据（单条记录）
+                _logger.LogInformation("使用 Excel 解析器处理数据");
 
-                // 判断数据文件类型和解析模式
-                bool isExcelFile = dataExtension == ".xlsx";
-                bool useFormattedData = isExcelFile; // Excel文件使用格式化数据模式
-
-                // 声明输出目录变量（在 if-else 分支之前）
+                // 声明输出目录变量
                 string timestampOutputDir = string.Empty;
 
-                // 解析数据文件
-                if (isExcelFile)
+                Dictionary<string, FormattedCellValue> excelData = await _excelDataParser.ParseExcelFileAsync(request.DataFilePath);
+
+                if (excelData == null || !excelData.Any())
                 {
-                    // Excel模式：解析为格式化数据（单条记录）
-                    _logger.LogInformation("使用 Excel 解析器处理数据");
-                    Dictionary<string, FormattedCellValue> excelData = await _excelDataParser.ParseExcelFileAsync(request.DataFilePath);
-
-                    if (excelData == null || !excelData.Any())
-                    {
-                        result.IsSuccess = false;
-                        result.AddError($"Excel 数据文件为空或解析失败: {request.DataFilePath}");
-                        result.ErrorMessage = "Excel 数据文件为空或解析失败";
-                        return result;
-                    }
-
-                    _logger.LogInformation($"成功解析 Excel 数据，共 {excelData.Count} 个键值对");
-
-                    // 创建时间戳输出文件夹
-                    string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
-                    string inputFolderName = Path.GetFileName(request.TemplateFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                    string timestampFolderName = $"{inputFolderName}_{timestamp}";
-                    timestampOutputDir = Path.Combine(request.OutputDirectory, timestampFolderName);
-
-                    if (!_fileService.DirectoryExists(timestampOutputDir))
-                    {
-                        _ = Directory.CreateDirectory(timestampOutputDir);
-                        _logger.LogInformation($"创建时间戳输出目录: {timestampOutputDir}");
-                    }
-
-                    int totalOperations = request.TemplateFiles.Count;
-                    int currentOperation = 0;
-
-                    // Excel模式：为每个模板文件生成一个文档
-                    foreach (Models.FileInfo templateFile in request.TemplateFiles)
-                    {
-                        try
-                        {
-                            _logger.LogInformation($"处理模板文件: {templateFile.Name}");
-
-                            // 验证模板文件
-                            ValidationResult validationResult = await ValidateTemplateAsync(templateFile.FullPath);
-                            if (!validationResult.IsValid)
-                            {
-                                _logger.LogWarning($"模板文件验证失败: {templateFile.Name} - {validationResult.ErrorMessage}");
-                                failedFiles.Add($"{templateFile.Name}: {validationResult.ErrorMessage}");
-                                continue;
-                            }
-
-                            // 在时间戳文件夹中创建与原始结构对应的子目录
-                            string relativeDir = string.IsNullOrEmpty(templateFile.RelativeDirectoryPath) ? "" : templateFile.RelativeDirectoryPath;
-                            string outputSubDir = string.IsNullOrEmpty(relativeDir) ? timestampOutputDir : Path.Combine(timestampOutputDir, relativeDir);
-
-                            if (!string.IsNullOrEmpty(relativeDir) && !_fileService.DirectoryExists(outputSubDir))
-                            {
-                                _ = Directory.CreateDirectory(outputSubDir);
-                                _logger.LogDebug($"创建子目录: {outputSubDir}");
-                            }
-
-                            currentOperation++;
-
-                            // 生成输出文件名 - 保持原始文件名
-                            string outputFileName = templateFile.Name;
-                            string outputPath = Path.Combine(outputSubDir, outputFileName);
-
-                            _logger.LogDebug($"处理模板文件，输出到: {outputPath}");
-
-                            // 使用格式化数据处理文档
-                            ProcessResult processResult = await ProcessDocumentWithFormattedDataAsync(
-                                templateFile.FullPath,
-                                excelData,
-                                outputPath);
-
-                            if (processResult.IsSuccess)
-                            {
-                                processedFiles.Add(outputPath);
-                                _logger.LogDebug($"✓ 成功处理: {outputFileName}");
-                            }
-                            else
-                            {
-                                failedFiles.Add($"{templateFile.Name}: {string.Join(", ", processResult.Errors)}");
-                                _logger.LogWarning($"✗ 处理失败: {outputFileName}");
-                            }
-
-                            // 更新进度 - 使用 _progressReporter 确保进度传播到 UI
-                            _progressReporter.ReportProgress(currentOperation, totalOperations,
-                                $"正在处理 {templateFile.Name} ({currentOperation}/{totalOperations})", templateFile.Name);
-
-                            _logger.LogInformation($"✓ 完成模板文件处理: {templateFile.Name}");
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, $"处理模板文件时发生异常: {templateFile.Name}");
-                            failedFiles.Add($"{templateFile.Name}: {ex.Message}");
-                        }
-                    }
+                    result.IsSuccess = false;
+                    result.AddError($"Excel 数据文件为空或解析失败: {request.DataFilePath}");
+                    result.ErrorMessage = "Excel 数据文件为空或解析失败";
+                    return result;
                 }
-                else
+
+                _logger.LogInformation($"成功解析 Excel 数据，共 {excelData.Count} 个键值对");
+
+                // 创建时间戳输出文件夹
+                string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+                string inputFolderName = Path.GetFileName(request.TemplateFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                string timestampFolderName = $"{inputFolderName}_{timestamp}";
+                timestampOutputDir = Path.Combine(request.OutputDirectory, timestampFolderName);
+
+                if (!_fileService.DirectoryExists(timestampOutputDir))
                 {
-                    // JSON模式：解析为数据列表（多条记录）
-                    _logger.LogInformation("使用 JSON 解析器处理数据");
-                    List<Dictionary<string, object>> dataList = await _dataParser.ParseJsonFileAsync(request.DataFilePath);
+                    _ = Directory.CreateDirectory(timestampOutputDir);
+                    _logger.LogInformation($"创建时间戳输出目录: {timestampOutputDir}");
+                }
 
-                    if (dataList == null || !dataList.Any())
+                int totalOperations = request.TemplateFiles.Count;
+                int currentOperation = 0;
+
+                // Excel模式：为每个模板文件生成一个文档
+                foreach (Models.FileInfo templateFile in request.TemplateFiles)
+                {
+                    try
                     {
-                        result.IsSuccess = false;
-                        result.AddError($"JSON 数据文件为空或格式不正确: {request.DataFilePath}");
-                        result.ErrorMessage = "JSON 数据文件为空或格式不正确";
-                        return result;
-                    }
+                        _logger.LogInformation($"处理模板文件: {templateFile.Name}");
 
-                    _logger.LogInformation($"成功解析 JSON 数据，共 {dataList.Count} 条记录");
-
-                    // 创建时间戳输出文件夹
-                    string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
-                    string inputFolderName = Path.GetFileName(request.TemplateFolderPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                    string timestampFolderName = $"{inputFolderName}_{timestamp}";
-                    timestampOutputDir = Path.Combine(request.OutputDirectory, timestampFolderName);
-
-                    if (!_fileService.DirectoryExists(timestampOutputDir))
-                    {
-                        _ = Directory.CreateDirectory(timestampOutputDir);
-                        _logger.LogInformation($"创建时间戳输出目录: {timestampOutputDir}");
-                    }
-
-                    int totalOperations = request.TemplateFiles.Count * dataList.Count();
-                    int currentOperation = 0;
-
-                    // JSON模式：为每个模板文件的每条数据生成一个文档
-                    foreach (Models.FileInfo templateFile in request.TemplateFiles)
-                    {
-                        try
+                        // 验证模板文件
+                        ValidationResult validationResult = await ValidateTemplateAsync(templateFile.FullPath);
+                        if (!validationResult.IsValid)
                         {
-                            _logger.LogInformation($"处理模板文件: {templateFile.Name}");
-
-                            // 验证模板文件
-                            ValidationResult validationResult = await ValidateTemplateAsync(templateFile.FullPath);
-                            if (!validationResult.IsValid)
-                            {
-                                _logger.LogWarning($"模板文件验证失败: {templateFile.Name} - {validationResult.ErrorMessage}");
-                                failedFiles.Add($"{templateFile.Name}: {validationResult.ErrorMessage}");
-                                continue;
-                            }
-
-                            // 在时间戳文件夹中创建与原始结构对应的子目录
-                            string relativeDir = string.IsNullOrEmpty(templateFile.RelativeDirectoryPath) ? "" : templateFile.RelativeDirectoryPath;
-                            string outputSubDir = string.IsNullOrEmpty(relativeDir) ? timestampOutputDir : Path.Combine(timestampOutputDir, relativeDir);
-
-                            if (!string.IsNullOrEmpty(relativeDir) && !_fileService.DirectoryExists(outputSubDir))
-                            {
-                                _ = Directory.CreateDirectory(outputSubDir);
-                                _logger.LogDebug($"创建子目录: {outputSubDir}");
-                            }
-
-                            // 为每条数据生成文档
-                            for (int i = 0; i < dataList.Count(); i++)
-                            {
-                                if (_cancellationTokenSource?.Token.IsCancellationRequested == true)
-                                {
-                                    _logger.LogDebug("检测到取消请求，停止处理");
-                                    result.IsSuccess = false;
-                                    result.AddError("操作已被用户取消");
-                                    result.ErrorMessage = "操作已被取消";
-                                    return result;
-                                }
-
-                                if (_cancellationTokenSource == null)
-                                {
-                                    _logger.LogDebug("警告：_cancellationTokenSource为null，无法检查取消状态");
-                                }
-
-                                Dictionary<string, object> data = dataList[i];
-                                currentOperation++;
-
-                                // 生成输出文件名 - 保持原始文件名
-                                string outputFileName = templateFile.Name;
-                                string outputPath = Path.Combine(outputSubDir, outputFileName);
-
-                                _logger.LogDebug($"处理第 {i + 1} 条数据，输出到: {outputPath}");
-
-                                // 处理单个文档
-                                bool success = await ProcessSingleDocumentAsync(templateFile.FullPath, outputPath, data);
-
-                                if (success)
-                                {
-                                    processedFiles.Add(outputPath);
-                                    _logger.LogDebug($"✓ 成功处理: {outputFileName}");
-                                }
-                                else
-                                {
-                                    failedFiles.Add($"{templateFile.Name} (第{i + 1}条数据): 处理失败");
-                                    _logger.LogWarning($"✗ 处理失败: {outputFileName}");
-                                }
-
-                                // 更新进度 - 使用 _progressReporter 确保进度传播到 UI
-                                _progressReporter.ReportProgress(currentOperation, totalOperations,
-                                    $"正在处理 {templateFile.Name} (第{i + 1}/{dataList.Count()}条数据)", templateFile.Name);
-                            }
-
-                            _logger.LogInformation($"✓ 完成模板文件处理: {templateFile.Name}");
+                            _logger.LogWarning($"模板文件验证失败: {templateFile.Name} - {validationResult.ErrorMessage}");
+                            failedFiles.Add($"{templateFile.Name}: {validationResult.ErrorMessage}");
+                            continue;
                         }
-                        catch (Exception ex)
+
+                        // 在时间戳文件夹中创建与原始结构对应的子目录
+                        string relativeDir = string.IsNullOrEmpty(templateFile.RelativeDirectoryPath) ? "" : templateFile.RelativeDirectoryPath;
+                        string outputSubDir = string.IsNullOrEmpty(relativeDir) ? timestampOutputDir : Path.Combine(timestampOutputDir, relativeDir);
+
+                        if (!string.IsNullOrEmpty(relativeDir) && !_fileService.DirectoryExists(outputSubDir))
                         {
-                            _logger.LogError(ex, $"处理模板文件时发生异常: {templateFile.Name}");
-                            failedFiles.Add($"{templateFile.Name}: {ex.Message}");
+                            _ = Directory.CreateDirectory(outputSubDir);
+                            _logger.LogDebug($"创建子目录: {outputSubDir}");
                         }
+
+                        currentOperation++;
+
+                        // 生成输出文件名 - 保持原始文件名
+                        string outputFileName = templateFile.Name;
+                        string outputPath = Path.Combine(outputSubDir, outputFileName);
+
+                        _logger.LogDebug($"处理模板文件，输出到: {outputPath}");
+
+                        // 使用格式化数据处理文档
+                        ProcessResult processResult = await ProcessDocumentWithFormattedDataAsync(
+                            templateFile.FullPath,
+                            excelData,
+                            outputPath);
+
+                        if (processResult.IsSuccess)
+                        {
+                            processedFiles.Add(outputPath);
+                            _logger.LogDebug($"✓ 成功处理: {outputFileName}");
+                        }
+                        else
+                        {
+                            failedFiles.Add($"{templateFile.Name}: {string.Join(", ", processResult.Errors)}");
+                            _logger.LogWarning($"✗ 处理失败: {outputFileName}");
+                        }
+
+                        // 更新进度 - 使用 _progressReporter 确保进度传播到 UI
+                        _progressReporter.ReportProgress(currentOperation, totalOperations,
+                            $"正在处理 {templateFile.Name} ({currentOperation}/{totalOperations})", templateFile.Name);
+
+                        _logger.LogInformation($"✓ 完成模板文件处理: {templateFile.Name}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"处理模板文件时发生异常: {templateFile.Name}");
+                        failedFiles.Add($"{templateFile.Name}: {ex.Message}");
                     }
                 }
 

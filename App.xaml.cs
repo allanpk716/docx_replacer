@@ -8,7 +8,6 @@ using Microsoft.Extensions.Options;
 using DocuFiller.Configuration;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
-using DocuFiller.Services.Update;
 using DocuFiller.ViewModels;
 using DocuFiller.Utils;
 
@@ -99,18 +98,13 @@ namespace DocuFiller
 
             // 注册服务接口和实现
             services.AddSingleton<IFileService, FileService>();
-            services.AddSingleton<IDataParser, DataParserService>();
             services.AddSingleton<IExcelDataParser, ExcelDataParserService>();
             services.AddSingleton<IProgressReporter, ProgressReporterService>();
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
             services.AddSingleton<IFileScanner, FileScannerService>();
             services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
-            services.AddSingleton<IExcelToWordConverter, ExcelToWordConverterService>();
             services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
             services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
-
-            // 注册更新服务（UpdateClientService 直接调用 update-client.exe，不需要 HttpClient）
-            services.AddSingleton<IUpdateService, UpdateClientService>();
 
             // 注册清理服务
             services.AddTransient<CleanupCommentProcessor>();
@@ -125,16 +119,10 @@ namespace DocuFiller
 
             // 注册ViewModels
             services.AddTransient<MainWindowViewModel>();
-            services.AddTransient<ViewModels.ConverterWindowViewModel>();
-            services.AddTransient<ViewModels.Update.UpdateViewModel>();
-            services.AddTransient<ViewModels.Update.UpdateBannerViewModel>();
 
             // 注册主窗口
             services.AddTransient<MainWindow>();
-            services.AddTransient<Views.ConverterWindow>();
             services.AddTransient<Views.CleanupWindow>();
-            services.AddTransient<Views.Update.UpdateWindow>();
-            services.AddTransient<Views.Update.UpdateBannerView>();
 
             _serviceProvider = services.BuildServiceProvider();
         }

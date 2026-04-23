@@ -169,38 +169,6 @@ namespace DocuFiller.Utils
         }
         
         /// <summary>
-        /// 验证JSON格式
-        /// </summary>
-        /// <param name="jsonContent">JSON内容</param>
-        /// <returns>验证结果</returns>
-        public static ValidationResult ValidateJsonFormat(string jsonContent)
-        {
-            var result = new ValidationResult();
-            
-            if (string.IsNullOrWhiteSpace(jsonContent))
-            {
-                result.AddError("JSON内容不能为空");
-                return result;
-            }
-            
-            try
-            {
-                Newtonsoft.Json.JsonConvert.DeserializeObject(jsonContent);
-                result.IsValid = true;
-            }
-            catch (Newtonsoft.Json.JsonException ex)
-            {
-                result.AddError($"JSON格式错误: {ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                result.AddError($"JSON验证失败: {ex.Message}");
-            }
-            
-            return result;
-        }
-        
-        /// <summary>
         /// 验证字符串是否为有效的文件名
         /// </summary>
         /// <param name="fileName">文件名</param>

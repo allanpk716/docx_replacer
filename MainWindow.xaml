@@ -4,7 +4,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:DocuFiller.Views"
-        xmlns:updateViews="clr-namespace:DocuFiller.Views.Update"
         mc:Ignorable="d"
         Title="DocuFiller - Word文档批量填充工具" Height="900" Width="1400"
         MinHeight="800" MinWidth="1200"
@@ -119,7 +118,7 @@
                                         <Grid>
                                             <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
                                                 <TextBlock x:Name="DataFileDropHint"
-                                                           Text="拖拽 JSON 或 Excel 数据文件到此处"
+                                                           Text="拖拽 Excel (.xlsx) 数据文件到此处"
                                                            Foreground="#95A5A6"
                                                            FontStyle="Italic"
                                                            HorizontalAlignment="Center"
@@ -346,57 +345,6 @@
                 </Grid>
             </TabItem>
 
-            <!-- 工具选项卡 -->
-            <TabItem Header="工具" FontSize="16">
-                <Grid Margin="30">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- JSON转Excel转换工具 -->
-                    <Border Grid.Row="0" BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="8" Margin="0,0,0,15"
-                            Background="White" Cursor="Hand">
-                        <Border.InputBindings>
-                            <MouseBinding Command="{Binding OpenConverterCommand}" MouseAction="LeftClick"/>
-                        </Border.InputBindings>
-                        <Grid Margin="20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0" Text="🔄" FontSize="48" VerticalAlignment="Center" Margin="0,0,20,0"/>
-
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="JSON转Excel转换工具" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
-                                <TextBlock Text="将JSON数据文件转换为Excel格式" FontSize="14" Foreground="#7F8C8D"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- 检查更新 -->
-                    <Border Grid.Row="1" BorderBrush="#BDC3C7" BorderThickness="1" CornerRadius="8"
-                            Background="White" Cursor="Hand">
-                        <Border.InputBindings>
-                            <MouseBinding Command="{Binding CheckForUpdateCommand}" MouseAction="LeftClick"/>
-                        </Border.InputBindings>
-                        <Grid Margin="20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0" Text="🔔" FontSize="48" VerticalAlignment="Center" Margin="0,0,20,0"/>
-
-                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                <TextBlock Text="检查更新" FontSize="20" FontWeight="Bold" Foreground="#2C3E50" Margin="0,0,0,5"/>
-                                <TextBlock Text="检查并下载最新版本" FontSize="14" Foreground="#7F8C8D"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                </Grid>
-            </TabItem>
         </TabControl>
     </Grid>
 </Window>

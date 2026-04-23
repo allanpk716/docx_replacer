@@ -28,30 +28,23 @@ graph TD
     subgraph 表示层["表示层 (Presentation)"]
         MW[MainWindow<br/>主窗口]
         CW[CleanupWindow<br/>审核清理窗口]
-        CVW[ConverterWindow<br/>格式转换窗口]
-        UW[UpdateWindow<br/>更新窗口]
     end
 
     subgraph ViewModel层["ViewModel 层"]
         MVM[MainWindowViewModel]
         CVM[CleanupViewModel]
-        CVVM[ConverterWindowViewModel]
-        UVM[UpdateViewModel]
     end
 
     subgraph 服务层["服务层 (Services)"]
         DP[IDocumentProcessor<br/>文档处理]
-        JDP[IDataParser<br/>JSON 数据解析]
         EDP[IExcelDataParser<br/>Excel 数据解析]
         FS[IFileService<br/>文件操作]
         PR[IProgressReporter<br/>进度报告]
         FSC[IFileScanner<br/>文件扫描]
         DM[IDirectoryManager<br/>目录管理]
-        EWC[IExcelToWordConverter<br/>JSON↔Excel 转换]
         STR[ISafeTextReplacer<br/>安全文本替换]
         SFR[ISafeFormattedContentReplacer<br/>格式化内容替换]
         TCS[ITemplateCacheService<br/>模板缓存]
-        KVS[IKeywordValidationService<br/>关键词验证]
         DCS[IDocumentCleanupService<br/>文档清理]
         CCP[ContentControlProcessor<br/>内容控件处理器]
         CM[CommentManager<br/>批注管理器]
@@ -60,7 +53,6 @@ graph TD
     subgraph 外部资源["外部资源 (External)"]
         OXML[DocumentFormat.OpenXml]
         EP[EPPlus]
-        NJ[Newtonsoft.Json]
         IO[System.IO]
     end
 
@@ -71,12 +63,10 @@ graph TD
     DP --> CCP
     CCP --> CM
     CCP --> STR
-    JDP --> NJ
     EDP --> EP
     FS --> IO
     FSC --> IO
     DM --> IO
-    EWC --> EP
     STR --> OXML
     SFR --> OXML
     DCS --> OXML
@@ -87,10 +77,10 @@ graph TD
 
 | 层次 | 职责 | 关键组件 |
 |------|------|----------|
-| **表示层** | 用户交互、数据展示、操作触发 | MainWindow, CleanupWindow, ConverterWindow |
+| **表示层** | 用户交互、数据展示、操作触发 | MainWindow, CleanupWindow |
 | **ViewModel 层** | 业务逻辑协调、状态管理、数据绑定 | MainWindowViewModel, CleanupViewModel |
-| **服务层** | 核心业务逻辑实现、接口抽象 | 15 个服务接口 + 2 个处理器类 |
-| **外部资源** | 第三方库封装、系统资源访问 | OpenXml, EPPlus, Newtonsoft.Json, System.IO |
+| **服务层** | 核心业务逻辑实现、接口抽象 | 10 个服务接口 + 2 个处理器类 |
+| **外部资源** | 第三方库封装、系统资源访问 | OpenXml, EPPlus, System.IO |
 
 ---
 
@@ -102,7 +92,6 @@ graph TD
 | **WPF** | .NET 8 内置 | 桌面 UI 框架 |
 | **DocumentFormat.OpenXml** | 3.0+ | Word 文档（.docx/.dotx）读写操作 |
 | **EPPlus** | — | Excel 文件（.xlsx）读写操作 |
-| **Newtonsoft.Json** | 13.0+ | JSON 数据文件解析 |
 | **Microsoft.Extensions.DependencyInjection** | — | 依赖注入容器 |
 | **Microsoft.Extensions.Logging** | — | 日志记录框架 |
 | **Microsoft.Extensions.Options** | — | 配置选项模式 |
@@ -117,17 +106,14 @@ graph TD
 | 服务名称 | 接口 | 实现类 | 生命周期 | 职责 |
 |----------|------|--------|----------|------|
 | 文档处理 | `IDocumentProcessor` | `DocumentProcessorService` | Singleton | 批量文档处理主入口 |
-| JSON 数据解析 | `IDataParser` | `DataParserService` | Singleton | JSON 文件解析与验证 |
 | Excel 数据解析 | `IExcelDataParser` | `ExcelDataParserService` | Singleton | Excel 文件解析（两列/三列格式） |
 | 文件操作 | `IFileService` | `FileService` | Singleton | 文件读写、复制、验证 |
 | 进度报告 | `IProgressReporter` | `ProgressReporterService` | Singleton | 处理进度追踪与报告 |
 | 文件扫描 | `IFileScanner` | `FileScannerService` | Singleton | 文件夹中的 .docx 文件发现 |
 | 目录管理 | `IDirectoryManager` | `DirectoryManagerService` | Singleton | 输出目录创建、时间戳文件夹 |
-| JSON↔Excel 转换 | `IExcelToWordConverter` | `ExcelToWordConverterService` | Singleton | JSON 与 Excel 格式互转 |
 | 安全文本替换 | `ISafeTextReplacer` | `SafeTextReplacer` | Singleton | 保留表格结构的文本替换 |
 | 格式化内容替换 | `ISafeFormattedContentReplacer` | `SafeFormattedContentReplacer` | Singleton | 保留富文本格式的内容替换 |
 | 模板缓存 | `ITemplateCacheService` | `TemplateCacheService` | Singleton | 模板验证结果与控件信息缓存 |
-| 关键词验证 | `IKeywordValidationService` | — | — | 关键词格式、重复性验证 |
 | 文档清理 | `IDocumentCleanupService` | `DocumentCleanupService` | Transient | 去除批注痕迹、内容控件正常化 |
 | 内容控件处理 | — (非接口) | `ContentControlProcessor` | Singleton | 内容控件处理协调（含批注） |
 | 批注管理 | — (非接口) | `CommentManager` | Singleton | Word 文档批注的创建与管理 |
@@ -171,46 +157,7 @@ public interface IDocumentProcessor
 }
 ```
 
-### 4.2 IDataParser — JSON 数据解析服务
-
-```csharp
-public interface IDataParser
-{
-    /// 解析 JSON 数据文件
-    Task<List<Dictionary<string, object>>> ParseJsonFileAsync(string filePath);
-
-    /// 解析 JSON 字符串
-    List<Dictionary<string, object>> ParseJsonString(string jsonContent);
-
-    /// 验证 JSON 数据文件格式
-    Task<ValidationResult> ValidateJsonFileAsync(string filePath);
-
-    /// 验证 JSON 字符串格式
-    ValidationResult ValidateJsonString(string jsonContent);
-
-    /// 获取 JSON 数据预览
-    Task<List<Dictionary<string, object>>> GetDataPreviewAsync(
-        string filePath, int maxRecords = 10);
-
-    /// 获取 JSON 数据统计信息
-    Task<DataStatistics> GetDataStatisticsAsync(string filePath);
-}
-```
-
-**辅助类 DataStatistics**：
-
-```csharp
-public class DataStatistics
-{
-    public int TotalRecords { get; set; }
-    public List<string> Fields { get; set; } = new List<string>();
-    public long FileSizeBytes { get; set; }
-    public Dictionary<string, string> FieldTypes { get; set; } = new Dictionary<string, string>();
-    public Dictionary<string, int> NullCounts { get; set; } = new Dictionary<string, int>();
-}
-```
-
-### 4.3 IExcelDataParser — Excel 数据解析服务
+### 4.2 IExcelDataParser — Excel 数据解析服务
 
 ```csharp
 public interface IExcelDataParser
@@ -310,39 +257,7 @@ public interface IDirectoryManager
 }
 ```
 
-### 4.8 IExcelToWordConverter — JSON↔Excel 转换服务
-
-```csharp
-public interface IExcelToWordConverter
-{
-    /// 将 JSON 文件转换为 Excel 文件
-    Task<bool> ConvertJsonToExcelAsync(string jsonFilePath, string outputExcelPath);
-
-    /// 批量转换 JSON 文件为 Excel
-    Task<BatchConvertResult> ConvertBatchAsync(string[] jsonFilePaths, string outputDirectory);
-}
-```
-
-**辅助类**：
-
-```csharp
-public class BatchConvertResult
-{
-    public int SuccessCount { get; set; }
-    public int FailureCount { get; set; }
-    public List<ConvertDetail> Details { get; set; } = new();
-}
-
-public class ConvertDetail
-{
-    public string SourceFile { get; set; } = string.Empty;
-    public string OutputFile { get; set; } = string.Empty;
-    public bool Success { get; set; }
-    public string ErrorMessage { get; set; } = string.Empty;
-}
-```
-
-### 4.9 ISafeTextReplacer — 安全文本替换服务
+### 4.7 ISafeTextReplacer — 安全文本替换服务
 
 ```csharp
 public interface ISafeTextReplacer
@@ -354,7 +269,7 @@ public interface ISafeTextReplacer
 
 该接口虽只有一个方法，但内部实现了三种替换策略（详见 [第 7 节](#7-表格内容控件处理)）。
 
-### 4.10 ISafeFormattedContentReplacer — 安全格式化内容替换服务
+### 4.8 ISafeFormattedContentReplacer — 安全格式化内容替换服务
 
 ```csharp
 public interface ISafeFormattedContentReplacer
@@ -365,7 +280,7 @@ public interface ISafeFormattedContentReplacer
 }
 ```
 
-### 4.11 ITemplateCacheService — 模板缓存服务
+### 4.9 ITemplateCacheService — 模板缓存服务
 
 ```csharp
 public interface ITemplateCacheService
@@ -380,24 +295,7 @@ public interface ITemplateCacheService
 }
 ```
 
-### 4.12 IKeywordValidationService — 关键词验证服务
-
-```csharp
-public interface IKeywordValidationService
-{
-    ValidationResult ValidateKeyword(JsonKeywordItem keyword);
-    ValidationResult ValidateKeywordList(IEnumerable<JsonKeywordItem> keywords);
-    bool IsKeywordDuplicate(string key, List<JsonKeywordItem> keywords, int excludeIndex = -1);
-    ValidationResult ValidateKeyFormat(string key);
-    ValidationResult ValidateKeyValue(string value);
-    ValidationResult ValidateSourceFile(string sourceFile);
-    List<string> GetKeywordSuggestions(string partialKey, List<JsonKeywordItem> existingKeywords);
-    string FormatKeyName(string key);
-    ValidationResult CheckValueIssues(string value);
-}
-```
-
-### 4.13 IDocumentCleanupService — 文档清理服务
+### 4.10 IDocumentCleanupService — 文档清理服务
 
 ```csharp
 public interface IDocumentCleanupService
@@ -432,7 +330,7 @@ public class CleanupResult
 }
 ```
 
-### 4.14 ContentControlProcessor — 内容控件处理器
+### 4.11 ContentControlProcessor — 内容控件处理器
 
 > **注意**：这是具体类（非接口），负责协调内容控件的整个处理流程。
 
@@ -461,7 +359,7 @@ public class ContentControlProcessor
 - 对于嵌套控件，通过 `HasAncestorWithSameTag` 检测，只处理最外层控件
 - 正文区域添加批注追踪，页眉/页脚区域跳过批注（OpenXML 不支持）
 
-### 4.15 CommentManager — 批注管理器
+### 4.12 CommentManager — 批注管理器
 
 ```csharp
 public class CommentManager
@@ -499,7 +397,6 @@ erDiagram
     FormattedCellValue ||--o{ TextFragment : contains
     ExcelValidationResult ||--|| ExcelFileSummary : includes
 
-    JsonProjectModel ||--o{ JsonKeywordItem : contains
     CleanupFileItem ||--o| CleanupFileStatus : has_status
 
     ProcessResult ||--o{ ProgressEventArgs : emits
@@ -553,22 +450,6 @@ erDiagram
         string Text
         bool IsSuperscript
         bool IsSubscript
-    }
-
-    JsonProjectModel {
-        string ProjectName
-        ObservableCollection Keywords
-        DateTime LastModified
-        string FilePath
-        bool HasUnsavedChanges
-    }
-
-    JsonKeywordItem {
-        string Key
-        string Value
-        string SourceFile
-        DateTime CreatedTime
-        DateTime ModifiedTime
     }
 
     FileInfo {
@@ -716,41 +597,6 @@ public class TextFragment
 }
 ```
 
-#### JsonKeywordItem — JSON 关键词项
-
-```csharp
-public class JsonKeywordItem : INotifyPropertyChanged
-{
-    public string Key { get; set; }
-    public string Value { get; set; }
-    public string SourceFile { get; set; }
-    public DateTime CreatedTime { get; set; }
-    public DateTime ModifiedTime { get; set; }
-    public bool IsMultiLine => Value?.Contains("\n") ?? false;
-
-    public ValidationResult Validate();
-    public JsonKeywordItem Clone();
-}
-```
-
-#### JsonProjectModel — JSON 项目数据
-
-```csharp
-public class JsonProjectModel : INotifyPropertyChanged
-{
-    public string ProjectName { get; set; }
-    public ObservableCollection<JsonKeywordItem> Keywords { get; set; }
-    public DateTime LastModified { get; set; }
-    public string FilePath { get; set; }
-    public bool HasUnsavedChanges { get; set; }
-    public int KeywordCount => Keywords?.Count ?? 0;
-
-    public ValidationResult Validate();
-    public void AddKeyword(JsonKeywordItem keyword);
-    public bool RemoveKeyword(JsonKeywordItem keyword);
-}
-```
-
 #### ProgressEventArgs — 进度事件参数
 
 ```csharp
@@ -860,26 +706,21 @@ sequenceDiagram
     participant User as 用户
     participant VM as MainWindowViewModel
     participant DP as IDocumentProcessor
-    participant JDP as IDataParser / IExcelDataParser
+    participant EDP as IExcelDataParser
     participant CCP as ContentControlProcessor
     participant STR as ISafeTextReplacer
     participant CM as CommentManager
     participant PR as IProgressReporter
 
-    User->>VM: 选择模板文件 + 数据文件
+    User->>VM: 选择模板文件 + Excel 数据文件
     VM->>DP: ValidateTemplateAsync(templatePath)
     DP-->>VM: ValidationResult
 
-    alt JSON 数据源
-        VM->>JDP: IDataParser.ParseJsonFileAsync(filePath)
-        JDP-->>VM: List<Dictionary<string, object>>
-    else Excel 数据源
-        VM->>JDP: IExcelDataParser.ParseExcelFileAsync(filePath)
-        JDP-->>VM: Dictionary<string, FormattedCellValue>
-    end
+    VM->>EDP: ParseExcelFileAsync(filePath)
+    EDP-->>VM: Dictionary<string, FormattedCellValue>
 
     User->>VM: 点击"开始处理"
-    VM->>DP: ProcessDocumentsAsync(request) / ProcessDocumentWithFormattedDataAsync(...)
+    VM->>DP: ProcessDocumentWithFormattedDataAsync(...)
     DP->>PR: ReportProgress(0, total)
 
     loop 每条数据记录
@@ -1094,18 +935,13 @@ private void ConfigureServices()
 
     // === 核心服务（Singleton） ===
     services.AddSingleton<IFileService, FileService>();
-    services.AddSingleton<IDataParser, DataParserService>();
     services.AddSingleton<IExcelDataParser, ExcelDataParserService>();
     services.AddSingleton<IProgressReporter, ProgressReporterService>();
     services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
     services.AddSingleton<IFileScanner, FileScannerService>();
     services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
-    services.AddSingleton<IExcelToWordConverter, ExcelToWordConverterService>();
     services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
     services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
-
-    // === 更新服务 ===
-    services.AddSingleton<IUpdateService, UpdateClientService>();
 
     // === 清理服务（Transient，每次请求创建新实例） ===
     services.AddTransient<CleanupCommentProcessor>();
@@ -1120,16 +956,10 @@ private void ConfigureServices()
 
     // === ViewModels（Transient） ===
     services.AddTransient<MainWindowViewModel>();
-    services.AddTransient<ConverterWindowViewModel>();
-    services.AddTransient<UpdateViewModel>();
-    services.AddTransient<UpdateBannerViewModel>();
 
     // === 窗口（Transient） ===
     services.AddTransient<MainWindow>();
-    services.AddTransient<ConverterWindow>();
     services.AddTransient<CleanupWindow>();
-    services.AddTransient<UpdateWindow>();
-    services.AddTransient<UpdateBannerView>();
 
     _serviceProvider = services.BuildServiceProvider();
 }
@@ -1139,5 +969,5 @@ private void ConfigureServices()
 
 | 生命周期 | 适用场景 | 服务示例 |
 |----------|----------|----------|
-| **Singleton** | 无状态服务、全局缓存、线程安全服务 | IFileService, IDataParser, ITemplateCacheService |
+| **Singleton** | 无状态服务、全局缓存、线程安全服务 | IFileService, IExcelDataParser, ITemplateCacheService |
 | **Transient** | 有状态服务、每次使用需新建实例 | IDocumentCleanupService, ViewModels, Windows |

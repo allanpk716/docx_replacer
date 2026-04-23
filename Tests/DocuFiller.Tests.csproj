@@ -30,7 +30,6 @@
     <Compile Include="..\Services\CommentManager.cs" Link="Services\CommentManager.cs" />
     <Compile Include="..\Services\DocumentProcessorService.cs" Link="Services\DocumentProcessorService.cs" />
     <Compile Include="..\Services\FileService.cs" Link="Services\FileService.cs" />
-    <Compile Include="..\Services\DataParserService.cs" Link="Services\DataParserService.cs" />
     <Compile Include="..\Services\ExcelDataParserService.cs" Link="Services\ExcelDataParserService.cs" />
     <Compile Include="..\Services\SafeTextReplacer.cs" Link="Services\SafeTextReplacer.cs" />
     <Compile Include="..\Services\SafeFormattedContentReplacer.cs" Link="Services\SafeFormattedContentReplacer.cs" />

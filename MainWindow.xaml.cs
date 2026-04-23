@@ -1,7 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using DocuFiller.Configuration;
 using DocuFiller.ViewModels;
 using DocuFiller.Models;
 using System;
@@ -9,7 +7,6 @@ using System.Windows;
 using System.Windows.Media;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
 
 namespace DocuFiller
 {
@@ -19,78 +16,15 @@ namespace DocuFiller
     public partial class MainWindow : Window
     {
         private readonly ILogger<MainWindow> _logger;
-        private readonly UISettings _uiSettings;
 
-        public MainWindow(ILogger<MainWindow> logger, IOptions<UISettings> uiSettings)
+        public MainWindow(ILogger<MainWindow> logger)
         {
             InitializeComponent();
             _logger = logger;
-            _uiSettings = uiSettings.Value;
             
             // 从依赖注入容器获取ViewModel
             var app = (App)Application.Current;
             DataContext = app.ServiceProvider.GetRequiredService<MainWindowViewModel>();
-        }
-        
-        /// <summary>
-        /// 关键词编辑器超链接点击事件
-        /// </summary>
-        private void KeywordEditorHyperlink_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            try
-            {
-                string url = _uiSettings.KeywordEditorUrl;
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = url,
-                    UseShellExecute = true
-                });
-                _logger.LogDebug("打开关键词编辑器: {Url}", url);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"无法打开关键词编辑器：{ex.Message}", "错误",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                _logger.LogDebug(ex, "打开关键词编辑器失败");
-            }
-        }
-
-        /// <summary>
-        /// JSON转Excel转换工具超链接点击事件
-        /// </summary>
-        private void ConverterHyperlink_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            try
-            {
-                if (DataContext is MainWindowViewModel viewModel)
-                {
-                    viewModel.OpenConverterCommand?.Execute(null);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"无法打开转换工具：{ex.Message}", "错误",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        /// <summary>
-        /// 检查更新超链接点击事件
-        /// </summary>
-        private void CheckForUpdateHyperlink_Click(object sender, System.Windows.RoutedEventArgs e)
-        {
-            try
-            {
-                if (DataContext is MainWindowViewModel viewModel)
-                {
-                    viewModel.CheckForUpdateCommand?.Execute(null);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"检查更新失败：{ex.Message}", "错误",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
         
         /// <summary>
@@ -121,10 +55,10 @@ namespace DocuFiller
             base.OnClosing(e);
         }
         
-        #region JSON数据文件拖拽事件处理
+        #region 数据文件拖拽事件处理
         
         /// <summary>
-        /// JSON数据文件拖拽进入事件
+        /// 数据文件拖拽进入事件
         /// </summary>
         private void DataFileDropBorder_DragEnter(object sender, DragEventArgs e)
         {
@@ -158,7 +92,7 @@ namespace DocuFiller
         }
         
         /// <summary>
-        /// JSON数据文件拖拽离开事件
+        /// 数据文件拖拽离开事件
         /// </summary>
         private void DataFileDropBorder_DragLeave(object sender, DragEventArgs e)
         {
@@ -172,7 +106,7 @@ namespace DocuFiller
         }
         
         /// <summary>
-        /// JSON数据文件拖拽悬停事件
+        /// 数据文件拖拽悬停事件
         /// </summary>
         private void DataFileDropBorder_DragOver(object sender, DragEventArgs e)
         {
@@ -196,7 +130,7 @@ namespace DocuFiller
         }
         
         /// <summary>
-        /// JSON数据文件拖拽放置事件
+        /// 数据文件拖拽放置事件
         /// </summary>
         private void DataFileDropBorder_Drop(object sender, DragEventArgs e)
         {
@@ -210,14 +144,6 @@ namespace DocuFiller
                         var filePath = files[0];
                         if (IsDataFile(filePath))
                         {
-                            // 对于JSON文件，验证格式
-                            if (IsJsonFile(filePath) && !IsValidJsonFile(filePath))
-                            {
-                                MessageBox.Show("所选文件不是有效的JSON格式！", "文件格式错误",
-                                    MessageBoxButton.OK, MessageBoxImage.Warning);
-                                return;
-                            }
-
                             // 设置数据路径并自动预览
                             if (DataContext is MainWindowViewModel viewModel)
                             {
@@ -230,7 +156,7 @@ namespace DocuFiller
                         }
                         else
                         {
-                            MessageBox.Show("请拖拽JSON或Excel文件！", "文件类型错误",
+                            MessageBox.Show("请拖拽 Excel (.xlsx) 文件！", "文件类型错误",
                                 MessageBoxButton.OK, MessageBoxImage.Warning);
                         }
                     }
@@ -254,18 +180,6 @@ namespace DocuFiller
         }
         
         /// <summary>
-        /// 检查是否为JSON文件
-        /// </summary>
-        private bool IsJsonFile(string filePath)
-        {
-            if (string.IsNullOrEmpty(filePath))
-                return false;
-
-            var extension = Path.GetExtension(filePath).ToLowerInvariant();
-            return extension == ".json";
-        }
-
-        /// <summary>
         /// 检查是否为Excel文件
         /// </summary>
         private bool IsExcelFile(string filePath)
@@ -278,36 +192,11 @@ namespace DocuFiller
         }
 
         /// <summary>
-        /// 检查是否为支持的数据文件（JSON或Excel）
+        /// 检查是否为支持的数据文件（Excel）
         /// </summary>
         private bool IsDataFile(string filePath)
         {
-            return IsJsonFile(filePath) || IsExcelFile(filePath);
-        }
-        
-        /// <summary>
-        /// 验证JSON文件有效性
-        /// </summary>
-        private bool IsValidJsonFile(string filePath)
-        {
-            try
-            {
-                if (!File.Exists(filePath))
-                    return false;
-                    
-                var content = File.ReadAllText(filePath);
-                if (string.IsNullOrWhiteSpace(content))
-                    return false;
-                    
-                // 简单的JSON格式验证
-                content = content.Trim();
-                return (content.StartsWith("[") && content.EndsWith("]")) || 
-                       (content.StartsWith("{") && content.EndsWith("}"));
-            }
-            catch
-            {
-                return false;
-            }
+            return IsExcelFile(filePath);
         }
         
         #endregion

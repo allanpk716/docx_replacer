@@ -10,12 +10,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using DocuFiller.Models;
-using DocuFiller.Models.Update;
 using DocuFiller.Services.Interfaces;
-using DocuFiller.Services.Update;
 using DocuFiller.Utils;
-using DocuFiller.Views.Update;
-using DocuFiller.ViewModels.Update;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
@@ -25,13 +21,11 @@ namespace DocuFiller.ViewModels
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         private readonly IDocumentProcessor _documentProcessor;
-        private readonly IDataParser _dataParser;
         private readonly IFileService _fileService;
         private readonly IProgressReporter _progressReporter;
         private readonly IFileScanner _fileScanner;
         private readonly IDirectoryManager _directoryManager;
         private readonly IExcelDataParser _excelDataParser;
-        private readonly IUpdateService _updateService;
         private readonly IDocumentCleanupService _cleanupService;
         private readonly ILogger<MainWindowViewModel> _logger;
         private CancellationTokenSource? _cancellationTokenSource;
@@ -46,10 +40,6 @@ namespace DocuFiller.ViewModels
         private double _progressPercentage = 0;
         private bool _isProcessing = false;
         private DataStatistics _dataStatistics = new();
-        private bool _isUpdateAvailable;
-        private VersionInfo? _latestVersionInfo;
-        private UpdateBannerViewModel? _updateBannerViewModel;
-        
         // 文件夹拖拽相关属性
         private string? _templateFolderPath;
         private bool _isFolderMode;
@@ -62,7 +52,7 @@ namespace DocuFiller.ViewModels
         private Models.FileInfo? _singleFileInfo;
 
         // 数据文件类型
-        private DataFileType _dataFileType = DataFileType.Json;
+        private DataFileType _dataFileType = DataFileType.Excel;
 
         // 清理功能相关字段
         private bool _isCleanupProcessing;
@@ -78,165 +68,31 @@ namespace DocuFiller.ViewModels
         
         public MainWindowViewModel(
             IDocumentProcessor documentProcessor,
-            IDataParser dataParser,
             IFileService fileService,
             IProgressReporter progressReporter,
             IFileScanner fileScanner,
             IDirectoryManager directoryManager,
             IExcelDataParser excelDataParser,
-            IUpdateService updateService,
             IDocumentCleanupService cleanupService,
-            ILogger<MainWindowViewModel> logger,
-            UpdateBannerViewModel? updateBannerViewModel = null)
+            ILogger<MainWindowViewModel> logger)
         {
             _documentProcessor = documentProcessor ?? throw new ArgumentNullException(nameof(documentProcessor));
-            _dataParser = dataParser ?? throw new ArgumentNullException(nameof(dataParser));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
             _progressReporter = progressReporter ?? throw new ArgumentNullException(nameof(progressReporter));
             _fileScanner = fileScanner ?? throw new ArgumentNullException(nameof(fileScanner));
             _directoryManager = directoryManager ?? throw new ArgumentNullException(nameof(directoryManager));
             _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
-            _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
             _cleanupService = cleanupService ?? throw new ArgumentNullException(nameof(cleanupService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
             InitializeCommands();
             SubscribeToProgressEvents();
-            SubscribeToUpdateEvents();
-
-            // 初始化更新横幅（使用现有的 logger 创建临时 UpdateBannerViewModel）
-            UpdateBanner = updateBannerViewModel ?? new UpdateBannerViewModel(new LoggerFactory().CreateLogger<UpdateBannerViewModel>());
 
             // 设置默认输出目录
             _outputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出");
 
             // 设置默认清理输出目录
             _cleanupOutputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出", "清理");
-
-            // 启动时自动检查更新（后台运行）
-            Task.Run(async () => await OnInitializedAsync());
-        }
-
-        /// <summary>
-        /// 初始化后的异步操作
-        /// </summary>
-        private async Task OnInitializedAsync()
-        {
-            try
-            {
-                // 从配置读取是否在启动时检查更新
-                var checkOnStartup = GetConfigValue("CheckUpdateOnStartup", "true");
-                if (!bool.Parse(checkOnStartup))
-                {
-                    _logger.LogInformation("启动时自动检查更新已禁用");
-                    return;
-                }
-
-                // 延迟2秒后检查，避免影响启动速度
-                await Task.Delay(2000);
-
-                _logger.LogInformation("开始启动时自动检查更新...");
-                await CheckForUpdateAsync(isAutoCheck: true);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "启动时自动检查更新失败");
-            }
-        }
-
-        /// <summary>
-        /// 检查更新并显示横幅
-        /// </summary>
-        /// <param name="isAutoCheck">是否为自动检查</param>
-        private async Task CheckForUpdatesAsync(bool isAutoCheck = false)
-        {
-            try
-            {
-                if (isAutoCheck)
-                {
-                    _logger.LogInformation("自动检查更新");
-                }
-                else
-                {
-                    _logger.LogInformation("用户手动检查更新");
-                    ProgressMessage = "正在检查更新...";
-                }
-
-                var currentVersion = VersionHelper.GetCurrentVersion();
-                var channel = GetConfigValue("UpdateChannel", "stable");
-
-                var versionInfo = await _updateService.CheckForUpdateAsync(currentVersion, channel);
-
-                if (versionInfo != null)
-                {
-                    _logger.LogInformation("发现新版本: {Version}", versionInfo.Version);
-                    if (!isAutoCheck)
-                    {
-                        ProgressMessage = $"发现新版本: {versionInfo.Version}";
-                    }
-
-                    // 在 UI 线程上显示更新横幅
-                    await ShowUpdateBannerAsync(versionInfo);
-                }
-                else
-                {
-                    _logger.LogInformation("当前版本已是最新: {Version}", currentVersion);
-                    if (!isAutoCheck)
-                    {
-                        ProgressMessage = "当前版本已是最新";
-                        MessageBox.Show(
-                            $"当前版本 {currentVersion} 已是最新版本！",
-                            "检查更新",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "检查更新时发生错误");
-                if (!isAutoCheck)
-                {
-                    ProgressMessage = "检查更新失败";
-                    MessageBox.Show(
-                        $"检查更新时发生错误：{ex.Message}",
-                        "错误",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 显示更新横幅
-        /// </summary>
-        private async Task ShowUpdateBannerAsync(VersionInfo versionInfo)
-        {
-            await Application.Current.Dispatcher.InvokeAsync(() =>
-            {
-                try
-                {
-                    _logger.LogInformation("显示更新横幅: {Version}", versionInfo.Version);
-
-                    // 设置更新横幅的版本信息
-                    if (UpdateBanner != null)
-                    {
-                        UpdateBanner.VersionInfo = versionInfo;
-                        UpdateBanner.IsVisible = true;
-                    }
-
-                    // 直接调用更新窗口（为了简化，我们直接显示更新窗口并隐藏横幅）
-                    ShowUpdateWindow(versionInfo);
-                    if (UpdateBanner != null)
-                    {
-                        UpdateBanner.IsVisible = false; // 隐藏横幅
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "显示更新横幅时发生错误");
-                }
-            });
         }
 
         #region 属性
@@ -261,16 +117,8 @@ namespace DocuFiller.ViewModels
             {
                 if (SetProperty(ref _dataPath, value))
                 {
-                    // 检测文件类型
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        var extension = Path.GetExtension(value).ToLowerInvariant();
-                        DataFileType = extension == ".xlsx" ? DataFileType.Excel : DataFileType.Json;
-                    }
-
                     UpdateFileInfo();
                     OnPropertyChanged(nameof(CanStartProcess));
-                    OnPropertyChanged(nameof(DataFileTypeDisplay));
                 }
             }
         }
@@ -408,12 +256,7 @@ namespace DocuFiller.ViewModels
         /// <summary>
         /// 数据文件类型显示文本
         /// </summary>
-        public string DataFileTypeDisplay => DataFileType switch
-        {
-            DataFileType.Excel => "Excel (支持格式)",
-            DataFileType.Json => "JSON (纯文本)",
-            _ => "未知"
-        };
+        public string DataFileTypeDisplay => "Excel (支持格式)";
         
         public bool CanStartProcess => !IsProcessing &&
             !string.IsNullOrEmpty(DataPath) &&
@@ -422,33 +265,6 @@ namespace DocuFiller.ViewModels
              (InputSourceType == InputSourceType.Folder && FolderStructure != null && !FolderStructure.IsEmpty));
         public bool CanCancelProcess => IsProcessing;
         public bool CanProcessFolder => !IsProcessing && IsFolderMode && FolderStructure != null && !FolderStructure.IsEmpty && !string.IsNullOrEmpty(DataPath);
-
-        /// <summary>
-        /// 是否有可用更新
-        /// </summary>
-        public bool IsUpdateAvailable
-        {
-            get => _isUpdateAvailable;
-            set => SetProperty(ref _isUpdateAvailable, value);
-        }
-
-        /// <summary>
-        /// 最新版本信息
-        /// </summary>
-        public VersionInfo? LatestVersionInfo
-        {
-            get => _latestVersionInfo;
-            set => SetProperty(ref _latestVersionInfo, value);
-        }
-
-        /// <summary>
-        /// 更新横幅视图模型
-        /// </summary>
-        public UpdateBannerViewModel? UpdateBanner
-        {
-            get => _updateBannerViewModel;
-            private set => SetProperty(ref _updateBannerViewModel, value);
-        }
 
         /// <summary>
         /// 清理功能处理状态
@@ -509,8 +325,6 @@ namespace DocuFiller.ViewModels
         public ICommand StartProcessCommand { get; private set; } = null!;
         public ICommand CancelProcessCommand { get; private set; } = null!;
         public ICommand ExitCommand { get; private set; } = null!;
-        public ICommand OpenConverterCommand { get; private set; } = null!;
-        public ICommand CheckForUpdateCommand { get; private set; } = null!;
         public ICommand OpenCleanupCommand { get; private set; } = null!;
 
         // 清理相关命令
@@ -541,8 +355,6 @@ namespace DocuFiller.ViewModels
             StartProcessCommand = new RelayCommand(async () => await StartProcessAsync(), () => CanStartProcess);
             CancelProcessCommand = new RelayCommand(CancelProcess, () => CanCancelProcess);
             ExitCommand = new RelayCommand(ExitApplication);
-            OpenConverterCommand = new RelayCommand(OpenConverter);
-            CheckForUpdateCommand = new RelayCommand(async () => await CheckForUpdateAsync());
             OpenCleanupCommand = new RelayCommand(OpenCleanup);
 
             // 清理相关命令
@@ -565,11 +377,6 @@ namespace DocuFiller.ViewModels
         private void SubscribeToProgressEvents()
         {
             _progressReporter.ProgressUpdated += OnProgressUpdated;
-        }
-
-        private void SubscribeToUpdateEvents()
-        {
-            _updateService.UpdateAvailable += OnUpdateAvailable;
         }
         
         private void OnProgressUpdated(object? sender, ProgressEventArgs e)
@@ -608,7 +415,7 @@ namespace DocuFiller.ViewModels
             var dialog = new OpenFileDialog
             {
                 Title = "选择数据文件",
-                Filter = "支持的数据文件 (*.xlsx;*.json)|*.xlsx;*.json|Excel 文件 (*.xlsx)|*.xlsx|JSON 文件 (*.json)|*.json|所有文件 (*.*)|*.*",
+                Filter = "Excel 文件 (*.xlsx)|*.xlsx|所有文件 (*.*)|*.*",
                 CheckFileExists = true
             };
 
@@ -679,45 +486,26 @@ namespace DocuFiller.ViewModels
             {
                 ProgressMessage = "加载数据预览...";
 
-                if (DataFileType == DataFileType.Excel)
+                var preview = await _excelDataParser.GetDataPreviewAsync(DataPath, 10);
+
+                PreviewData.Clear();
+                foreach (var item in preview)
                 {
-                    var preview = await _excelDataParser.GetDataPreviewAsync(DataPath, 10);
-
-                    PreviewData.Clear();
-                    foreach (var item in preview)
-                    {
-                        // 转换 Dictionary<string, FormattedCellValue> 为 Dictionary<string, object>
-                        var convertedItem = item.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.PlainText);
-                        PreviewData.Add(convertedItem);
-                    }
-
-                    var summary = await _excelDataParser.GetDataStatisticsAsync(DataPath);
-                    var fileInfo = new System.IO.FileInfo(DataPath);
-                    DataStatistics = new DataStatistics
-                    {
-                        TotalRecords = summary.ValidKeywordRows,
-                        Fields = preview.SelectMany(d => d.Keys).Distinct().ToList(),
-                        FileSizeBytes = fileInfo.Length
-                    };
-
-                    ProgressMessage = $"Excel 数据加载完成，共 {summary.ValidKeywordRows} 条记录";
+                    // 转换 Dictionary<string, FormattedCellValue> 为 Dictionary<string, object>
+                    var convertedItem = item.ToDictionary(kvp => kvp.Key, kvp => (object)kvp.Value.PlainText);
+                    PreviewData.Add(convertedItem);
                 }
-                else
+
+                var summary = await _excelDataParser.GetDataStatisticsAsync(DataPath);
+                var fileInfo = new System.IO.FileInfo(DataPath);
+                DataStatistics = new DataStatistics
                 {
-                    // 保留原有的 JSON 预览逻辑
-                    var statistics = await _dataParser.GetDataStatisticsAsync(DataPath);
-                    DataStatistics = statistics;
+                    TotalRecords = summary.ValidKeywordRows,
+                    Fields = preview.SelectMany(d => d.Keys).Distinct().ToList(),
+                    FileSizeBytes = fileInfo.Length
+                };
 
-                    var preview = await _dataParser.GetDataPreviewAsync(DataPath, 10);
-
-                    PreviewData.Clear();
-                    foreach (var item in preview)
-                    {
-                        PreviewData.Add(item);
-                    }
-
-                    ProgressMessage = $"JSON 数据加载完成，共 {statistics.TotalRecords} 条记录";
-                }
+                ProgressMessage = $"Excel 数据加载完成，共 {summary.ValidKeywordRows} 条记录";
             }
             catch (Exception ex)
             {
@@ -830,23 +618,6 @@ namespace DocuFiller.ViewModels
         private void ExitApplication()
         {
             Application.Current.Shutdown();
-        }
-
-        private void OpenConverter()
-        {
-            try
-            {
-                var app = (App)Application.Current;
-                IServiceProvider serviceProvider = app.ServiceProvider;
-                var converterWindow = serviceProvider.GetRequiredService<Views.ConverterWindow>();
-                converterWindow.Owner = Application.Current.MainWindow;
-                converterWindow.ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "打开转换器窗口时发生错误");
-                MessageBox.Show($"打开转换器窗口时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
         }
 
         private void OpenCleanup()
@@ -1259,131 +1030,6 @@ namespace DocuFiller.ViewModels
         }
 
         /// <summary>
-        /// 检查更新
-        /// </summary>
-        /// <param name="isAutoCheck">是否为自动检查</param>
-        private async Task CheckForUpdateAsync(bool isAutoCheck = false)
-        {
-            try
-            {
-                if (isAutoCheck)
-                {
-                    _logger.LogInformation("自动检查更新");
-                }
-                else
-                {
-                    _logger.LogInformation("用户手动检查更新");
-                    ProgressMessage = "正在检查更新...";
-                }
-
-                var currentVersion = VersionHelper.GetCurrentVersion();
-                var channel = GetConfigValue("UpdateChannel", "stable");
-
-                var versionInfo = await _updateService.CheckForUpdateAsync(currentVersion, channel);
-
-                if (versionInfo != null)
-                {
-                    _logger.LogInformation("发现新版本: {Version}", versionInfo.Version);
-                    if (!isAutoCheck)
-                    {
-                        ProgressMessage = $"发现新版本: {versionInfo.Version}";
-                    }
-
-                    // 显示更新窗口
-                    ShowUpdateWindow(versionInfo);
-                }
-                else
-                {
-                    _logger.LogInformation("当前版本已是最新: {Version}", currentVersion);
-                    if (!isAutoCheck)
-                    {
-                        ProgressMessage = "当前版本已是最新";
-                        MessageBox.Show(
-                            $"当前版本 {currentVersion} 已是最新版本！",
-                            "检查更新",
-                            MessageBoxButton.OK,
-                            MessageBoxImage.Information);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "检查更新时发生错误");
-                if (!isAutoCheck)
-                {
-                    ProgressMessage = "检查更新失败";
-                    MessageBox.Show(
-                        $"检查更新时发生错误：{ex.Message}",
-                        "错误",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Error);
-                }
-            }
-        }
-
-        /// <summary>
-        /// 处理更新可用事件
-        /// </summary>
-        private void OnUpdateAvailable(object? sender, UpdateAvailableEventArgs e)
-        {
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                try
-                {
-                    _logger.LogInformation("收到更新可用事件: {Version}", e.Version.Version);
-
-                    LatestVersionInfo = e.Version;
-                    IsUpdateAvailable = true;
-
-                    // 显示更新通知对话框
-                    var result = MessageBox.Show(
-                        $"发现新版本 {e.Version.Version}！\n\n是否立即查看更新详情？",
-                        "发现新版本",
-                        MessageBoxButton.YesNo,
-                        MessageBoxImage.Information);
-
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        ShowUpdateWindow(e.Version);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "处理更新可用事件时发生错误");
-                }
-            });
-        }
-
-        /// <summary>
-        /// 显示更新窗口
-        /// </summary>
-        private void ShowUpdateWindow(VersionInfo versionInfo)
-        {
-            try
-            {
-                _logger.LogInformation("显示更新窗口: {Version}", versionInfo.Version);
-
-                var app = (App)Application.Current;
-                var updateViewModel = app.ServiceProvider.GetRequiredService<UpdateViewModel>();
-                var updateWindow = new UpdateWindow(updateViewModel);
-
-                updateWindow.Owner = Application.Current.MainWindow;
-                updateWindow.ShowDialog();
-
-                _logger.LogInformation("更新窗口已关闭");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "显示更新窗口时发生错误");
-                MessageBox.Show(
-                    $"显示更新窗口时发生错误：{ex.Message}",
-                    "错误",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-        }
-
-        /// <summary>
         /// 从配置获取值
         /// </summary>
         private static string GetConfigValue(string key, string defaultValue)
@@ -1582,23 +1228,6 @@ namespace DocuFiller.ViewModels
     /// </summary>
     public enum DataFileType
     {
-        Json,
-        Excel
-    }
-}�错误");
-                MessageBox.Show($"打开输出文件夹时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        #endregion
-    }
-
-    /// <summary>
-    /// 数据文件类型
-    /// </summary>
-    public enum DataFileType
-    {
-        Json,
         Excel
     }
 }

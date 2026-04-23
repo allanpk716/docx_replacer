@@ -51,6 +51,4 @@
 - `BodyField1`: 正文中的测试字段
 - `HeaderField2`: 偶数页页眉中的测试字段
 
-## 测试数据
 
-对应的测试数据文件位于 `../Data/test-data.json`。
