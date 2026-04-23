@@ -65,20 +65,31 @@ External/update-config.yaml
 External/update-client.exe
 
 # ── GSD baseline (auto-generated) ──
+# NOTE: .gsd is NOT blanket-ignored because this project tracks .gsd/ planning
+# artifacts (PROJECT.md, DECISIONS.md, REQUIREMENTS.md, milestones/) in git.
+# GSD's ensureGitignore() detects tracked files and skips the blanket rule.
 .gsd-id
 
-# ── GSD runtime (not tracked) ──
-.gsd/gsd.db
-.gsd/gsd.db-shm
-.gsd/gsd.db-wal
-.gsd/STATE.md
-.gsd/audit-log.jsonl
-.gsd/audit/
-.gsd/journal/
-.gsd/notifications.jsonl
+# ── GSD runtime (auto-generated, synced with gitignore.ts GSD_RUNTIME_PATTERNS) ──
+.gsd/activity/
+.gsd/forensics/
 .gsd/runtime/
-.gsd/graphs/
 .gsd/worktrees/
+.gsd/parallel/
+.gsd/auto.lock
+.gsd/metrics.json
+.gsd/completed-units*.json
+.gsd/state-manifest.json
+.gsd/STATE.md
+.gsd/gsd.db*
+.gsd/journal/
+.gsd/doctor-history.jsonl
+.gsd/event-log.jsonl
+.gsd/DISCUSSION-MANIFEST.json
+.gsd/milestones/**/*-CONTINUE.md
+.gsd/milestones/**/continue.md
+
+# ── GSD baseline (auto-generated) ──
 .mcp.json
 .bg-shell/
 .DS_Store
