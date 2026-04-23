@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M005-3te7t8/S01/T02",
+  "timestamp": 1776958403920,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet build 编译成功；无参数启动 GUI 正常；有参数时不弹窗",
+      "exitCode": 1,
+      "durationMs": 201,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

@@ -156,6 +156,93 @@
       "label": "T03: Update README.md and clean stale docs/",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M005",
+      "label": "M005",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M005:S01",
+      "label": "S01: CLI 框架 + inspect 子命令",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M005/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M005:S01:T01",
+      "label": "T01: 创建 CLI 基础设施（ConsoleHelper + JsonlOutput + CliRunner）",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M005:S01:T02",
+      "label": "T02: 修改 App.OnStartup 实现 CLI/GUI 双模式分叉",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M005:S01:T03",
+      "label": "T03: 实现 inspect 子命令",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M005:S01:T04",
+      "label": "T04: 实现 --help JSONL 输出（全局 + 子命令级别）",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M005:S01:T05",
+      "label": "T05: 端到端验证：CLI --help + inspect + GUI 回归",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M005:S02",
+      "label": "S02: fill + cleanup 子命令",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M005/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M005:S02:T01",
+      "label": "T01: 实现 FillCommand + DI 注册",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M005:S02:T02",
+      "label": "T02: 实现 CleanupCommand + DI 注册",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M005:S03",
+      "label": "S03: CLI 测试 + 文档更新",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M005/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M005:S03:T01",
+      "label": "T01: 编写 CLI 单元测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M005:S03:T02",
+      "label": "T02: 更新 CLAUDE.md 和 README.md 添加 CLI 文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M006",
+      "label": "M006",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -290,7 +377,79 @@
       "to": "task:M004:S03:T03",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M005",
+      "to": "slice:M005:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S01",
+      "to": "task:M005:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S01",
+      "to": "task:M005:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S01",
+      "to": "task:M005:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S01",
+      "to": "task:M005:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S01",
+      "to": "task:M005:S01:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M005",
+      "to": "slice:M005:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S02",
+      "to": "task:M005:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S02",
+      "to": "task:M005:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M005",
+      "to": "slice:M005:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S03",
+      "to": "task:M005:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M005:S03",
+      "to": "task:M005:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-04-23T15:10:59.806Z"
+  "builtAt": "2026-04-23T16:40:46.522Z"
 }

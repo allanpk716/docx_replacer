@@ -23,6 +23,7 @@
     <NoWarn>$(NoWarn);1591;CS0579</NoWarn>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <StartupObject>DocuFiller.Program</StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

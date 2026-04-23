@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using DocuFiller.Cli;
+using DocuFiller.Cli.Commands;
 using DocuFiller.Configuration;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
@@ -29,6 +31,7 @@ namespace DocuFiller
         
         protected override void OnStartup(StartupEventArgs e)
         {
+            // GUI 模式：原有启动逻辑（CLI 模式由 Program.Main 处理）
             try
             {
                 // 配置服务容器
@@ -74,9 +77,34 @@ namespace DocuFiller
         }
         
         /// <summary>
+        /// 为 CLI 模式创建 ServiceProvider（静态方法，不依赖 WPF Application 实例）。
+        /// </summary>
+        public static ServiceProvider CreateCliServices()
+        {
+            var tempApp = new App();
+            return tempApp.BuildServiceProvider(isCliMode: true);
+        }
+
+        /// <summary>
         /// 配置依赖注入服务
         /// </summary>
         private void ConfigureServices()
+        {
+            _serviceProvider = BuildServiceProvider(isCliMode: false);
+        }
+
+        /// <summary>
+        /// 为 CLI 模式创建 ServiceProvider，不依赖 WPF Application 初始化。
+        /// </summary>
+        public ServiceProvider CreateCliServiceProvider()
+        {
+            return BuildServiceProvider(isCliMode: true);
+        }
+
+        /// <summary>
+        /// 构建 ServiceProvider。CLI 模式下禁用 Console Logger 以保持 JSONL 输出纯净。
+        /// </summary>
+        private ServiceProvider BuildServiceProvider(bool isCliMode)
         {
             var services = new ServiceCollection();
 
@@ -91,8 +119,8 @@ namespace DocuFiller
             services.Configure<PerformanceSettings>(_configuration.GetSection("Performance"));
             services.Configure<UISettings>(_configuration.GetSection("UI"));
 
-            // 配置日志记录
-            var loggerFactory = LoggerConfiguration.CreateLoggerFactory();
+            // 配置日志记录：CLI 模式禁用 Console Logger 以避免污染 JSONL 输出
+            var loggerFactory = LoggerConfiguration.CreateLoggerFactory(enableConsole: !isCliMode);
             services.AddSingleton(loggerFactory);
             services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
 
@@ -112,6 +140,11 @@ namespace DocuFiller
             services.AddTransient<IDocumentCleanupService, DocumentCleanupService>();
             services.AddTransient<CleanupViewModel>();
 
+            // 注册 CLI 子命令处理器
+            services.AddSingleton<ICliCommand, InspectCommand>();
+            services.AddSingleton<ICliCommand, FillCommand>();
+            services.AddSingleton<ICliCommand, CleanupCommand>();
+
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();
             services.AddSingleton<CommentManager>();
@@ -124,7 +157,7 @@ namespace DocuFiller
             services.AddTransient<MainWindow>();
             services.AddTransient<Views.CleanupWindow>();
 
-            _serviceProvider = services.BuildServiceProvider();
+            return services.BuildServiceProvider();
         }
 
         /// <summary>

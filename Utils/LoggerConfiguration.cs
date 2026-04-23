@@ -16,15 +16,19 @@ namespace DocuFiller.Utils
         /// <summary>
         /// 配置日志记录器
         /// </summary>
+        /// <param name="enableConsole">是否启用控制台日志输出。CLI 模式下应传 false 以避免污染 JSONL 输出。</param>
         /// <returns>日志记录器工厂</returns>
-        public static ILoggerFactory CreateLoggerFactory()
+        public static ILoggerFactory CreateLoggerFactory(bool enableConsole = true)
         {
             EnsureLogDirectoryExists();
             
             var factory = LoggerFactory.Create(builder =>
             {
+                if (enableConsole)
+                {
+                    builder.AddConsole();
+                }
                 builder
-                    .AddConsole()
                     .AddDebug()
                     .AddProvider(new FileLoggerProvider(GetCurrentLogFilePath()))
                     .SetMinimumLevel(LogLevel.Information);

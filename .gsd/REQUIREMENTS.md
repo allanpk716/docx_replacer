@@ -2,19 +2,6 @@
 
 This file is the explicit capability and coverage contract for the project.
 
-## Active
-
-### R021 — 更新 CLAUDE.md（移除 JSON/更新/转换器相关架构描述）、README.md（移除 JSON/更新/转换器/Tools 描述）、docs/ 相关文档同步
-- Class: core-capability
-- Status: active
-- Description: 更新 CLAUDE.md（移除 JSON/更新/转换器相关架构描述）、README.md（移除 JSON/更新/转换器/Tools 描述）、docs/ 相关文档同步
-- Why it matters: 文档与代码不一致会误导未来的开发和 AI 辅助编码
-- Source: inferred
-- Primary owning slice: M004-l08k3s/S03
-- Supporting slices: none
-- Validation: unmapped
-- Notes: 需要在代码清理完成后更新
-
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -138,6 +125,17 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: .trae/documents/ 目录已删除（4 份旧文件全部清理），DocuFiller 两份文档已迁移到 docs/，JSON 编辑器两份文档已按 D004 直接删除
 - Notes: JSON 编辑器文档不迁移，直接删除
 
+### R012 — 不更新 docs/VERSION_MANAGEMENT.md、docs/EXTERNAL_SETUP.md、docs/deployment-guide.md
+- Class: operability
+- Status: validated
+- Description: 不更新 docs/VERSION_MANAGEMENT.md、docs/EXTERNAL_SETUP.md、docs/deployment-guide.md
+- Why it matters: 用户明确要求更新机制不写入文档
+- Source: user
+- Primary owning slice: none
+- Supporting slices: none
+- Validation: fill 和 cleanup 子命令实现完成，JSONL 输出格式验证通过。FillCommand 通过 IDocumentProcessor.ProcessDocumentsAsync 调用核心填充服务，CleanupCommand 通过 IDocumentCleanupService.CleanupAsync 调用清理服务。37 个 CLI 单元测试覆盖路由、参数验证和输出格式，108/108 测试全部通过。
+- Notes: 这些文档保持现状不动
+
 ### R014 — 移除所有在线更新相关代码：Services/Update/*、DocuFiller/Services/Update/*、Models/Update/*、ViewModels/Update/*、Views/Update/*、External/*（update-client.exe、publish-client.exe、config.yaml）、csproj PreBuild 门禁、App.xaml.cs DI 注册、MainWindowViewModel 更新逻辑和命令、MainWindow.xaml 更新按钮和横幅 UI
 - Class: core-capability
 - Status: validated
@@ -215,18 +213,18 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: All 71 tests pass after S01/S02 feature removal. T01 removed ValidateJsonFormat (sole Newtonsoft.Json consumer) and test-data.json. dotnet test --no-build --verbosity minimal: 71 passed, 0 failed. No Newtonsoft.Json references remain in .cs/.csproj files.
 - Notes: JSON 相关测试数据文件（test-data.json、test_data/*.json）可一并清理
 
-## Out of Scope
-
-### R012 — 不更新 docs/VERSION_MANAGEMENT.md、docs/EXTERNAL_SETUP.md、docs/deployment-guide.md
-- Class: operability
-- Status: out-of-scope
-- Description: 不更新 docs/VERSION_MANAGEMENT.md、docs/EXTERNAL_SETUP.md、docs/deployment-guide.md
-- Why it matters: 用户明确要求更新机制不写入文档
-- Source: user
-- Primary owning slice: none
+### R021 — 更新 CLAUDE.md（移除 JSON/更新/转换器相关架构描述）、README.md（移除 JSON/更新/转换器/Tools 描述）、docs/ 相关文档同步
+- Class: core-capability
+- Status: validated
+- Description: 更新 CLAUDE.md（移除 JSON/更新/转换器相关架构描述）、README.md（移除 JSON/更新/转换器/Tools 描述）、docs/ 相关文档同步
+- Why it matters: 文档与代码不一致会误导未来的开发和 AI 辅助编码
+- Source: inferred
+- Primary owning slice: M004-l08k3s/S03
 - Supporting slices: none
-- Validation: n/a
-- Notes: 这些文档保持现状不动
+- Validation: CLAUDE.md 和 README.md 已添加完整 CLI 使用文档。CLAUDE.md 包含 6 个 CLI 组件说明、CLI 接口章节（子命令用法、JSONL envelope schema、输出类型、错误码、使用示例）。README.md 包含 CLI 使用方法章节（三个子命令参数和示例）、JSONL 格式说明。
+- Notes: 需要在代码清理完成后更新
+
+## Out of Scope
 
 ### R013 — JSON 编辑器功能已移除，相关文档不迁移，直接删除
 - Class: core-capability
@@ -254,7 +252,7 @@ This file is the explicit capability and coverage contract for the project.
 | R009 | core-capability | validated | M003-g1w88x/S03 | none | docs/excel-data-user-guide.md 包含 6 个章节（含三列格式独立章节）、三列格式关键词匹配 11 处、无 TBD/TODO 标记 |
 | R010 | core-capability | validated | M003-g1w88x/S03 | none | header-footer-support.md 修正为"仅正文区域支持批注"（7 个章节，含准确描述）；批注功能说明.md 与代码一致；两份文档均无 TBD/TODO |
 | R011 | operability | validated | M003-g1w88x/S01 | none | .trae/documents/ 目录已删除（4 份旧文件全部清理），DocuFiller 两份文档已迁移到 docs/，JSON 编辑器两份文档已按 D004 直接删除 |
-| R012 | operability | out-of-scope | none | none | n/a |
+| R012 | operability | validated | none | none | fill 和 cleanup 子命令实现完成，JSONL 输出格式验证通过。FillCommand 通过 IDocumentProcessor.ProcessDocumentsAsync 调用核心填充服务，CleanupCommand 通过 IDocumentCleanupService.CleanupAsync 调用清理服务。37 个 CLI 单元测试覆盖路由、参数验证和输出格式，108/108 测试全部通过。 |
 | R013 | core-capability | out-of-scope | none | none | n/a |
 | R014 | core-capability | validated | M004-l08k3s/S01 | none | All online update code removed: csproj PreBuild/PostPublish gates deleted, External/ directory deleted, 19 update service/model/viewmodel/view files deleted, App.xaml.cs DI registrations removed, MainWindowViewModel/MainWindow.xaml/MainWindow.xaml.cs update references removed. dotnet build passes with 0 errors. grep confirms 0 matches for IUpdateService, UpdateViewModel, UpdateBannerView, UpdateWindow, ValidateUpdateClientFiles, ValidateReleaseFiles, update-client. |
 | R015 | core-capability | validated | M004-l08k3s/S01 | none | All 9 JSON editor orphaned files deleted: JsonEditorService.cs, IJsonEditorService.cs, KeywordValidationService.cs, IKeywordValidationService.cs, JsonKeywordItem.cs, JsonProjectModel.cs, JsonEditorViewModel.cs, JsonEditorWindow.xaml, JsonEditorWindow.xaml.cs. No remaining JSON editor files in codebase. dotnet build passes. |
@@ -263,11 +261,11 @@ This file is the explicit capability and coverage contract for the project.
 | R018 | core-capability | validated | M004-l08k3s/S02 | none | KeywordEditorUrl removed from appsettings.json and AppSettings.cs UISettings class. KeywordEditorHyperlink_Click and ConverterHyperlink_Click handlers removed from MainWindow.xaml.cs. IOptions<UISettings> constructor parameter removed. dotnet build and test pass. |
 | R019 | core-capability | validated | M004-l08k3s/S02 | none | Tools/ directory deleted (confirmed not present on disk). All 10 tool project entries removed from DocuFiller.sln. Compile/EmbeddedResource/None Remove entries removed from DocuFiller.csproj. grep confirms 0 residual references to any tool project name. dotnet build and test pass. |
 | R020 | quality-attribute | validated | M004-l08k3s/S03 | M004-l08k3s/S02 | All 71 tests pass after S01/S02 feature removal. T01 removed ValidateJsonFormat (sole Newtonsoft.Json consumer) and test-data.json. dotnet test --no-build --verbosity minimal: 71 passed, 0 failed. No Newtonsoft.Json references remain in .cs/.csproj files. |
-| R021 | core-capability | active | M004-l08k3s/S03 | none | unmapped |
+| R021 | core-capability | validated | M004-l08k3s/S03 | none | CLAUDE.md 和 README.md 已添加完整 CLI 使用文档。CLAUDE.md 包含 6 个 CLI 组件说明、CLI 接口章节（子命令用法、JSONL envelope schema、输出类型、错误码、使用示例）。README.md 包含 CLI 使用方法章节（三个子命令参数和示例）、JSONL 格式说明。 |
 
 ## Coverage Summary
 
-- Active requirements: 1
-- Mapped to slices: 1
-- Validated: 18 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R014, R015, R016, R017, R018, R019, R020)
+- Active requirements: 0
+- Mapped to slices: 0
+- Validated: 20 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021)
 - Unmapped active requirements: 0

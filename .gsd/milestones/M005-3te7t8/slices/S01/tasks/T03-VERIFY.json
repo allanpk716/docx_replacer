@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M005-3te7t8/S01/T03",
+  "timestamp": 1776958650190,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "使用测试模板执行 DocuFiller.exe inspect --template <path> 输出正确 JSONL 控件列表",
+      "exitCode": 1,
+      "durationMs": 14,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}
