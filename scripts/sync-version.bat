@@ -30,11 +30,6 @@ REM Update DocuFiller.csproj
 set "PS_CMD=%PROJECT_ROOT%\DocuFiller.csproj"
 powershell -Command "$content = Get-Content '%PS_CMD%'; $newVersion = '%VERSION%'; $content = $content -replace '<Version>[^<]+</Version>', ('<Version>' + $newVersion + '</Version>'); Set-Content '%PS_CMD%' $content -Encoding UTF8"
 
-REM Update update-client.config.yaml (only the current_version field)
-if exist "%PROJECT_ROOT%\External\update-client.config.yaml" (
-    powershell -Command "$content = [System.IO.File]::ReadAllText('%PROJECT_ROOT%\External\update-client.config.yaml'); $newVersion = '%VERSION%'; $content = $content -replace 'current_version: \S+', ('current_version: ''' + $newVersion + ''''); [System.IO.File]::WriteAllText('%PROJECT_ROOT%\External\update-client.config.yaml', $content, [System.Text.Encoding]::UTF8)"
-)
-
 echo Version synchronized: !VERSION!
 
 endlocal

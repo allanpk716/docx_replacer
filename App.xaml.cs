@@ -133,6 +133,7 @@ namespace DocuFiller
             services.AddSingleton<IDirectoryManager, DirectoryManagerService>();
             services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
             services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
+            services.AddSingleton<IUpdateService, UpdateService>();
 
             // 注册清理服务
             services.AddTransient<CleanupCommentProcessor>();

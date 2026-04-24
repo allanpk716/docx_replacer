@@ -1,4 +1,4 @@
-# M004-l08k3s: 功能瘦身 — 移除不活跃功能模块
+# M004-l08k3s: 功能瘦身 - 移除不活跃功能模块
 
 **Vision:** 清理 DocuFiller 代码库中所有不再使用的功能模块：在线更新系统、JSON 编辑器遗留、JSON 数据源解析、JSON→Excel 转换器、KeywordEditorUrl、Tools 目录。清理后 Excel 为唯一数据源，编译不依赖外部文件，代码库只包含活跃功能。
 

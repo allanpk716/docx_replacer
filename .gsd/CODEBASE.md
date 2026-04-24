@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-24T01:14:10Z | Files: 123 | Described: 0/123
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-24T01:14:10Z","fingerprint":"a76630db8a18b74e5bb762f5b23d2a7052eaec12","fileCount":123,"truncated":false} -->
+Generated: 2026-04-24T06:41:35Z | Files: 124 | Described: 0/124
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-24T06:41:35Z","fingerprint":"e7a2b2e475d9bd356246955208647bdba78f664b","fileCount":124,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -98,6 +98,7 @@ Generated: 2026-04-24T01:14:10Z | Files: 123 | Described: 0/123
 - `Services/SafeFormattedContentReplacer.cs`
 - `Services/SafeTextReplacer.cs`
 - `Services/TemplateCacheService.cs`
+- `Services/UpdateService.cs`
 
 ### Services/Interfaces/
 - `Services/Interfaces/IDirectoryManager.cs`
@@ -110,6 +111,7 @@ Generated: 2026-04-24T01:14:10Z | Files: 123 | Described: 0/123
 - `Services/Interfaces/ISafeFormattedContentReplacer.cs`
 - `Services/Interfaces/ISafeTextReplacer.cs`
 - `Services/Interfaces/ITemplateCacheService.cs`
+- `Services/Interfaces/IUpdateService.cs`
 
 ### Tests/
 - `Tests/ContentControlProcessorTests.cs`
@@ -177,15 +179,12 @@ Generated: 2026-04-24T01:14:10Z | Files: 123 | Described: 0/123
 - `docs/plans/2025-01-23-cleanup-output-directory.md`
 - `docs/plans/2025-01-23-mainwindow-layout-refactor-design.md`
 - `docs/plans/2025-01-23-mainwindow-layout-refactor.md`
+- `docs/plans/e2e-update-test-guide.md`
 
 ### scripts/
-- `scripts/build-and-publish.bat`
 - `scripts/build-internal.bat`
 - `scripts/build.bat`
-- `scripts/publish.bat`
-- `scripts/release.bat`
+- `scripts/cleanup-gsd-stash.bat`
+- `scripts/e2e-serve.py`
+- `scripts/e2e-update-test.bat`
 - `scripts/sync-version.bat`
-
-### scripts/config/
-- `scripts/config/publish-config.bat`
-- `scripts/config/release-config.bat.example`

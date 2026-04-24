@@ -9,9 +9,56 @@
         MinHeight="800" MinWidth="1200"
         WindowStartupLocation="CenterScreen">
     
-    <Grid Margin="15">
+    <DockPanel>
+        <!-- 底部状态栏 -->
+        <Border DockPanel.Dock="Bottom" Background="#F5F5F5" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="15,6">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding CurrentVersion, StringFormat='版本 {0}'}"
+                           VerticalAlignment="Center" FontSize="12" Foreground="#666666" Margin="0,0,10,0"/>
+
+                <TextBlock Grid.Column="1" x:Name="StatusBarMessage"
+                           Text="{Binding ProgressMessage}"
+                           VerticalAlignment="Center" FontSize="12" Foreground="#888888"/>
+
+                <Button Grid.Column="2" Content="检查更新"
+                        Command="{Binding CheckUpdateCommand}"
+                        IsEnabled="{Binding CanCheckUpdate}"
+                        FontSize="12" Padding="12,4" Cursor="Hand"
+                        Background="Transparent" BorderBrush="#CCCCCC" BorderThickness="1"
+                        Foreground="#555555">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}"
+                                    CornerRadius="3"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E8E8E8"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4"/>
+                                    <Setter Property="Cursor" Value="Arrow"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Border>
+
         <!-- 主要内容区域 -->
-        <TabControl Margin="0,10,0,10" FontSize="16">
+        <Grid Margin="15">
+    <TabControl Margin="0,10,0,10" FontSize="16">
             
             <!-- 关键词替换选项卡 -->
             <TabItem Header="关键词替换" FontSize="16">
@@ -347,4 +394,5 @@
 
         </TabControl>
     </Grid>
+    </DockPanel>
 </Window>

@@ -27,6 +27,7 @@ namespace DocuFiller.ViewModels
         private readonly IDirectoryManager _directoryManager;
         private readonly IExcelDataParser _excelDataParser;
         private readonly IDocumentCleanupService _cleanupService;
+        private readonly IUpdateService? _updateService;
         private readonly ILogger<MainWindowViewModel> _logger;
         private CancellationTokenSource? _cancellationTokenSource;
         
@@ -60,6 +61,9 @@ namespace DocuFiller.ViewModels
         private int _cleanupProgressPercent;
         private string _cleanupOutputDirectory = string.Empty;
 
+        // 更新检查相关字段
+        private bool _isCheckingUpdate;
+
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
         public ObservableCollection<ContentControlData> ContentControls { get; } = new();
@@ -74,7 +78,8 @@ namespace DocuFiller.ViewModels
             IDirectoryManager directoryManager,
             IExcelDataParser excelDataParser,
             IDocumentCleanupService cleanupService,
-            ILogger<MainWindowViewModel> logger)
+            ILogger<MainWindowViewModel> logger,
+            IUpdateService? updateService = null)
         {
             _documentProcessor = documentProcessor ?? throw new ArgumentNullException(nameof(documentProcessor));
             _fileService = fileService ?? throw new ArgumentNullException(nameof(fileService));
@@ -84,6 +89,7 @@ namespace DocuFiller.ViewModels
             _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
             _cleanupService = cleanupService ?? throw new ArgumentNullException(nameof(cleanupService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _updateService = updateService;
 
             InitializeCommands();
             SubscribeToProgressEvents();
@@ -313,6 +319,31 @@ namespace DocuFiller.ViewModels
             set => SetProperty(ref _cleanupOutputDirectory, value);
         }
 
+        /// <summary>
+        /// 当前应用程序版本号
+        /// </summary>
+        public string CurrentVersion => VersionHelper.GetCurrentVersion();
+
+        /// <summary>
+        /// 是否正在检查更新
+        /// </summary>
+        public bool IsCheckingUpdate
+        {
+            get => _isCheckingUpdate;
+            set
+            {
+                if (SetProperty(ref _isCheckingUpdate, value))
+                {
+                    OnPropertyChanged(nameof(CanCheckUpdate));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 是否可以检查更新（更新源已配置且未在检查中）
+        /// </summary>
+        public bool CanCheckUpdate => _updateService?.IsUpdateUrlConfigured == true && !IsCheckingUpdate;
+
         #endregion
         
         #region 命令
@@ -334,6 +365,9 @@ namespace DocuFiller.ViewModels
         public ICommand CloseCleanupCommand { get; private set; } = null!;
         public ICommand BrowseCleanupOutputCommand { get; private set; } = null!;
         public ICommand OpenCleanupOutputFolderCommand { get; private set; } = null!;
+
+        // 更新检查命令
+        public ICommand CheckUpdateCommand { get; private set; } = null!;
 
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -370,6 +404,9 @@ namespace DocuFiller.ViewModels
             SwitchToFolderModeCommand = new RelayCommand(() => IsFolderMode = true);
             ProcessFolderCommand = new RelayCommand(async () => await ProcessFolderAsync(), () => CanProcessFolder);
             BrowseTemplateFolderCommand = new RelayCommand(BrowseTemplateFolder);
+
+            // 更新检查命令
+            CheckUpdateCommand = new RelayCommand(async () => await CheckUpdateAsync(), () => CanCheckUpdate);
         }
         
 
@@ -1057,6 +1094,73 @@ namespace DocuFiller.ViewModels
 
             var extension = Path.GetExtension(filePath).ToLowerInvariant();
             return extension == ".docx" || extension == ".dotx";
+        }
+
+        /// <summary>
+        /// 异步检查更新
+        /// </summary>
+        private async Task CheckUpdateAsync()
+        {
+            if (_updateService == null || !CanCheckUpdate)
+                return;
+
+            try
+            {
+                IsCheckingUpdate = true;
+                _logger.LogInformation("用户触发检查更新");
+
+                var updateInfo = await _updateService.CheckForUpdatesAsync();
+
+                if (updateInfo == null)
+                {
+                    // 无新版本
+                    _logger.LogInformation("当前已是最新版本");
+                    MessageBox.Show(
+                        $"当前版本 {CurrentVersion} 已是最新版本。",
+                        "检查更新",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    return;
+                }
+
+                // 有新版本
+                var newVersion = updateInfo.TargetFullRelease.Version.ToString();
+                _logger.LogInformation("发现新版本: {NewVersion}，当前版本: {CurrentVersion}", newVersion, CurrentVersion);
+
+                var result = MessageBox.Show(
+                    $"发现新版本：{newVersion}\n当前版本：{CurrentVersion}\n\n是否下载并安装更新？\n（下载完成后将自动重启应用）",
+                    "发现新版本",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Question);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    _logger.LogInformation("用户确认下载更新: {NewVersion}", newVersion);
+
+                    // 下载更新
+                    await _updateService.DownloadUpdatesAsync(updateInfo, progress =>
+                    {
+                        // 进度回调在后台线程执行，不需要更新 UI
+                        _logger.LogDebug("更新下载进度: {Progress}%", progress);
+                    });
+
+                    _logger.LogInformation("更新下载完成，准备应用更新并重启");
+                    _updateService.ApplyUpdatesAndRestart();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "检查更新时发生错误");
+                MessageBox.Show(
+                    $"检查更新时发生错误：\n{ex.Message}",
+                    "更新错误",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsCheckingUpdate = false;
+            }
         }
 
         /// <summary>

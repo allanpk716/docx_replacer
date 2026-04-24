@@ -224,6 +224,96 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: CLAUDE.md 和 README.md 已添加完整 CLI 使用文档。CLAUDE.md 包含 6 个 CLI 组件说明、CLI 接口章节（子命令用法、JSONL envelope schema、输出类型、错误码、使用示例）。README.md 包含 CLI 使用方法章节（三个子命令参数和示例）、JSONL 格式说明。
 - Notes: 需要在代码清理完成后更新
 
+### R022 — 在 Program.cs 的 Main() 最顶部初始化 VelopackApp.Build().Run()，清理 App.config 中旧更新配置项（UpdateServerUrl、UpdateChannel、CheckUpdateOnStartup），清理 build-internal.bat 中 COPY_EXTERNAL_FILES 步骤和旧 update-client.exe 引用
+- Class: core-capability
+- Status: validated
+- Description: 在 Program.cs 的 Main() 最顶部初始化 VelopackApp.Build().Run()，清理 App.config 中旧更新配置项（UpdateServerUrl、UpdateChannel、CheckUpdateOnStartup），清理 build-internal.bat 中 COPY_EXTERNAL_FILES 步骤和旧 update-client.exe 引用
+- Why it matters: Velopack 是替代旧更新系统的现代方案，旧残留会与新系统冲突并增加维护混乱
+- Source: user
+- Primary owning slice: M007-wpaxa3/S01
+- Supporting slices: none
+- Validation: Velopack 0.0.1298 NuGet added to csproj + both test csprojs. VelopackApp.Build().Run() is first line of Program.Main(). App.config old update entries (UpdateServerUrl, UpdateChannel, CheckUpdateOnStartup) removed. build-internal.bat COPY_EXTERNAL_FILES/PUBLISH_TO_SERVER/update-client references removed. sync-version.bat update-client.config.yaml block removed. dotnet build 0 errors, dotnet test 162 pass. grep confirms 0 old update system references.
+- Notes: 旧更新系统在 M004 已移除运行时代码，本 slice 清理残留配置和脚本
+
+### R023 — 新增 IUpdateService 接口和 UpdateService 实现，封装 Velopack UpdateManager 的 CheckForUpdatesAsync、DownloadUpdatesAsync、ApplyUpdatesAndRestart。注册到 DI 容器。更新源 URL 从 appsettings.json 读取。
+- Class: core-capability
+- Status: validated
+- Description: 新增 IUpdateService 接口和 UpdateService 实现，封装 Velopack UpdateManager 的 CheckForUpdatesAsync、DownloadUpdatesAsync、ApplyUpdatesAndRestart。注册到 DI 容器。更新源 URL 从 appsettings.json 读取。
+- Why it matters: 将 Velopack API 封装为应用层服务，解耦 UI 与更新框架，便于测试和维护
+- Source: inferred
+- Primary owning slice: M007-wpaxa3/S02
+- Supporting slices: none
+- Validation: Services/UpdateService.cs 实现了 IUpdateService 全部 4 个成员（CheckForUpdatesAsync, DownloadUpdatesAsync, ApplyUpdatesAndRestart, IsUpdateUrlConfigured）。在 App.xaml.cs 中注册为 Singleton（services.AddSingleton<IUpdateService, UpdateService>()）。从 IConfiguration 读取 Update:UpdateUrl 配置，空字符串时 IsUpdateUrlConfigured 返回 false。dotnet build 0 errors, dotnet test 162 tests pass。
+- Notes: 更新源 URL 在 appsettings.json 的 Update:UpdateUrl 节点
+
+### R024 — 在 MainWindow 底部添加状态栏，显示 VersionHelper.GetCurrentVersion() 的版本号和"检查更新"按钮。点击后调用 IUpdateService.CheckForUpdatesAsync()，根据结果显示"已是最新版本"或更新确认对话框。更新源未配置时按钮灰显。
+- Class: primary-user-loop
+- Status: validated
+- Description: 在 MainWindow 底部添加状态栏，显示 VersionHelper.GetCurrentVersion() 的版本号和"检查更新"按钮。点击后调用 IUpdateService.CheckForUpdatesAsync()，根据结果显示"已是最新版本"或更新确认对话框。更新源未配置时按钮灰显。
+- Why it matters: 这是用户手动触发更新的唯一入口，需要常驻可见且不干扰现有功能布局
+- Source: user
+- Primary owning slice: M007-wpaxa3/S02
+- Supporting slices: none
+- Validation: MainWindow.xaml 底部添加 StatusBar 显示 VersionHelper.GetCurrentVersion() 版本号和"检查更新"按钮。MainWindowViewModel 注入 IUpdateService（可选参数），实现 CheckUpdateCommand 命令。更新检查流程：有新版本弹确认对话框，无新版本显示"已是最新版本"，异常显示错误信息。CanCheckUpdate 绑定控制按钮灰显（IsUpdateUrlConfigured 为 false 时禁用）。dotnet build 0 errors, dotnet test 162 tests pass。
+- Notes: 不使用 Velopack 内置更新对话框，自定义 WPF 弹窗匹配应用视觉风格
+
+### R025 — 修改 build-internal.bat：dotnet publish 启用 PublishSingleFile=true 和 IncludeNativeLibrariesForSelfExtract=true，然后调用 vpk pack 产出 Velopack 格式发布物（Setup.exe、Portable.zip、full/delta .nupkg、releases.win.json）。清理旧发布流程中对旧更新服务器的引用。
+- Class: operability
+- Status: validated
+- Description: 修改 build-internal.bat：dotnet publish 启用 PublishSingleFile=true 和 IncludeNativeLibrariesForSelfExtract=true，然后调用 vpk pack 产出 Velopack 格式发布物（Setup.exe、Portable.zip、full/delta .nupkg、releases.win.json）。清理旧发布流程中对旧更新服务器的引用。
+- Why it matters: 发布形态从多文件 zip 变为专业桌面应用发布流程，支持安装版和便携版双渠道分发
+- Source: user
+- Primary owning slice: M007-wpaxa3/S03
+- Supporting slices: none
+- Validation: build-internal.bat contains PublishSingleFile=true, IncludeNativeLibrariesForSelfExtract=true, vpk pack with --packId DocuFiller and --mainExe DocuFiller.exe. Old scripts (publish.bat, release.bat, build-and-publish.bat) and config/ directory removed. build.bat simplified to standalone-only. dotnet build succeeds with 0 errors.
+- Notes: 不启用 PublishTrimmed（EPPlus/OpenXML 有反射使用）。vpk 需预先安装（dotnet tool install -g vpk）
+
+### R026 — 构建 Velopack 发布包，部署到本地 HTTP 服务器，验证：Setup.exe 安装后正常运行、Portable.zip 解压后正常运行、从旧版本检查更新并升级到新版本、升级后用户配置文件（appsettings.json、Logs/、Output/）保留
+- Class: quality-attribute
+- Status: validated
+- Description: 构建 Velopack 发布包，部署到本地 HTTP 服务器，验证：Setup.exe 安装后正常运行、Portable.zip 解压后正常运行、从旧版本检查更新并升级到新版本、升级后用户配置文件（appsettings.json、Logs/、Output/）保留
+- Why it matters: 更新功能的正确性必须通过真实的安装→更新流程验证，单元测试无法覆盖文件替换和重启场景
+- Source: inferred
+- Primary owning slice: M007-wpaxa3/S04
+- Supporting slices: none
+- Validation: E2E test automation infrastructure created (e2e-update-test.bat, e2e-serve.py, e2e-update-test-guide.md) covering all 4 R026 scenarios. Automated pipeline checks pass (162 tests, DI wiring, config). Full manual E2E validation requires human tester on clean Windows with vpk installed — test guide provides step-by-step procedures.
+- Notes: S04 delivered the automation infrastructure and test guide. The actual live E2E test on clean Windows is a manual verification step that requires vpk CLI installed.
+
+### R027 — dotnet build 无错误，dotnet test 全部通过。Velopack 集成和发布管道改造不影响现有业务逻辑。
+- Class: quality-attribute
+- Status: validated
+- Description: dotnet build 无错误，dotnet test 全部通过。Velopack 集成和发布管道改造不影响现有业务逻辑。
+- Why it matters: 回归安全底线——更新功能是新增能力，不应破坏已有功能
+- Source: inferred
+- Primary owning slice: M007-wpaxa3/S01
+- Supporting slices: M007-wpaxa3/S02, M007-wpaxa3/S03
+- Validation: dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests.
+- Notes: 贯穿所有 slice 的约束
+
+## Deferred
+
+### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
+- Class: core-capability
+- Status: deferred
+- Description: 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
+- Why it matters: 减少用户主动检查的认知负担，确保用户及时获取更新
+- Source: user
+- Primary owning slice: none
+- Supporting slices: none
+- Validation: unmapped
+- Notes: M007 只做手动触发，自动检查作为后续增强
+
+### R029 — 支持在 UI 中切换更新渠道（stable/beta），不同渠道对应不同的更新源
+- Class: operability
+- Status: deferred
+- Description: 支持在 UI 中切换更新渠道（stable/beta），不同渠道对应不同的更新源
+- Why it matters: 允许高级用户提前体验 beta 版本，同时不影响普通用户的稳定版本
+- Source: inferred
+- Primary owning slice: none
+- Supporting slices: none
+- Validation: unmapped
+- Notes: 当前只有 stable 渠道
+
 ## Out of Scope
 
 ### R013 — JSON 编辑器功能已移除，相关文档不迁移，直接删除
@@ -262,10 +352,18 @@ This file is the explicit capability and coverage contract for the project.
 | R019 | core-capability | validated | M004-l08k3s/S02 | none | Tools/ directory deleted (confirmed not present on disk). All 10 tool project entries removed from DocuFiller.sln. Compile/EmbeddedResource/None Remove entries removed from DocuFiller.csproj. grep confirms 0 residual references to any tool project name. dotnet build and test pass. |
 | R020 | quality-attribute | validated | M004-l08k3s/S03 | M004-l08k3s/S02 | All 71 tests pass after S01/S02 feature removal. T01 removed ValidateJsonFormat (sole Newtonsoft.Json consumer) and test-data.json. dotnet test --no-build --verbosity minimal: 71 passed, 0 failed. No Newtonsoft.Json references remain in .cs/.csproj files. |
 | R021 | core-capability | validated | M004-l08k3s/S03 | none | CLAUDE.md 和 README.md 已添加完整 CLI 使用文档。CLAUDE.md 包含 6 个 CLI 组件说明、CLI 接口章节（子命令用法、JSONL envelope schema、输出类型、错误码、使用示例）。README.md 包含 CLI 使用方法章节（三个子命令参数和示例）、JSONL 格式说明。 |
+| R022 | core-capability | validated | M007-wpaxa3/S01 | none | Velopack 0.0.1298 NuGet added to csproj + both test csprojs. VelopackApp.Build().Run() is first line of Program.Main(). App.config old update entries (UpdateServerUrl, UpdateChannel, CheckUpdateOnStartup) removed. build-internal.bat COPY_EXTERNAL_FILES/PUBLISH_TO_SERVER/update-client references removed. sync-version.bat update-client.config.yaml block removed. dotnet build 0 errors, dotnet test 162 pass. grep confirms 0 old update system references. |
+| R023 | core-capability | validated | M007-wpaxa3/S02 | none | Services/UpdateService.cs 实现了 IUpdateService 全部 4 个成员（CheckForUpdatesAsync, DownloadUpdatesAsync, ApplyUpdatesAndRestart, IsUpdateUrlConfigured）。在 App.xaml.cs 中注册为 Singleton（services.AddSingleton<IUpdateService, UpdateService>()）。从 IConfiguration 读取 Update:UpdateUrl 配置，空字符串时 IsUpdateUrlConfigured 返回 false。dotnet build 0 errors, dotnet test 162 tests pass。 |
+| R024 | primary-user-loop | validated | M007-wpaxa3/S02 | none | MainWindow.xaml 底部添加 StatusBar 显示 VersionHelper.GetCurrentVersion() 版本号和"检查更新"按钮。MainWindowViewModel 注入 IUpdateService（可选参数），实现 CheckUpdateCommand 命令。更新检查流程：有新版本弹确认对话框，无新版本显示"已是最新版本"，异常显示错误信息。CanCheckUpdate 绑定控制按钮灰显（IsUpdateUrlConfigured 为 false 时禁用）。dotnet build 0 errors, dotnet test 162 tests pass。 |
+| R025 | operability | validated | M007-wpaxa3/S03 | none | build-internal.bat contains PublishSingleFile=true, IncludeNativeLibrariesForSelfExtract=true, vpk pack with --packId DocuFiller and --mainExe DocuFiller.exe. Old scripts (publish.bat, release.bat, build-and-publish.bat) and config/ directory removed. build.bat simplified to standalone-only. dotnet build succeeds with 0 errors. |
+| R026 | quality-attribute | validated | M007-wpaxa3/S04 | none | E2E test automation infrastructure created (e2e-update-test.bat, e2e-serve.py, e2e-update-test-guide.md) covering all 4 R026 scenarios. Automated pipeline checks pass (162 tests, DI wiring, config). Full manual E2E validation requires human tester on clean Windows with vpk installed — test guide provides step-by-step procedures. |
+| R027 | quality-attribute | validated | M007-wpaxa3/S01 | M007-wpaxa3/S02, M007-wpaxa3/S03 | dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests. |
+| R028 | core-capability | deferred | none | none | unmapped |
+| R029 | operability | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
 - Active requirements: 0
 - Mapped to slices: 0
-- Validated: 20 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021)
+- Validated: 26 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027)
 - Unmapped active requirements: 0

@@ -1,4 +1,4 @@
-# M005-3te7t8: CLI 接口 — LLM Agent 集成
+# M005-3te7t8: CLI 接口 - LLM Agent 集成
 
 **Vision:** 为 DocuFiller 新增命令行接口（CLI），让第三方 LLM agent 能无需 GUI 界面直接调用核心功能。CLI 全部使用 JSONL 格式输出（包括 --help），专为机器消费设计。三个子命令覆盖完整工作流：fill（Excel 数据批量填充模板）、cleanup（清理批注和内容控件）、inspect（查询模板控件信息）。无参数时正常启动 WPF GUI，有参数时走 CLI 路径不弹窗。
 

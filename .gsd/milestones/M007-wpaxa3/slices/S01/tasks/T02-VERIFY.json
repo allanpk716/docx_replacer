@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M007-wpaxa3/S01/T02",
+  "timestamp": 1777009397121,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd \"C:/WorkSpace/agent/docx_replacer/.gsd/worktrees/M007-wpaxa3\"",
+      "exitCode": 1,
+      "durationMs": 15,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

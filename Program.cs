@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using Velopack;
 
 namespace DocuFiller
 {
@@ -13,6 +14,9 @@ namespace DocuFiller
         [STAThread]
         public static int Main(string[] args)
         {
+            // Velopack 必须在 Main 最先调用，处理安装/更新/卸载钩子
+            VelopackApp.Build().Run();
+
             if (args.Length > 0)
             {
                 // CLI 模式：完全绕过 WPF Application 初始化

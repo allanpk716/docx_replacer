@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M007-wpaxa3/S02/T02",
+  "timestamp": 1777010436231,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet build",
+      "exitCode": 0,
+      "durationMs": 1982,
+      "verdict": "pass"
+    },
+    {
+      "command": "dotnet test",
+      "exitCode": 0,
+      "durationMs": 11135,
+      "verdict": "pass"
+    }
+  ]
+}
