@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.0" />
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.4.1" />
+    <PackageReference Include="EPPlus" Version="7.5.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.5.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Core services — path is ../.. because this project is under Tests/E2ERegression/ -->
+    <Compile Include="..\..\Services\ContentControlProcessor.cs" Link="Services\ContentControlProcessor.cs" />
+    <Compile Include="..\..\Services\CommentManager.cs" Link="Services\CommentManager.cs" />
+    <Compile Include="..\..\Services\DocumentProcessorService.cs" Link="Services\DocumentProcessorService.cs" />
+    <Compile Include="..\..\Services\FileService.cs" Link="Services\FileService.cs" />
+    <Compile Include="..\..\Services\ExcelDataParserService.cs" Link="Services\ExcelDataParserService.cs" />
+    <Compile Include="..\..\Services\SafeTextReplacer.cs" Link="Services\SafeTextReplacer.cs" />
+    <Compile Include="..\..\Services\SafeFormattedContentReplacer.cs" Link="Services\SafeFormattedContentReplacer.cs" />
+    <Compile Include="..\..\Services\ProgressReporterService.cs" Link="Services\ProgressReporterService.cs" />
+
+    <!-- Conditional: M004-deleted files (exist on d81cd00, not on current code) -->
+    <Compile Include="..\..\Services\DataParserService.cs" Condition="Exists('..\..\Services\DataParserService.cs')" Link="Services\DataParserService.cs" />
+    <Compile Include="..\..\Services\Interfaces\IDataParser.cs" Condition="Exists('..\..\Services\Interfaces\IDataParser.cs')" Link="Services\Interfaces\IDataParser.cs" />
+
+    <!-- Service interfaces (exclude IDataParser — handled by conditional include above) -->
+    <Compile Include="..\..\Services\Interfaces\*.cs" Exclude="..\..\Services\Interfaces\IDataParser.cs" Link="Services\Interfaces\%(Filename).cs" />
+
+    <!-- Models -->
+    <Compile Include="..\..\Models\*.cs" Link="Models\%(Filename).cs" />
+
+    <!-- Utils -->
+    <Compile Include="..\..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
+    <Compile Include="..\..\DocuFiller\Utils\OpenXmlTableCellHelper.cs" Link="Utils\OpenXmlTableCellHelper.cs" />
+
+    <!-- Exceptions -->
+    <Compile Include="..\..\Exceptions\*.cs" Link="Exceptions\%(Filename).cs" />
+  </ItemGroup>
+
+</Project>

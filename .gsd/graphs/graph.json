@@ -243,6 +243,93 @@
       "label": "M006",
       "type": "milestone",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M006:S01",
+      "label": "S01: E2E 测试基础设施 + 全维度验证测试",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M006:S01:T01",
+      "label": "T01: Create E2E test project scaffold",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T02",
+      "label": "T02: Implement ServiceFactory + TestDataHelper + smoke tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T03",
+      "label": "T03: Scan real templates + implement replacement correctness tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T04",
+      "label": "T04: Implement table structure + rich text format verification tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T05",
+      "label": "T05: Implement header/footer + comment tracking tests + full verification",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M006:S02",
+      "label": "S02: 两列格式 + 表格/富文本/页眉页脚/批注验证",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M006:S02:T04",
+      "label": "T04: Implement two-column (FD68) format replacement tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S02:T05",
+      "label": "T05: Implement table structure verification tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S02:T06",
+      "label": "T06: Implement rich text format verification tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S02:T07",
+      "label": "T07: Implement header/footer + comment tracking tests + final verification",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M006:S03",
+      "label": "S03: d81cd00 基准跨版本验证",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M006:S03:T01",
+      "label": "T01: 在 d81cd00 基准版本上构建并运行 E2E 测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S03:T02",
+      "label": "T02: 切回里程碑分支并验证测试仍通过",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -449,7 +536,91 @@
       "to": "task:M005:S03:T02",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T06",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T07",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S03",
+      "to": "task:M006:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S03",
+      "to": "task:M006:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-04-23T16:40:46.522Z"
+  "builtAt": "2026-04-24T00:33:33.535Z"
 }

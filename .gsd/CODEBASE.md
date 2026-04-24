@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-23T22:57:33Z | Files: 114 | Described: 0/114
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-23T22:57:33Z","fingerprint":"27b189ad408a5eee08c2418117573c3a613f1634","fileCount":114,"truncated":false} -->
+Generated: 2026-04-24T00:24:34Z | Files: 123 | Described: 0/123
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-24T00:24:34Z","fingerprint":"a76630db8a18b74e5bb762f5b23d2a7052eaec12","fileCount":123,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -136,6 +136,17 @@ Generated: 2026-04-23T22:57:33Z | Files: 114 | Described: 0/114
 
 ### Tests/DocuFiller.Tests/Utils/
 - `Tests/DocuFiller.Tests/Utils/OpenXmlTableCellHelperTests.cs`
+
+### Tests/E2ERegression/
+- `Tests/E2ERegression/E2ERegression.csproj`
+- `Tests/E2ERegression/HeaderFooterCommentTests.cs`
+- `Tests/E2ERegression/InfrastructureTests.cs`
+- `Tests/E2ERegression/ReplacementCorrectnessTests.cs`
+- `Tests/E2ERegression/RichTextFormatTests.cs`
+- `Tests/E2ERegression/ServiceFactory.cs`
+- `Tests/E2ERegression/TableStructureTests.cs`
+- `Tests/E2ERegression/TestDataHelper.cs`
+- `Tests/E2ERegression/TwoColumnFormatTests.cs`
 
 ### Tests/Integration/
 - `Tests/Integration/HeaderFooterCommentIntegrationTests.cs`

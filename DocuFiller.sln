@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DocuFiller", "DocuFiller.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocuFiller.Tests", "Tests\DocuFiller.Tests.csproj", "{952439E6-E192-4A15-8626-12530AD98DCE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "E2ERegression", "Tests\E2ERegression\E2ERegression.csproj", "{B3F7A1C2-4D5E-4F8B-9A3C-6E2D1F0A8B4C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{952439E6-E192-4A15-8626-12530AD98DCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{952439E6-E192-4A15-8626-12530AD98DCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{952439E6-E192-4A15-8626-12530AD98DCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3F7A1C2-4D5E-4F8B-9A3C-6E2D1F0A8B4C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3F7A1C2-4D5E-4F8B-9A3C-6E2D1F0A8B4C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3F7A1C2-4D5E-4F8B-9A3C-6E2D1F0A8B4C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3F7A1C2-4D5E-4F8B-9A3C-6E2D1F0A8B4C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
