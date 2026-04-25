@@ -20,5 +20,8 @@ namespace DocuFiller.Services.Interfaces
 
         /// <summary>更新源 URL 是否已配置</summary>
         bool IsUpdateUrlConfigured { get; }
+
+        /// <summary>当前更新通道（stable/beta），默认 stable</summary>
+        string Channel { get; }
     }
 }

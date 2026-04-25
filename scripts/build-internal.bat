@@ -10,6 +10,7 @@ REM   Setup.exe, Portable.zip, .nupkg, releases.win.json
 REM ========================================
 
 set MODE=%1
+set CHANNEL=%2
 set SCRIPT_DIR=%~dp0
 set PROJECT_ROOT=%SCRIPT_DIR%..
 set PACK_OUTPUT=%SCRIPT_DIR%build
@@ -25,6 +26,16 @@ if not "%MODE%"=="standalone" (
     exit /b 1
 )
 
+REM Validate channel if provided
+if not "%CHANNEL%"=="" (
+    if not "%CHANNEL%"=="stable" (
+        if not "%CHANNEL%"=="beta" (
+            echo Error: Invalid channel '%CHANNEL%'. Must be 'stable' or 'beta'.
+            exit /b 1
+        )
+    )
+)
+
 REM ========================================
 REM Get Version
 REM ========================================
@@ -38,6 +49,7 @@ echo ========================================
 echo Mode: !MODE!
 echo Version: !VERSION!
 if defined GIT_TAG echo Git Tag: !GIT_TAG!
+if defined CHANNEL echo Channel: !CHANNEL!
 echo ========================================
 
 REM ========================================
@@ -53,6 +65,15 @@ call :VPK_PACK
 if errorlevel 1 (
     echo Error: Velopack packaging failed
     exit /b 1
+)
+
+REM Upload to update server if channel is specified
+if defined CHANNEL (
+    call :UPLOAD
+    if errorlevel 1 (
+        echo Error: Upload failed
+        exit /b 1
+    )
 )
 
 echo ========================================
@@ -138,6 +159,70 @@ echo [VPK_PACK] SUCCESS: Velopack artifacts created
 echo Artifacts:
 for %%f in ("%PACK_OUTPUT%\DocuFiller*") do echo   %%~nxf
 for %%f in ("%PACK_OUTPUT%\releases.win.json") do echo   %%~nxf
+exit /b 0
+
+REM ========================================
+REM Function: UPLOAD
+REM Uploads .nupkg files and releases.win.json to the Go update server
+REM Requires UPDATE_SERVER_URL and UPDATE_SERVER_TOKEN environment variables
+REM ========================================
+:UPLOAD
+echo.
+echo [UPLOAD] Starting upload to channel: !CHANNEL!
+
+REM Check required environment variables
+if "!UPDATE_SERVER_URL!"=="" (
+    echo [UPLOAD] FAILED: UPDATE_SERVER_URL environment variable is not set
+    echo [UPLOAD] Required environment variables:
+    echo [UPLOAD]   UPDATE_SERVER_URL   - Base URL of the update server (e.g. http://localhost:8080^)
+    echo [UPLOAD]   UPDATE_SERVER_TOKEN - Bearer token for authentication
+    exit /b 1
+)
+if "!UPDATE_SERVER_TOKEN!"=="" (
+    echo [UPLOAD] FAILED: UPDATE_SERVER_TOKEN environment variable is not set
+    echo [UPLOAD] Required environment variables:
+    echo [UPLOAD]   UPDATE_SERVER_URL   - Base URL of the update server (e.g. http://localhost:8080^)
+    echo [UPLOAD]   UPDATE_SERVER_TOKEN - Bearer token for authentication
+    exit /b 1
+)
+
+set "UPLOAD_URL=!UPDATE_SERVER_URL!/api/channels/!CHANNEL!/releases"
+echo [UPLOAD] Target: !UPLOAD_URL!
+
+REM Upload releases.win.json
+set "RELEASES_FILE=%PACK_OUTPUT%\releases.win.json"
+if exist "!RELEASES_FILE!" (
+    echo [UPLOAD] Uploading releases.win.json...
+    for /f "tokens=* delims= " %%h in ('curl -s -o nul -w "%%{http_code}" --max-time 60 -H "Authorization: Bearer !UPDATE_SERVER_TOKEN!" -F "file=@!RELEASES_FILE!" "!UPLOAD_URL!" 2^>nul') do set HTTP_STATUS=%%h
+    if "!HTTP_STATUS!"=="200" (
+        echo [UPLOAD]   releases.win.json - OK (HTTP !HTTP_STATUS!^)
+    ) else (
+        echo [UPLOAD] FAILED: releases.win.json - HTTP !HTTP_STATUS!
+        exit /b 1
+    )
+) else (
+    echo [UPLOAD] WARNING: releases.win.json not found in %PACK_OUTPUT%
+)
+
+REM Upload all .nupkg files
+set UPLOAD_COUNT=0
+for %%f in ("%PACK_OUTPUT%\*.nupkg") do (
+    echo [UPLOAD] Uploading %%~nxf...
+    for /f "tokens=* delims= " %%h in ('curl -s -o nul -w "%%{http_code}" --max-time 60 -H "Authorization: Bearer !UPDATE_SERVER_TOKEN!" -F "file=@%%f" "!UPLOAD_URL!" 2^>nul') do set HTTP_STATUS=%%h
+    if "!HTTP_STATUS!"=="200" (
+        echo [UPLOAD]   %%~nxf - OK (HTTP !HTTP_STATUS!^)
+        set /a UPLOAD_COUNT+=1
+    ) else (
+        echo [UPLOAD] FAILED: %%~nxf - HTTP !HTTP_STATUS!
+        exit /b 1
+    )
+)
+
+if !UPLOAD_COUNT! equ 0 (
+    echo [UPLOAD] WARNING: No .nupkg files found to upload
+)
+
+echo [UPLOAD] SUCCESS: !UPLOAD_COUNT! package(s^) uploaded to !CHANNEL! channel
 exit /b 0
 
 

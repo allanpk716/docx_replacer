@@ -412,6 +412,94 @@
       "label": "T02: Verify build pipeline, configuration wiring, and create E2E test guide",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M008",
+      "label": "M008",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M008:S01",
+      "label": "S01: Go 更新服务器",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M008/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M008:S01:T01",
+      "label": "T01: Scaffold Go project with static file serving and channel directory structure",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M008:S01:T02",
+      "label": "T02: Implement upload API with token authentication",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M008:S01:T03",
+      "label": "T03: Implement promote, version list, and auto-cleanup APIs",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M008:S01:T04",
+      "label": "T04: Write Go unit tests and curl-based integration test script",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M008:S02",
+      "label": "S02: 客户端通道支持",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M008/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M008:S02:T01",
+      "label": "T01: Add Channel config and modify UpdateService URL construction",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M008:S02:T02",
+      "label": "T02: Add unit tests for channel URL construction",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M008:S03",
+      "label": "S03: 发布脚本改造",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M008/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M008:S03:T01",
+      "label": "T01: Add channel parameter and auto-upload to build-internal.bat",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M008:S04",
+      "label": "S04: 端到端验证",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M008/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M008:S04:T01",
+      "label": "T01: Write e2e dual-channel integration test script",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M008:S04:T02",
+      "label": "T02: Execute full test suite and verify zero regressions",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -774,7 +862,85 @@
       "to": "task:M007:S04:T02",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M008",
+      "to": "slice:M008:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S01",
+      "to": "task:M008:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S01",
+      "to": "task:M008:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S01",
+      "to": "task:M008:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S01",
+      "to": "task:M008:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M008",
+      "to": "slice:M008:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S02",
+      "to": "task:M008:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S02",
+      "to": "task:M008:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M008",
+      "to": "slice:M008:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S03",
+      "to": "task:M008:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M008",
+      "to": "slice:M008:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S04",
+      "to": "task:M008:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M008:S04",
+      "to": "task:M008:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-04-24T06:40:56.890Z"
+  "builtAt": "2026-04-25T00:56:13.693Z"
 }

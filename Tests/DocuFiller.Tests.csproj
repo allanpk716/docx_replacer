@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
@@ -37,6 +38,7 @@
     <Compile Include="..\Services\SafeTextReplacer.cs" Link="Services\SafeTextReplacer.cs" />
     <Compile Include="..\Services\SafeFormattedContentReplacer.cs" Link="Services\SafeFormattedContentReplacer.cs" />
     <Compile Include="..\Services\ProgressReporterService.cs" Link="Services\ProgressReporterService.cs" />
+    <Compile Include="..\Services\UpdateService.cs" Link="Services\UpdateService.cs" />
     <Compile Include="..\Services\Interfaces\*.cs" Link="Services\Interfaces\%(Filename).cs" />
     <Compile Include="..\Models\*.cs" Link="Models\%(Filename).cs" />
     <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />

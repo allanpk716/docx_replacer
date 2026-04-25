@@ -290,6 +290,83 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests.
 - Notes: 贯穿所有 slice 的约束
 
+### R030 — Go 单二进制更新服务器，启动时指定数据目录和端口。自动维护 stable/ 和 beta/ 子目录，每个目录存放 releases.win.json 和 .nupkg 文件。静态文件服务供 Velopack 客户端下载更新。
+- Class: core-capability
+- Status: validated
+- Description: Go 单二进制更新服务器，启动时指定数据目录和端口。自动维护 stable/ 和 beta/ 子目录，每个目录存放 releases.win.json 和 .nupkg 文件。静态文件服务供 Velopack 客户端下载更新。
+- Why it matters: 内网轻量更新源，无需 Nginx/IIS 等重型服务器，Go 编译后单文件部署
+- Source: user
+- Primary owning slice: M008-4uyz6m/S01
+- Supporting slices: none
+- Validation: Go update-server serves static files from /{channel}/releases.win.json and /{channel}/*.nupkg with Content-Type headers. Build compiles, 50 Go tests pass, curl integration tests verify static serving.
+- Notes: 不使用数据库，文件系统即存储
+
+### R031 — POST /api/channels/{channel}/releases 接口，接受 multipart 上传（releases.win.json + .nupkg + Setup.exe 等），带 Token 认证（Header: Authorization: Bearer {token}）。上传后自动更新该通道的 releases.win.json。
+- Class: core-capability
+- Status: validated
+- Description: POST /api/channels/{channel}/releases 接口，接受 multipart 上传（releases.win.json + .nupkg + Setup.exe 等），带 Token 认证（Header: Authorization: Bearer {token}）。上传后自动更新该通道的 releases.win.json。
+- Why it matters: 支持自动化构建后直接推送到更新服务器，不需要手动复制文件
+- Source: user
+- Primary owning slice: M008-4uyz6m/S01
+- Supporting slices: none
+- Validation: POST /api/channels/{channel}/releases accepts multipart uploads (releases.win.json + .nupkg files), merges feeds by FileName to avoid duplicates, requires Bearer token auth. Tested with httptest integration tests and curl.
+- Notes: Token 在服务器启动参数中配置
+
+### R032 — POST /api/channels/stable/promote?from=beta&version={version} 接口，将指定版本从 beta 目录复制到 stable 目录并更新 stable 的 releases.win.json。不需要重新上传文件。
+- Class: core-capability
+- Status: validated
+- Description: POST /api/channels/stable/promote?from=beta&version={version} 接口，将指定版本从 beta 目录复制到 stable 目录并更新 stable 的 releases.win.json。不需要重新上传文件。
+- Why it matters: 简化发布流程——测试通过后一条命令从 beta 推到 stable，不需要重新编译上传
+- Source: user
+- Primary owning slice: M008-4uyz6m/S01
+- Supporting slices: none
+- Validation: POST /api/channels/{target}/promote?from={source}&version={version} copies matching files and merges feed entries. Returns 404 if version not found. Tested in handler_test.go (5 test cases).
+- Notes: 版本文件从 beta 目录硬链接或复制
+
+### R033 — GET /api/channels/{channel}/releases 接口，返回该通道的版本列表（版本号、文件大小、上传时间）。
+- Class: core-capability
+- Status: validated
+- Description: GET /api/channels/{channel}/releases 接口，返回该通道的版本列表（版本号、文件大小、上传时间）。
+- Why it matters: 方便运维查看服务器上有哪些版本，辅助发布决策
+- Source: user
+- Primary owning slice: M008-4uyz6m/S01
+- Supporting slices: none
+- Validation: GET /api/channels/{channel}/releases returns grouped versions with file names, counts, sizes, sorted by semver descending. No auth required. Tested in handler_test.go (3 test cases).
+- Notes: 只读接口，不需要认证
+
+### R034 — 上传新版本或 promote 时，检查该通道的版本数量。如果超过 10 个，删除最老的版本文件并更新 releases.win.json。
+- Class: operability
+- Status: validated
+- Description: 上传新版本或 promote 时，检查该通道的版本数量。如果超过 10 个，删除最老的版本文件并更新 releases.win.json。
+- Why it matters: 防止磁盘无限增长，保留 10 个版本足够回滚和增量更新使用
+- Source: user
+- Primary owning slice: M008-4uyz6m/S01
+- Supporting slices: none
+- Validation: CleanupOldVersions keeps last 10 versions per channel. Tested with 11 versions (oldest removed) and 15 versions (5 removed). Cleanup triggers after every upload and promote. Files deleted from disk and feed updated atomically.
+- Notes: 清理策略在上传和 promote 时自动触发
+
+### R035 — build-internal.bat 增加 channel 参数（stable/beta），构建完成后自动调用更新服务器的上传 API 将 Velopack 产物推送到指定通道。服务器地址和 Token 从环境变量或配置读取。
+- Class: operability
+- Status: validated
+- Description: build-internal.bat 增加 channel 参数（stable/beta），构建完成后自动调用更新服务器的上传 API 将 Velopack 产物推送到指定通道。服务器地址和 Token 从环境变量或配置读取。
+- Why it matters: 一条命令完成编译+打包+发布，自动化流水线的核心
+- Source: user
+- Primary owning slice: M008-4uyz6m/S03
+- Supporting slices: none
+- Validation: build-internal.bat accepts optional CHANNEL parameter (stable/beta), validates input, and auto-uploads .nupkg + releases.win.json to Go update server via curl when UPDATE_SERVER_URL and UPDATE_SERVER_TOKEN are set. Grep verification: 28 UPLOAD lines, 10 CHANNEL lines, both env vars present. dotnet build: 0 errors.
+- Notes: 需要 UPDATE_SERVER_URL 和 UPDATE_SERVER_TOKEN 环境变量
+
+### R036 — 验证完整流程：启动 Go 服务器 → 上传到 beta → beta 客户端收到更新 → promote 到 stable → stable 客户端收到更新。现有 162 个测试全部通过。
+- Class: quality-attribute
+- Status: validated
+- Description: 验证完整流程：启动 Go 服务器 → 上传到 beta → beta 客户端收到更新 → promote 到 stable → stable 客户端收到更新。现有 162 个测试全部通过。
+- Why it matters: 双通道是跨组件功能（Go 服务器 + C# 客户端 + BAT 脚本），必须端到端验证
+- Source: inferred
+- Primary owning slice: M008-4uyz6m/S04
+- Supporting slices: none
+- Validation: E2E dual-channel script (13 assertions PASS), Go server tests (handler 28 + storage 14 = 42 PASS), Go build (exit 0), .NET build (0 errors), .NET tests (168 PASS: 141 unit + 27 E2E). Full flow verified: upload beta → beta feed accessible → channel isolation → promote → stable feed accessible → auto-cleanup.
+- Notes: 可复用 M007 的 e2e-serve.py 和 e2e-update-test.bat 思路
+
 ## Deferred
 
 ### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
@@ -360,10 +437,17 @@ This file is the explicit capability and coverage contract for the project.
 | R027 | quality-attribute | validated | M007-wpaxa3/S01 | M007-wpaxa3/S02, M007-wpaxa3/S03 | dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests. |
 | R028 | core-capability | deferred | none | none | unmapped |
 | R029 | operability | deferred | none | none | unmapped |
+| R030 | core-capability | validated | M008-4uyz6m/S01 | none | Go update-server serves static files from /{channel}/releases.win.json and /{channel}/*.nupkg with Content-Type headers. Build compiles, 50 Go tests pass, curl integration tests verify static serving. |
+| R031 | core-capability | validated | M008-4uyz6m/S01 | none | POST /api/channels/{channel}/releases accepts multipart uploads (releases.win.json + .nupkg files), merges feeds by FileName to avoid duplicates, requires Bearer token auth. Tested with httptest integration tests and curl. |
+| R032 | core-capability | validated | M008-4uyz6m/S01 | none | POST /api/channels/{target}/promote?from={source}&version={version} copies matching files and merges feed entries. Returns 404 if version not found. Tested in handler_test.go (5 test cases). |
+| R033 | core-capability | validated | M008-4uyz6m/S01 | none | GET /api/channels/{channel}/releases returns grouped versions with file names, counts, sizes, sorted by semver descending. No auth required. Tested in handler_test.go (3 test cases). |
+| R034 | operability | validated | M008-4uyz6m/S01 | none | CleanupOldVersions keeps last 10 versions per channel. Tested with 11 versions (oldest removed) and 15 versions (5 removed). Cleanup triggers after every upload and promote. Files deleted from disk and feed updated atomically. |
+| R035 | operability | validated | M008-4uyz6m/S03 | none | build-internal.bat accepts optional CHANNEL parameter (stable/beta), validates input, and auto-uploads .nupkg + releases.win.json to Go update server via curl when UPDATE_SERVER_URL and UPDATE_SERVER_TOKEN are set. Grep verification: 28 UPLOAD lines, 10 CHANNEL lines, both env vars present. dotnet build: 0 errors. |
+| R036 | quality-attribute | validated | M008-4uyz6m/S04 | none | E2E dual-channel script (13 assertions PASS), Go server tests (handler 28 + storage 14 = 42 PASS), Go build (exit 0), .NET build (0 errors), .NET tests (168 PASS: 141 unit + 27 E2E). Full flow verified: upload beta → beta feed accessible → channel isolation → promote → stable feed accessible → auto-cleanup. |
 
 ## Coverage Summary
 
 - Active requirements: 0
 - Mapped to slices: 0
-- Validated: 26 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027)
+- Validated: 33 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R030, R031, R032, R033, R034, R035, R036)
 - Unmapped active requirements: 0

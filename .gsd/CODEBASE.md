@@ -1,10 +1,11 @@
 # Codebase Map
 
-Generated: 2026-04-24T06:41:35Z | Files: 124 | Described: 0/124
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-24T06:41:35Z","fingerprint":"e7a2b2e475d9bd356246955208647bdba78f664b","fileCount":124,"truncated":false} -->
+Generated: 2026-04-25T00:53:20Z | Files: 144 | Described: 0/144
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-25T00:53:20Z","fingerprint":"5aa58f467ca7b3b64f80fb01549db37ab94ac185","fileCount":144,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
+- `3`
 - `App.config`
 - `App.xaml`
 - `App.xaml.cs`
@@ -120,6 +121,7 @@ Generated: 2026-04-24T06:41:35Z | Files: 124 | Described: 0/124
 - `Tests/ExcelIntegrationTests.cs`
 - `Tests/FormattedCellValueTests.cs`
 - `Tests/HeaderFooterCommentTests.cs`
+- `Tests/UpdateServiceTests.cs`
 - `Tests/verify-templates.bat`
 
 ### Tests/DocuFiller.Tests/
@@ -185,6 +187,36 @@ Generated: 2026-04-24T06:41:35Z | Files: 124 | Described: 0/124
 - `scripts/build-internal.bat`
 - `scripts/build.bat`
 - `scripts/cleanup-gsd-stash.bat`
+- `scripts/e2e-dual-channel-test.sh`
 - `scripts/e2e-serve.py`
 - `scripts/e2e-update-test.bat`
 - `scripts/sync-version.bat`
+- `scripts/test-update-server.sh`
+
+### update-server/
+- `update-server/go.mod`
+- `update-server/main.go`
+
+### update-server/handler/
+- `update-server/handler/api.go`
+- `update-server/handler/handler_test.go`
+- `update-server/handler/list.go`
+- `update-server/handler/promote.go`
+- `update-server/handler/static.go`
+- `update-server/handler/upload_test.go`
+- `update-server/handler/upload.go`
+
+### update-server/middleware/
+- `update-server/middleware/auth.go`
+
+### update-server/model/
+- `update-server/model/release.go`
+
+### update-server/storage/
+- `update-server/storage/cleanup_test.go`
+- `update-server/storage/cleanup.go`
+- `update-server/storage/store_test.go`
+- `update-server/storage/store.go`
+
+### update-server/testdata/beta/
+- `update-server/testdata/beta/test-1.0.0-full.nupkg`

@@ -25,3 +25,8 @@
 | D017 |  | convention | 更新源配置位置 | appsettings.json 的 Update:UpdateUrl 节点 | 和现有配置风格一致（所有应用配置都在 appsettings.json），不使用 App.config（旧更新残留将被清理）。Velopack UpdateManager 构造函数接受 URL 字符串直接传入。 | Yes — 如果需要支持多环境配置 | agent |
 | D018 |  | architecture | 不做 Trimming | PublishSingleFile=true 但 PublishTrimmed=false | EPPlus 和 DocumentFormat.OpenXml 使用反射，trimming 可能导致运行时错误。内网环境下载速度不是瓶颈，大体积（80-120MB）可接受。 | Yes — 如果未来需要减小体积且能验证 trimming 安全性 | agent |
 | D019 |  | pattern | 不使用 Velopack 内置更新对话框 | 自定义 WPF 弹窗处理更新确认和进度展示 | Velopack 内置对话框是 WinForms 风格，与应用 WPF 视觉风格不一致。自定义弹窗匹配现有 UI 主题。 | No | agent |
+| D020 |  | library | 更新服务器技术选择 | Go 语言，放在项目子目录 update-server/ | Go 编译为单二进制无运行时依赖，内网部署简单。作为子目录先开发，后续好用再分离。只为 DocuFiller 服务，不需要多程序支持。 | Yes | collaborative |
+| D021 |  | architecture | 更新服务器认证方式 | 简单 Token（启动参数配置，Bearer Header 传递） | 内网环境够用就行。上传和 promote 接口需要保护，版本列表查询不需要认证。 | Yes | collaborative |
+| D022 |  | architecture | 客户端通道切换方式 | appsettings.json Update:Channel 字段，值为 stable 或 beta | 兼顾 GUI 和 CLI 模式（都读同一配置文件）。即时生效，下次检查更新时读取最新配置。向后兼容——Channel 为空默认 stable。 | Yes | collaborative |
+| D023 |  | architecture | 版本保留策略 | 每通道自动保留最近 10 个版本，上传/promote 时触发清理 | 10 个版本足够回滚和增量更新，自动化不需要人工干预。 | Yes | collaborative |
+| D024 |  | architecture | 更新服务器存储方案 | 文件系统存储，不用数据库 | 够用就行。数据目录下 stable/ 和 beta/ 子目录，每个目录存放 releases.win.json 和 .nupkg 文件。Go 服务器本身就是文件的搬运工。 | Yes | collaborative |

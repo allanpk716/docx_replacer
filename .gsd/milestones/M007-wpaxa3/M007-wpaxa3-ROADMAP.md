@@ -1,4 +1,4 @@
-# M007-wpaxa3: Velopack 自动更新 — 单 EXE 发布 + 内网更新
+# M007-wpaxa3: Velopack 自动更新 - 单 EXE 发布 + 内网更新
 
 **Vision:** 为 DocuFiller 集成 Velopack 自动更新框架，实现手动检测远程最新版本号并一键自动升级。发布形态从多文件 zip 改为单 EXE（PublishSingleFile self-contained），同时提供安装版（Setup.exe）和便携版（Portable.zip）。更新源为内网 HTTP 静态文件服务器。
 
