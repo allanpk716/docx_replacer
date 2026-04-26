@@ -1,6 +1,8 @@
 using System.Reflection;
 using System.Text.Json;
+using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.Cli;
 
@@ -59,8 +61,15 @@ internal class CliRunner
                     "inspect" => await RunSubCommandAsync("inspect", options),
                     "fill" => await RunSubCommandAsync("fill", options),
                     "cleanup" => await RunSubCommandAsync("cleanup", options),
+                    "update" => await RunSubCommandAsync("update", options),
                     _ => HandleUnknownCommand(subCommand),
                 };
+
+                // Post-command update reminder: only for successful non-update commands
+                if (exitCode == 0 && !subCommand.Equals("update", StringComparison.OrdinalIgnoreCase))
+                {
+                    await TryAppendUpdateReminderAsync();
+                }
 
                 return exitCode;
             }
@@ -148,7 +157,7 @@ internal class CliRunner
 
     private static int HandleUnknownCommand(string command)
     {
-        JsonlOutput.WriteError($"未知子命令: {command}。支持的子命令: inspect, fill, cleanup", "UNKNOWN_COMMAND");
+        JsonlOutput.WriteError($"未知子命令: {command}。支持的子命令: inspect, fill, cleanup, update", "UNKNOWN_COMMAND");
         return 1;
     }
 
@@ -207,6 +216,18 @@ internal class CliRunner
             },
         });
 
+        WriteJsonLine(new Dictionary<string, object>
+        {
+            ["type"] = "command",
+            ["name"] = "update",
+            ["description"] = "检查并安装应用更新",
+            ["usage"] = "DocuFiller.exe update [options]",
+            ["options"] = new[]
+            {
+                new { name = "--yes", required = false, description = "自动下载更新并重启应用" },
+            },
+        });
+
         // Line 5: examples
         WriteJsonLine(new Dictionary<string, object>
         {
@@ -216,6 +237,8 @@ internal class CliRunner
                 "DocuFiller.exe inspect --template report.docx",
                 "DocuFiller.exe fill --template report.docx --data input.xlsx --output ./output",
                 "DocuFiller.exe cleanup --input ./docs",
+                "DocuFiller.exe update",
+                "DocuFiller.exe update --yes",
             },
         });
     }
@@ -263,6 +286,17 @@ internal class CliRunner
                     new { name = "--template", required = true, description = "模板文件路径" },
                 },
             },
+            "update" => new Dictionary<string, object>
+            {
+                ["type"] = "command",
+                ["name"] = "update",
+                ["description"] = "检查并安装应用更新",
+                ["usage"] = "DocuFiller.exe update [options]",
+                ["options"] = new[]
+                {
+                    new { name = "--yes", required = false, description = "自动下载更新并重启应用" },
+                },
+            },
             _ => null,
         };
 
@@ -272,7 +306,7 @@ internal class CliRunner
         }
         else
         {
-            JsonlOutput.WriteError($"未知子命令: {command}。支持的子命令: inspect, fill, cleanup", "UNKNOWN_COMMAND");
+            JsonlOutput.WriteError($"未知子命令: {command}。支持的子命令: inspect, fill, cleanup, update", "UNKNOWN_COMMAND");
         }
     }
 
@@ -289,6 +323,40 @@ internal class CliRunner
     {
         var v = Assembly.GetEntryAssembly()?.GetName().Version;
         return v is not null ? $"{v.Major}.{v.Minor}.{v.Build}" : "1.0.0";
+    }
+
+    /// <summary>
+    /// 条件性追加 update reminder JSONL 行。
+    /// 仅在有新版本时输出，已是最新或检查失败时不输出。
+    /// 不影响调用方的 exitCode。
+    /// </summary>
+    private async Task TryAppendUpdateReminderAsync()
+    {
+        try
+        {
+            var updateService = _serviceProvider.GetService<IUpdateService>();
+            if (updateService is null)
+            {
+                return;
+            }
+
+            var updateInfo = await updateService.CheckForUpdatesAsync();
+            if (updateInfo is not null)
+            {
+                JsonlOutput.WriteUpdate(new
+                {
+                    reminder = true,
+                    latestVersion = updateInfo.TargetFullRelease.Version?.ToString(),
+                    message = $"发现新版本: {updateInfo.TargetFullRelease.Version}，运行 update --yes 更新",
+                });
+            }
+
+            // 已是最新版本时不输出任何内容
+        }
+        catch
+        {
+            // 更新检查失败不影响原命令结果，静默跳过
+        }
     }
 
     /// <summary>

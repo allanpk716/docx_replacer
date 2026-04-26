@@ -56,6 +56,14 @@ internal static class JsonlOutput
         WriteEnvelope("summary", "success", summary);
     }
 
+    /// <summary>
+    /// 输出 update 类型 JSONL 行（版本检查结果、更新进度等）。
+    /// </summary>
+    public static void WriteUpdate(object data)
+    {
+        WriteEnvelope("update", "success", data);
+    }
+
     private static void WriteEnvelope(string type, string status, object data)
     {
         var envelope = new JsonlEnvelope

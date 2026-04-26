@@ -2,38 +2,36 @@
 
 ## What This Is
 
-DocuFiller 是一款基于 .NET 8 + WPF 的 Windows 桌面应用，通过 Excel 数据文件批量填充 Word 文档模板中的内容控件。支持富文本格式保留（上标、下标）、页眉页脚替换、批注追踪、审核清理（去除控件和批注）。提供 CLI 接口（JSONL 输出）供 LLM Agent 集成调用。具备 Velopack 驱动的内网自动更新能力（stable/beta 双通道）。
+DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，支持 GUI 和 CLI 双模式。提供 Word 文档批量填充、富文本替换、批注追踪和审核清理 4 大功能模块。CLI 模式输出 JSONL 格式，适合 LLM agent 集成。
 
 ## Core Value
 
-用户选择模板 + Excel 数据源 → 一键批量生成格式正确的 Word 文档。内容控件精确定位替换，不破坏文档结构。CLI 模式支持第三方 LLM agent 无需 GUI 直接调用核心功能。
+用 Excel 数据驱动 Word 模板批量生成文档，保持格式完整，追踪变更痕迹。
 
 ## Current State
 
-已完成八个里程碑：
-- **M001-a60bo7**: Excel 三列格式支持（ID|关键词|值），自动格式检测，ID 唯一性校验
-- **M002-ahlnua**: 代码质量清理（ILogger 注入、OpenFolderDialog 替换、Console.WriteLine 清除）
-- **M003-g1w88x**: 文档全面更新（7 份文档对齐代码库、.trae/documents/ 迁移清理）
-- **M004-l08k3s**: 功能瘦身 — 移除在线更新（19文件）、JSON编辑器遗留（9文件）、JSON数据源（IDataParser）、转换器窗口（5文件）、KeywordEditorUrl、Tools目录（10项目）、Newtonsoft.Json依赖，Excel成为唯一数据源，文档全部同步
-- **M005-3te7t8**: CLI 接口 — 新增命令行接口（CliRunner + 3 子命令），JSONL 格式输出，37 个 CLI 单元测试，文档更新
-- **M006-rj9bue**: 真实数据端到端回归测试 — 用真实业务数据创建独立 E2E 测试项目
-- **M007-wpaxa3**: Velopack 自动更新 — 集成 Velopack 框架，Program.cs 初始化，更新服务（UpdateService），主窗口状态栏版本号+检查更新，build-internal.bat 发布脚本产出 Setup.exe + Portable.zip，E2E 测试脚本和测试指南
-- **M008-4uyz6m**: 双通道更新系统 — Go 轻量更新服务器（上传/promote/列表/清理 API），客户端通道选择（appsettings.json Channel 字段），发布脚本一条命令构建+发布，端到端双通道验证通过
+- 10 个服务接口 + 2 个处理器的完整业务层
+- GUI（WPF MVVM）+ CLI（JSONL 输出）双模式运行
+- 支持 Excel 两列/三列格式自动检测、正文/页眉/页脚内容控件替换
+- Velopack 更新框架已集成，内网 Go 更新服务器已部署
+- E2E 回归测试覆盖主要业务路径
+- 在线更新功能全套移除并重建为 Velopack 方案（M005-M008）
+- GitHub CI/CD 发布流水线已建立（v* tag 触发自动发布到 GitHub Release）
+- UpdateService 多源切换（HTTP URL 优先 + GithubSource 备选），便携版检测
+- GUI 状态栏常驻更新提示（便携版/有新版本/检查失败三种状态）
+- CLI update 子命令（版本检查 JSONL + --yes 下载重启 + post-command 更新提醒）
 
 ## Architecture / Key Patterns
 
-- **框架**: .NET 8 + WPF，MVVM 模式
-- **文档处理**: DocumentFormat.OpenXml（SafeTextReplacer 三种替换策略处理表格控件）
-- **Excel 处理**: EPPlus 7.5.2（ExcelDataParserService 自动检测两列/三列格式）
-- **依赖注入**: Microsoft.Extensions.DependencyInjection
-- **CLI 接口**: CliRunner 参数解析 + fill/cleanup/inspect 子命令，JsonlOutput 统一 envelope 输出
-- **自动更新**: Velopack（UpdateManager 检测/下载/安装/重启，vpk 打包发布）
-- **更新通道**: stable/beta 双通道，通过 appsettings.json Channel 字段配置，Go 更新服务器托管（单二进制，文件系统存储，Bearer Token 认证，每通道保留 10 版本自动清理）
-- **发布形态**: PublishSingleFile self-contained 单 EXE，Velopack 产出 Setup.exe + Portable.zip + 增量更新包
-- **服务层**: 10+ 个服务接口覆盖文档处理、Excel 数据解析、格式化替换、文档清理、自动更新等核心功能
-- **主界面**: 两个 Tab（关键词替换、审核清理）+ 底部状态栏（版本号 + 检查更新）
-- **数据源**: 仅 Excel（.xlsx）
-- **双模式启动**: 无参数→WPF GUI，有参数→CLI（JSONL 输出）
+- MVVM + 依赖注入 + 分层架构（Singleton 服务为主，Transient 用于有状态组件）
+- 双模式入口：`Program.Main` 检查 args 长度分流 CLI/GUI
+- CLI 使用 `AttachConsole(-1)` P/Invoke 解决 WinExe stdout 问题
+- Velopack `VelopackApp.Build().Run()` 必须在 Main 最先调用
+- 更新服务：`UpdateService` 封装 Velopack `UpdateManager`，多源切换（HTTP URL / GithubSource），配置驱动源选择
+- 便携版检测：`UpdateManager.IsInstalled` 构造时缓存，区分安装版和便携版
+- Go 更新服务器：文件系统存储，stable/beta 双通道，Bearer Token 认证
+- GitHub CI/CD：v* tag 触发 Actions workflow，Velopack 打包，Release 自动创建
+- CLI post-command hook：成功命令后条件性追加更新提醒 JSONL
 
 ## Capability Contract
 
@@ -41,11 +39,12 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 
 ## Milestone Sequence
 
-- [x] M001-a60bo7: Excel 行 ID 列支持 — 三列 Excel 格式自动检测与 ID 唯一性校验
-- [x] M002-ahlnua: 代码质量清理 — ILogger 注入、调试日志清除、OpenFolderDialog 替换
-- [x] M003-g1w88x: 文档全面更新 — 7 份文档对齐代码库当前状态
-- [x] M004-l08k3s: 功能瘦身 — 移除在线更新、JSON 相关、转换器、Tools 等不活跃模块
-- [x] M005-3te7t8: CLI 接口 — LLM Agent 集成（fill/cleanup/inspect 子命令，JSONL 输出）
-- [x] M006-rj9bue: 真实数据端到端回归测试
-- [x] M007-wpaxa3: Velopack 自动更新 — 单 EXE 发布 + 内网更新 + 安装版/便携版
-- [x] M008-4uyz6m: 双通道更新系统 — Go 更新服务器 + stable/beta 通道 + 自动化发布
+- [x] M001: 三列 Excel 格式支持 — 自动检测两列/三列格式
+- [x] M002: 文档迁移与清理 — 产品文档迁移到 docs/，清理在线更新代码
+- [x] M003: MainWindow 布局重构 — 功能面板整合，拖拽支持
+- [x] M004: JSON 数据源清理 — 移除 DataParserService，Excel 为唯一数据源
+- [x] M005: Velopack 更新框架集成 — 替换旧更新方案
+- [x] M006: E2E 回归测试 — 端到端测试覆盖主要业务路径
+- [x] M007: 更新服务器 — Go 语言内网更新服务器
+- [x] M008: Velopack 更新 UI — 自定义 WPF 更新弹窗
+- [x] M009: GitHub CI/CD 发布 + 多源更新提醒 — tag 驱动发布流水线，GUI/CLI 更新体验

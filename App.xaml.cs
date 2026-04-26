@@ -145,6 +145,7 @@ namespace DocuFiller
             services.AddSingleton<ICliCommand, InspectCommand>();
             services.AddSingleton<ICliCommand, FillCommand>();
             services.AddSingleton<ICliCommand, CleanupCommand>();
+            services.AddSingleton<ICliCommand, UpdateCommand>();
 
             // 注册内部服务
             services.AddSingleton<ContentControlProcessor>();

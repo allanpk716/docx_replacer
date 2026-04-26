@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Utils;
@@ -18,6 +19,25 @@ using Microsoft.Win32;
 
 namespace DocuFiller.ViewModels
 {
+    /// <summary>
+    /// 更新状态枚举，用于状态栏常驻提示
+    /// </summary>
+    public enum UpdateStatus
+    {
+        /// <summary>初始状态，尚未检查</summary>
+        None,
+        /// <summary>便携版运行，不支持自动更新</summary>
+        PortableVersion,
+        /// <summary>有新版本可用</summary>
+        UpdateAvailable,
+        /// <summary>当前已是最新版本</summary>
+        UpToDate,
+        /// <summary>正在检查更新</summary>
+        Checking,
+        /// <summary>检查更新失败</summary>
+        Error
+    }
+
     public class MainWindowViewModel : INotifyPropertyChanged
     {
         private readonly IDocumentProcessor _documentProcessor;
@@ -63,6 +83,8 @@ namespace DocuFiller.ViewModels
 
         // 更新检查相关字段
         private bool _isCheckingUpdate;
+        private UpdateStatus _updateStatus = UpdateStatus.None;
+        private string _updateStatusMessage = string.Empty;
 
         // 集合属性
         public ObservableCollection<Dictionary<string, object>> PreviewData { get; } = new();
@@ -99,6 +121,9 @@ namespace DocuFiller.ViewModels
 
             // 设置默认清理输出目录
             _cleanupOutputDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "DocuFiller输出", "清理");
+
+            // 启动时自动检查更新状态（fire-and-forget，不阻塞 UI）
+            _ = InitializeUpdateStatusAsync();
         }
 
         #region 属性
@@ -344,6 +369,60 @@ namespace DocuFiller.ViewModels
         /// </summary>
         public bool CanCheckUpdate => _updateService?.IsUpdateUrlConfigured == true && !IsCheckingUpdate;
 
+        /// <summary>
+        /// 更新状态枚举值
+        /// </summary>
+        public UpdateStatus CurrentUpdateStatus
+        {
+            get => _updateStatus;
+            set
+            {
+                if (SetProperty(ref _updateStatus, value))
+                {
+                    OnPropertyChanged(nameof(HasUpdateStatus));
+                    OnPropertyChanged(nameof(UpdateStatusMessage));
+                    OnPropertyChanged(nameof(UpdateStatusBrush));
+                }
+            }
+        }
+
+        /// <summary>
+        /// 状态栏显示的更新状态消息
+        /// </summary>
+        public string UpdateStatusMessage
+        {
+            get => _updateStatus switch
+            {
+                UpdateStatus.PortableVersion => "便携版不支持自动更新",
+                UpdateStatus.UpdateAvailable => "有新版本可用，点击更新",
+                UpdateStatus.UpToDate => "当前已是最新版本",
+                UpdateStatus.Checking => "正在检查更新...",
+                UpdateStatus.Error => "检查更新失败",
+                _ => string.Empty
+            };
+        }
+
+        /// <summary>
+        /// 状态栏更新状态文本颜色
+        /// </summary>
+        public Brush UpdateStatusBrush
+        {
+            get => _updateStatus switch
+            {
+                UpdateStatus.PortableVersion => Brushes.Gray,
+                UpdateStatus.UpdateAvailable => Brushes.Orange,
+                UpdateStatus.UpToDate => Brushes.Green,
+                UpdateStatus.Checking => Brushes.Gray,
+                UpdateStatus.Error => Brushes.Red,
+                _ => Brushes.Gray
+            };
+        }
+
+        /// <summary>
+        /// 是否有可显示的更新状态（用于 UI 可见性绑定）
+        /// </summary>
+        public bool HasUpdateStatus => _updateStatus != UpdateStatus.None;
+
         #endregion
         
         #region 命令
@@ -368,6 +447,7 @@ namespace DocuFiller.ViewModels
 
         // 更新检查命令
         public ICommand CheckUpdateCommand { get; private set; } = null!;
+        public ICommand UpdateStatusClickCommand { get; private set; } = null!;
 
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -407,6 +487,7 @@ namespace DocuFiller.ViewModels
 
             // 更新检查命令
             CheckUpdateCommand = new RelayCommand(async () => await CheckUpdateAsync(), () => CanCheckUpdate);
+            UpdateStatusClickCommand = new RelayCommand(async () => await OnUpdateStatusClickAsync(), () => HasUpdateStatus);
         }
         
 
@@ -1160,6 +1241,91 @@ namespace DocuFiller.ViewModels
             finally
             {
                 IsCheckingUpdate = false;
+            }
+        }
+
+        /// <summary>
+        /// 启动时自动检查更新状态，初始化状态栏常驻提示
+        /// </summary>
+        private async Task InitializeUpdateStatusAsync()
+        {
+            if (_updateService == null)
+            {
+                _logger.LogInformation("更新服务未注册，跳过更新状态初始化");
+                return;
+            }
+
+            try
+            {
+                CurrentUpdateStatus = UpdateStatus.Checking;
+
+                // 便携版检测
+                if (!_updateService.IsInstalled)
+                {
+                    _logger.LogInformation("检测到便携版运行，更新状态: PortableVersion");
+                    CurrentUpdateStatus = UpdateStatus.PortableVersion;
+                    return;
+                }
+
+                // 更新源未配置
+                if (!_updateService.IsUpdateUrlConfigured)
+                {
+                    _logger.LogInformation("更新源未配置，跳过自动检查");
+                    CurrentUpdateStatus = UpdateStatus.None;
+                    return;
+                }
+
+                // 检查是否有新版本
+                var updateInfo = await _updateService.CheckForUpdatesAsync();
+
+                if (updateInfo != null)
+                {
+                    var newVersion = updateInfo.TargetFullRelease.Version.ToString();
+                    _logger.LogInformation("自动检查发现新版本: {NewVersion}，当前版本: {CurrentVersion}", newVersion, CurrentVersion);
+                    CurrentUpdateStatus = UpdateStatus.UpdateAvailable;
+                }
+                else
+                {
+                    _logger.LogInformation("自动检查完成，当前已是最新版本: {CurrentVersion}", CurrentVersion);
+                    CurrentUpdateStatus = UpdateStatus.UpToDate;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "自动检查更新时发生异常");
+                CurrentUpdateStatus = UpdateStatus.Error;
+            }
+        }
+
+        /// <summary>
+        /// 点击状态栏更新提示时，走现有弹窗更新流程
+        /// </summary>
+        private async Task OnUpdateStatusClickAsync()
+        {
+            switch (_updateStatus)
+            {
+                case UpdateStatus.UpdateAvailable:
+                    // 有新版本，直接走 CheckUpdateAsync 弹窗流程
+                    await CheckUpdateAsync();
+                    break;
+                case UpdateStatus.PortableVersion:
+                    MessageBox.Show(
+                        "当前为便携版运行，不支持自动更新。\n如需自动更新功能，请安装正式版本。",
+                        "便携版提示",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    break;
+                case UpdateStatus.Error:
+                    // 检查失败时重试
+                    await InitializeUpdateStatusAsync();
+                    break;
+                case UpdateStatus.UpToDate:
+                    MessageBox.Show(
+                        $"当前版本 {CurrentVersion} 已是最新版本。",
+                        "检查更新",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Information);
+                    break;
             }
         }
 

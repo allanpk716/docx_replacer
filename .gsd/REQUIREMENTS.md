@@ -2,6 +2,19 @@
 
 This file is the explicit capability and coverage contract for the project.
 
+## Active
+
+### R042 — CLI 每次命令执行后，仅在 actionable 时（未配置更新源、有新版本可用）追加一行 `{"type":"update","status":"success","data":{...}}` JSONL 输出。已最新版本时不输出。
+- Class: core-capability
+- Status: active
+- Description: CLI 每次命令执行后，仅在 actionable 时（未配置更新源、有新版本可用）追加一行 `{"type":"update","status":"success","data":{...}}` JSONL 输出。已最新版本时不输出。
+- Why it matters: 不干扰 JSONL 解析器的同时，让 CLI 用户感知更新状态
+- Source: user
+- Primary owning slice: M009-q7p4iu/S04
+- Supporting slices: none
+- Validation: mapped
+- Notes: 不影响现有 JSONL 输出格式，只是在末尾可能有条件地多一行
+
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -367,6 +380,72 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: E2E dual-channel script (13 assertions PASS), Go server tests (handler 28 + storage 14 = 42 PASS), Go build (exit 0), .NET build (0 errors), .NET tests (168 PASS: 141 unit + 27 E2E). Full flow verified: upload beta → beta feed accessible → channel isolation → promote → stable feed accessible → auto-cleanup.
 - Notes: 可复用 M007 的 e2e-serve.py 和 e2e-update-test.bat 思路
 
+### R037 — 打 `v*` 格式 tag 推送到 GitHub 时触发 Actions workflow，自动编译 Windows 程序，使用 Velopack 打包，创建 GitHub Release
+- Class: core-capability
+- Status: validated
+- Description: 打 `v*` 格式 tag 推送到 GitHub 时触发 Actions workflow，自动编译 Windows 程序，使用 Velopack 打包，创建 GitHub Release
+- Why it matters: 自动化发布流程，消除手动构建和上传的人工错误
+- Source: user
+- Primary owning slice: M009-q7p4iu/S01
+- Supporting slices: none
+- Validation: Workflow file .github/workflows/build-release.yml exists with correct v* tag trigger, .NET 8 setup, Velopack packaging, and GitHub Release creation. 24 structural checks pass. dotnet build succeeds confirming CI compatibility.
+- Notes: tag 驱动版本号（v1.2.3 → 1.2.3），tag-only 触发
+
+### R038 — GitHub Release 上传全部 Velopack 产物：用户可直接下载的 Setup.exe 和 Portable.zip，以及 Velopack 更新机制需要的 .nupkg 和 releases.win.json
+- Class: core-capability
+- Status: validated
+- Description: GitHub Release 上传全部 Velopack 产物：用户可直接下载的 Setup.exe 和 Portable.zip，以及 Velopack 更新机制需要的 .nupkg 和 releases.win.json
+- Why it matters: 确保 Velopack 的 GitHubSource 更新通道可以正常工作
+- Source: user
+- Primary owning slice: M009-q7p4iu/S01
+- Supporting slices: none
+- Validation: Workflow uploads all 4 artifact types to GitHub Release: DocuFillerSetup.exe, *Portable*.zip, *.nupkg, releases.win.json. Verified via grep checks on workflow YAML file patterns.
+- Notes: 用户是小白，不需要了解 .nupkg 和 releases.win.json 的存在
+
+### R039 — UpdateService 根据配置自动选择更新源。UpdateUrl 非空时使用内网 Go 更新服务器（HTTP URL），为空时使用 Velopack GitHubSource 指向 GitHub Releases。GitHub 只走 stable 通道。
+- Class: core-capability
+- Status: validated
+- Description: UpdateService 根据配置自动选择更新源。UpdateUrl 非空时使用内网 Go 更新服务器（HTTP URL），为空时使用 Velopack GitHubSource 指向 GitHub Releases。GitHub 只走 stable 通道。
+- Why it matters: 公司用户访问 GitHub 不顺畅，需要内网优先；外网用户需要备选更新通道
+- Source: user
+- Primary owning slice: M009-q7p4iu/S02
+- Supporting slices: none
+- Validation: S02 通过 10 个单元测试验证：UpdateUrl 为空时 UpdateSourceType 为 "GitHub"（使用 GithubSource），UpdateUrl 非空时为 "HTTP"（使用 SimpleWebSource），Channel 默认 stable。接口签名未改，只新增属性。
+- Notes: 不需要同时检查多个源，按配置选一个。IUpdateService 接口不改签名。
+
+### R040 — GUI 启动后状态栏根据更新状态显示常驻提示：未配置更新源时提醒配置、有新版本时提醒更新、便携版运行时提示使用安装版。点击后复用现有 CheckUpdateAsync 弹窗流程。
+- Class: primary-user-loop
+- Status: validated
+- Description: GUI 启动后状态栏根据更新状态显示常驻提示：未配置更新源时提醒配置、有新版本时提醒更新、便携版运行时提示使用安装版。点击后复用现有 CheckUpdateAsync 弹窗流程。
+- Why it matters: 用户是小白，需要主动告知更新状态，不能指望手动点击检查
+- Source: user
+- Primary owning slice: M009-q7p4iu/S03
+- Supporting slices: none
+- Validation: S03 T01+T02: MainWindowViewModel 新增 UpdateStatus 枚举（6种状态）+ 5个绑定属性 + InitializeUpdateStatusAsync 自动检查 + UpdateStatusClickCommand。MainWindow.xaml 状态栏新增 TextBlock 绑定到这些属性，点击触发更新流程。dotnet build 通过，172个测试全部通过。
+- Notes: 现有"检查更新"按钮保留，常驻提示是额外补充
+
+### R041 — 新增 `DocuFiller.exe update` 子命令。无 --yes 时输出当前版本、最新版本、是否有更新的 JSONL 信息。加 --yes 时执行下载并应用更新重启。
+- Class: core-capability
+- Status: validated
+- Description: 新增 `DocuFiller.exe update` 子命令。无 --yes 时输出当前版本、最新版本、是否有更新的 JSONL 信息。加 --yes 时执行下载并应用更新重启。
+- Why it matters: CLI 模式下也需要更新能力，纯 JSONL 保持输出一致性
+- Source: user
+- Primary owning slice: M009-q7p4iu/S04
+- Supporting slices: none
+- Validation: UpdateCommand implements ICliCommand with CommandName=update. Unit tests verify: no-yes outputs version info JSONL (currentVersion/latestVersion/hasUpdate/isInstalled/updateSourceType), --yes portable guard emits PORTABLE_NOT_SUPPORTED error, --yes no-update outputs ALREADY_UP_TO_DATE. Build passes, all 154 tests pass.
+- Notes: 纯 JSONL，无交互式 Y/N 确认。需要安装版才能执行更新。
+
+### R043 — 多源支持和常驻提示的改动不能破坏现有的状态栏"检查更新"按钮、弹窗确认、下载进度、重启应用流程
+- Class: constraint
+- Status: validated
+- Description: 多源支持和常驻提示的改动不能破坏现有的状态栏"检查更新"按钮、弹窗确认、下载进度、重启应用流程
+- Why it matters: 已有的更新体验是稳定的，新功能是增量补充
+- Source: inferred
+- Primary owning slice: M009-q7p4iu/S03
+- Supporting slices: M009-q7p4iu/S02
+- Validation: S03 T02 验证：现有"检查更新"按钮保持不变（Grid.Column 从 2 移至 3），新增的更新提示 TextBlock 使用独立的 Grid 列和 InputBindings，不修改现有弹窗确认/下载进度/重启流程。dotnet test 172个测试全部通过，零回归。
+- Notes: S02 未修改现有方法签名（CheckForUpdatesAsync/DownloadUpdatesAsync/ApplyUpdatesAndRestart），仅新增属性。零回归确认需 S03/S04 集成验证。
+
 ## Deferred
 
 ### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
@@ -444,10 +523,17 @@ This file is the explicit capability and coverage contract for the project.
 | R034 | operability | validated | M008-4uyz6m/S01 | none | CleanupOldVersions keeps last 10 versions per channel. Tested with 11 versions (oldest removed) and 15 versions (5 removed). Cleanup triggers after every upload and promote. Files deleted from disk and feed updated atomically. |
 | R035 | operability | validated | M008-4uyz6m/S03 | none | build-internal.bat accepts optional CHANNEL parameter (stable/beta), validates input, and auto-uploads .nupkg + releases.win.json to Go update server via curl when UPDATE_SERVER_URL and UPDATE_SERVER_TOKEN are set. Grep verification: 28 UPLOAD lines, 10 CHANNEL lines, both env vars present. dotnet build: 0 errors. |
 | R036 | quality-attribute | validated | M008-4uyz6m/S04 | none | E2E dual-channel script (13 assertions PASS), Go server tests (handler 28 + storage 14 = 42 PASS), Go build (exit 0), .NET build (0 errors), .NET tests (168 PASS: 141 unit + 27 E2E). Full flow verified: upload beta → beta feed accessible → channel isolation → promote → stable feed accessible → auto-cleanup. |
+| R037 | core-capability | validated | M009-q7p4iu/S01 | none | Workflow file .github/workflows/build-release.yml exists with correct v* tag trigger, .NET 8 setup, Velopack packaging, and GitHub Release creation. 24 structural checks pass. dotnet build succeeds confirming CI compatibility. |
+| R038 | core-capability | validated | M009-q7p4iu/S01 | none | Workflow uploads all 4 artifact types to GitHub Release: DocuFillerSetup.exe, *Portable*.zip, *.nupkg, releases.win.json. Verified via grep checks on workflow YAML file patterns. |
+| R039 | core-capability | validated | M009-q7p4iu/S02 | none | S02 通过 10 个单元测试验证：UpdateUrl 为空时 UpdateSourceType 为 "GitHub"（使用 GithubSource），UpdateUrl 非空时为 "HTTP"（使用 SimpleWebSource），Channel 默认 stable。接口签名未改，只新增属性。 |
+| R040 | primary-user-loop | validated | M009-q7p4iu/S03 | none | S03 T01+T02: MainWindowViewModel 新增 UpdateStatus 枚举（6种状态）+ 5个绑定属性 + InitializeUpdateStatusAsync 自动检查 + UpdateStatusClickCommand。MainWindow.xaml 状态栏新增 TextBlock 绑定到这些属性，点击触发更新流程。dotnet build 通过，172个测试全部通过。 |
+| R041 | core-capability | validated | M009-q7p4iu/S04 | none | UpdateCommand implements ICliCommand with CommandName=update. Unit tests verify: no-yes outputs version info JSONL (currentVersion/latestVersion/hasUpdate/isInstalled/updateSourceType), --yes portable guard emits PORTABLE_NOT_SUPPORTED error, --yes no-update outputs ALREADY_UP_TO_DATE. Build passes, all 154 tests pass. |
+| R042 | core-capability | active | M009-q7p4iu/S04 | none | mapped |
+| R043 | constraint | validated | M009-q7p4iu/S03 | M009-q7p4iu/S02 | S03 T02 验证：现有"检查更新"按钮保持不变（Grid.Column 从 2 移至 3），新增的更新提示 TextBlock 使用独立的 Grid 列和 InputBindings，不修改现有弹窗确认/下载进度/重启流程。dotnet test 172个测试全部通过，零回归。 |
 
 ## Coverage Summary
 
-- Active requirements: 0
-- Mapped to slices: 0
-- Validated: 33 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R030, R031, R032, R033, R034, R035, R036)
+- Active requirements: 1
+- Mapped to slices: 1
+- Validated: 39 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R043)
 - Unmapped active requirements: 0

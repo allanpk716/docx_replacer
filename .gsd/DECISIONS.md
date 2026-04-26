@@ -30,3 +30,8 @@
 | D022 |  | architecture | 客户端通道切换方式 | appsettings.json Update:Channel 字段，值为 stable 或 beta | 兼顾 GUI 和 CLI 模式（都读同一配置文件）。即时生效，下次检查更新时读取最新配置。向后兼容——Channel 为空默认 stable。 | Yes | collaborative |
 | D023 |  | architecture | 版本保留策略 | 每通道自动保留最近 10 个版本，上传/promote 时触发清理 | 10 个版本足够回滚和增量更新，自动化不需要人工干预。 | Yes | collaborative |
 | D024 |  | architecture | 更新服务器存储方案 | 文件系统存储，不用数据库 | 够用就行。数据目录下 stable/ 和 beta/ 子目录，每个目录存放 releases.win.json 和 .nupkg 文件。Go 服务器本身就是文件的搬运工。 | Yes | collaborative |
+| D025 | M009-q7p4iu | architecture | UpdateService 多源切换策略 | UpdateUrl 非空 → HTTP URL 走内网 Go 服务器；UpdateUrl 为空 → GitHubSource 走 GitHub Releases。GitHub 只走 stable 通道。 | 公司用户访问 GitHub 不顺畅，内网 Go 服务器是首选更新源。GitHub Releases 作为外网用户的备选通道。不需要同时检查多个源，按配置选一个即可。 | Yes | collaborative |
+| D026 | M009-q7p4iu | convention | CLI update 命令交互方式 | 纯 JSONL 输出 + --yes 参数确认执行，无交互式 Y/N | CLI 场景可能用于批处理脚本，交互式确认会打断工作流。JSONL 保持输出格式一致性。 | Yes | collaborative |
+| D027 | M009-q7p4iu | architecture | IUpdateService 接口兼容策略 | 不改接口签名，IsUpdateUrlConfigured 语义扩展为"有任一更新源可用"（内网 Go 或 GitHub Releases 都算） | 内网 Go 服务器和 GitHub Releases 都算"有更新源"，调用方不需要知道具体走哪个源。最小化改动范围，避免连锁修改。 | Yes | agent |
+| D028 | M009-q7p4iu | scope | GitHub Release 通道策略 | GitHub Release 只分发 stable 版本（Velopack 默认 win 通道），beta 继续走内网 Go 服务器 | 公司大部分用户访问 GitHub 不顺畅，beta 测试在内网进行。GitHub 对外只发稳定版，减少维护复杂度。 | Yes | collaborative |
+| D029 | M009-q7p4iu | scope | 只支持安装版自动更新 | 只提供安装版（Setup.exe）的自动更新支持，便携版有明确提示告知用户使用安装版以获得自动更新能力 | 统一更新体验，避免便携版无法自更新导致的用户困惑。Velopack 自更新机制依赖安装版。 | Yes | collaborative |

@@ -2,8 +2,11 @@ using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
+using Velopack;
 using Xunit;
 using DocuFiller.Cli;
+using DocuFiller.Services.Interfaces;
 
 namespace DocuFiller.Tests.Cli;
 
@@ -239,5 +242,133 @@ public class CliRunnerTests
         Assert.Equal("error", doc.RootElement.GetProperty("type").GetString());
         var data = doc.RootElement.GetProperty("data");
         Assert.Equal("COMMAND_NOT_IMPLEMENTED", data.GetProperty("code").GetString());
+    }
+
+    // === Post-command update reminder tests ===
+
+    /// <summary>
+    /// Stub IUpdateService for post-command update reminder testing
+    /// </summary>
+    private class StubUpdateService : IUpdateService
+    {
+        public UpdateInfo? UpdateInfoToReturn { get; init; }
+        public bool IsInstalled => true;
+        public bool IsUpdateUrlConfigured => true;
+        public string Channel => "stable";
+        public string UpdateSourceType => "GitHub";
+
+        public Task<UpdateInfo?> CheckForUpdatesAsync() => Task.FromResult(UpdateInfoToReturn);
+        public Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null) => Task.CompletedTask;
+        public void ApplyUpdatesAndRestart() { }
+    }
+
+    private static UpdateInfo CreateTestUpdateInfo(string version = "2.0.0")
+    {
+        var asset = new VelopackAsset
+        {
+            Version = SemanticVersion.Parse(version),
+            PackageId = "DocuFiller",
+            Type = VelopackAssetType.Full,
+        };
+        return new UpdateInfo(asset, false, asset, Array.Empty<VelopackAsset>());
+    }
+
+    private static CliRunner CreateRunnerWithUpdateService(
+        IUpdateService updateService, params ICliCommand[] commands)
+    {
+        var services = new ServiceCollection();
+        services.AddSingleton(updateService);
+        foreach (var cmd in commands)
+        {
+            services.AddSingleton<ICliCommand>(cmd);
+        }
+        services.AddLogging();
+        var provider = services.BuildServiceProvider();
+        return new CliRunner(provider);
+    }
+
+    [Fact]
+    public async Task PostCommand_UpdateAvailable_AppendsUpdateLine()
+    {
+        var updateService = new StubUpdateService
+        {
+            UpdateInfoToReturn = CreateTestUpdateInfo("2.0.0"),
+        };
+        var stubCmd = new StubCommand
+        {
+            CommandName = "fill",
+            ExecuteFn = _ => Task.FromResult(0), // success
+        };
+        var runner = CreateRunnerWithUpdateService(updateService, stubCmd);
+        var (exitCode, output) = await RunAndCapture(runner,
+            new[] { "fill", "--template", "test.docx", "--data", "test.xlsx", "--output", "./out" });
+
+        Assert.Equal(0, exitCode);
+
+        // Should have appended an update reminder line at the end
+        var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.True(lines.Length >= 1, "Expected at least one output line");
+
+        // Last line should be the update reminder
+        var lastLine = JsonDocument.Parse(lines[^1]);
+        Assert.Equal("update", lastLine.RootElement.GetProperty("type").GetString());
+        var data = lastLine.RootElement.GetProperty("data");
+        Assert.True(data.TryGetProperty("reminder", out var reminder));
+        Assert.True(reminder.GetBoolean());
+        Assert.True(data.TryGetProperty("latestVersion", out _));
+    }
+
+    [Fact]
+    public async Task PostCommand_NoUpdate_NoExtraLine()
+    {
+        var updateService = new StubUpdateService
+        {
+            UpdateInfoToReturn = null, // no update
+        };
+        var stubCmd = new StubCommand
+        {
+            CommandName = "fill",
+            ExecuteFn = _ => Task.FromResult(0), // success
+        };
+        var runner = CreateRunnerWithUpdateService(updateService, stubCmd);
+        var (exitCode, output) = await RunAndCapture(runner,
+            new[] { "fill", "--template", "test.docx", "--data", "test.xlsx", "--output", "./out" });
+
+        Assert.Equal(0, exitCode);
+
+        // No update reminder should be appended
+        var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            var doc = JsonDocument.Parse(line);
+            Assert.NotEqual("update", doc.RootElement.GetProperty("type").GetString());
+        }
+    }
+
+    [Fact]
+    public async Task PostCommand_FailedCommand_NoUpdateLine()
+    {
+        var updateService = new StubUpdateService
+        {
+            UpdateInfoToReturn = CreateTestUpdateInfo("2.0.0"), // update available
+        };
+        var stubCmd = new StubCommand
+        {
+            CommandName = "fill",
+            ExecuteFn = _ => Task.FromResult(1), // failure
+        };
+        var runner = CreateRunnerWithUpdateService(updateService, stubCmd);
+        var (exitCode, output) = await RunAndCapture(runner,
+            new[] { "fill", "--template", "test.docx", "--data", "test.xlsx", "--output", "./out" });
+
+        Assert.Equal(1, exitCode);
+
+        // No update reminder for failed commands
+        var lines = output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var line in lines)
+        {
+            var doc = JsonDocument.Parse(line);
+            Assert.NotEqual("update", doc.RootElement.GetProperty("type").GetString());
+        }
     }
 }

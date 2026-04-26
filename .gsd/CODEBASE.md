@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-26T10:14:21Z | Files: 147 | Described: 0/147
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-26T10:14:21Z","fingerprint":"a5d2001e075aa8088059d5b707b26be88646235c","fileCount":147,"truncated":false} -->
+Generated: 2026-04-26T11:36:00Z | Files: 151 | Described: 0/151
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-26T11:36:00Z","fingerprint":"e7be8a6264100431f18562e8f8d6049c3d235818","fileCount":151,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -28,6 +28,9 @@ Generated: 2026-04-26T10:14:21Z | Files: 147 | Described: 0/147
 ### "docs/\346\211\271\346\263\250\345\212\237\350\203\275\350\257\264\346\230/
 - `"docs/\346\211\271\346\263\250\345\212\237\350\203\275\350\257\264\346\230\216.md"`
 
+### .github/workflows/
+- `.github/workflows/build-release.yml`
+
 ### .trae/rules/
 - `.trae/rules/project_rules.md`
 
@@ -40,6 +43,7 @@ Generated: 2026-04-26T10:14:21Z | Files: 147 | Described: 0/147
 - `Cli/Commands/CleanupCommand.cs`
 - `Cli/Commands/FillCommand.cs`
 - `Cli/Commands/InspectCommand.cs`
+- `Cli/Commands/UpdateCommand.cs`
 
 ### Configuration/
 - `Configuration/AppSettings.cs`
@@ -129,6 +133,7 @@ Generated: 2026-04-26T10:14:21Z | Files: 147 | Described: 0/147
 - `Tests/DocuFiller.Tests/Cli/CliRunnerTests.cs`
 - `Tests/DocuFiller.Tests/Cli/CommandValidationTests.cs`
 - `Tests/DocuFiller.Tests/Cli/JsonlOutputTests.cs`
+- `Tests/DocuFiller.Tests/Cli/UpdateCommandTests.cs`
 
 ### Tests/DocuFiller.Tests/Services/
 - `Tests/DocuFiller.Tests/Services/ContentControlProcessorIntegrationTests.cs`
@@ -194,6 +199,7 @@ Generated: 2026-04-26T10:14:21Z | Files: 147 | Described: 0/147
 - `scripts/post_reboot_test.py`
 - `scripts/run_e2e_test.ps1`
 - `scripts/sync-version.bat`
+- `scripts/test-releases.win.json`
 - `scripts/test-update-server.sh`
 
 ### update-server/

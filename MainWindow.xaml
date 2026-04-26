@@ -17,6 +17,7 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="{Binding CurrentVersion, StringFormat='版本 {0}'}"
@@ -26,7 +27,27 @@
                            Text="{Binding ProgressMessage}"
                            VerticalAlignment="Center" FontSize="12" Foreground="#888888"/>
 
-                <Button Grid.Column="2" Content="检查更新"
+                <TextBlock Grid.Column="2" x:Name="UpdateStatusText"
+                           Text="{Binding UpdateStatusMessage}"
+                           Foreground="{Binding UpdateStatusBrush}"
+                           Visibility="{Binding HasUpdateStatus, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           VerticalAlignment="Center" FontSize="12" Cursor="Hand"
+                           Margin="15,0,15,0">
+                    <TextBlock.InputBindings>
+                        <MouseBinding MouseAction="LeftClick" Command="{Binding UpdateStatusClickCommand}"/>
+                    </TextBlock.InputBindings>
+                    <TextBlock.TextDecorations>
+                        <TextDecorationCollection>
+                            <TextDecoration Location="Underline">
+                                <TextDecoration.Pen>
+                                    <Pen Brush="{Binding UpdateStatusBrush}" Thickness="1"/>
+                                </TextDecoration.Pen>
+                            </TextDecoration>
+                        </TextDecorationCollection>
+                    </TextBlock.TextDecorations>
+                </TextBlock>
+
+                <Button Grid.Column="3" Content="检查更新"
                         Command="{Binding CheckUpdateCommand}"
                         IsEnabled="{Binding CanCheckUpdate}"
                         FontSize="12" Padding="12,4" Cursor="Hand"

@@ -1,0 +1,68 @@
+name: Build and Publish Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: windows-latest
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ── Setup .NET ───────────────────────────────────────────
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # ── Install vpk ──────────────────────────────────────────
+      - name: Install Velopack CLI (vpk)
+        run: dotnet tool install -g vpk
+
+      # ── Extract version from tag ─────────────────────────────
+      - name: Extract version from tag
+        id: version
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          VERSION="${TAG#v}"
+          echo "[GET_VERSION] Tag: $TAG"
+          echo "[GET_VERSION] Version: $VERSION"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # ── Publish ──────────────────────────────────────────────
+      - name: Publish application
+        run: |
+          echo "[CLEAN_BUILD] Publishing DocuFiller..."
+          dotnet publish DocuFiller.csproj -c Release -r win-x64 --self-contained -o publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          echo "[CLEAN_BUILD] SUCCESS"
+
+      # ── Velopack pack ────────────────────────────────────────
+      - name: Velopack pack
+        run: |
+          echo "[VPK_PACK] Running vpk pack..."
+          vpk pack --packId DocuFiller --packVersion ${{ steps.version.outputs.version }} --packDir publish --mainExe DocuFiller.exe --outputDir artifacts
+          echo "[VPK_PACK] SUCCESS"
+          echo "[VPK_PACK] Artifacts:"
+          Get-ChildItem -Path artifacts -Name
+
+      # ── Create GitHub Release ────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            artifacts/DocuFillerSetup.exe
+            artifacts/*Portable*.zip
+            artifacts/*.nupkg
+            artifacts/releases.win.json
