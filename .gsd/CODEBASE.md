@@ -1,11 +1,10 @@
 # Codebase Map
 
-Generated: 2026-04-25T00:53:20Z | Files: 144 | Described: 0/144
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-25T00:53:20Z","fingerprint":"5aa58f467ca7b3b64f80fb01549db37ab94ac185","fileCount":144,"truncated":false} -->
+Generated: 2026-04-26T10:14:21Z | Files: 147 | Described: 0/147
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-26T10:14:21Z","fingerprint":"a5d2001e075aa8088059d5b707b26be88646235c","fileCount":147,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
-- `3`
 - `App.config`
 - `App.xaml`
 - `App.xaml.cs`
@@ -19,7 +18,6 @@ Generated: 2026-04-25T00:53:20Z | Files: 144 | Described: 0/144
 - `MainWindow.xaml.cs`
 - `Program.cs`
 - `README.md`
-- `run_e2e_test.ps1`
 
 ### "docs/DocuFiller\344\272\247\345\223\201\351\234\200\346\261\202\346\226\207\346\241/
 - `"docs/DocuFiller\344\272\247\345\223\201\351\234\200\346\261\202\346\226\207\346\241\243.md"`
@@ -171,6 +169,8 @@ Generated: 2026-04-25T00:53:20Z | Files: 144 | Described: 0/144
 
 ### docs/
 - `docs/excel-data-user-guide.md`
+- `docs/ssh-offline-install.md`
+- `docs/update-server-deployment.md`
 
 ### docs/features/
 - `docs/features/header-footer-support.md`
@@ -190,6 +190,9 @@ Generated: 2026-04-25T00:53:20Z | Files: 144 | Described: 0/144
 - `scripts/e2e-dual-channel-test.sh`
 - `scripts/e2e-serve.py`
 - `scripts/e2e-update-test.bat`
+- `scripts/install-ssh.bat`
+- `scripts/post_reboot_test.py`
+- `scripts/run_e2e_test.ps1`
 - `scripts/sync-version.bat`
 - `scripts/test-update-server.sh`
 

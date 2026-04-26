@@ -5,9 +5,8 @@ bin/
 *.dll
 *.pdb
 
-# Exception: External update tools (needed for builds and releases)
-!External/update-client.exe
-!External/update-publisher.exe
+# External dependencies (update tools placed manually by users/deployment)
+External/
 
 # ========== IDE & Editor ==========
 /.vs
@@ -29,7 +28,6 @@ test_data/**/*.xlsx
 /output/
 
 # ========== Temporary Files ==========
-nul
 *.tmp
 *.log
 *.cache
@@ -43,8 +41,6 @@ scripts/build/
 # ========== Tool Projects Build Outputs ==========
 Tools/*/bin/
 Tools/*/obj/
-ExcelToWordVerifier/bin/
-ExcelToWordVerifier/obj/
 
 # ========== Update Server (已迁移到独立仓库) ==========
 # git@github.com:LiteHomeLab/update-server.git
@@ -57,12 +53,7 @@ scripts/config/release-config.bat
 scripts/config/publish-config.bat
 
 # ========== External Dependencies ==========
-# Update client files placed manually by users or deployment
-# Source: update-client.exe built from update-server repository
-# Note: .exe files are already excluded by global *.exe rule
-External/update-config.yaml
 .no-pushover
-External/update-client.exe
 
 # ── GSD baseline (auto-generated) ──
 # NOTE: .gsd is NOT blanket-ignored because this project tracks .gsd/ planning
@@ -99,11 +90,6 @@ External/update-client.exe
 # ── Build artifacts ──
 publish/
 Tests/TestResults/
-err.txt
-help_output.txt
-help_output2.txt
-out.txt
-test_data.xlsx
 
 # ── GSD baseline (auto-generated) ──
 .mcp.json
@@ -130,4 +116,6 @@ target/
 vendor/
 coverage/
 .cache/
+tmp/
+/
 tmp/
