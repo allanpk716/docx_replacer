@@ -125,8 +125,8 @@ Else:
 **Command:**
 ```batch
 publish-client.exe upload
-  --server {UPDATE_SERVER_URL}
-  --token {UPDATE_SERVER_TOKEN}
+  --server {UPDATE_SERVER_HOST}:{UPDATE_SERVER_PORT}
+  --token {UPDATE_SERVER_API_TOKEN}
   --program-id {PROGRAM_ID}
   --channel {CHANNEL}
   --version {VERSION}
@@ -156,8 +156,9 @@ If no commits:
 **Content:**
 ```batch
 REM Update Server Configuration
-set UPDATE_SERVER_URL=http://172.18.200.47:58100
-set UPDATE_SERVER_TOKEN=your-token-here
+set UPDATE_SERVER_HOST=172.18.200.47
+set UPDATE_SERVER_PORT=58100
+set UPDATE_SERVER_API_TOKEN=your-token-here
 set PROGRAM_ID=docufiller
 ```
 

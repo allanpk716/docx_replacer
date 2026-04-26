@@ -60,8 +60,9 @@ echo   beta            - Upload to beta channel after build
 echo   (omit)          - Build only, no upload
 echo.
 echo Environment variables for upload:
-echo   UPDATE_SERVER_URL   - Base URL of the update server
-echo   UPDATE_SERVER_TOKEN - Bearer token for authentication
+echo   UPDATE_SERVER_HOST     - IP or hostname of the update server
+echo   UPDATE_SERVER_PORT     - HTTP port of the update server (default: 80)
+echo   UPDATE_SERVER_API_TOKEN - Bearer token for authentication
 echo.
 echo Examples:
 echo   build.bat                    - Build only

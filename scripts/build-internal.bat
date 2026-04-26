@@ -164,36 +164,43 @@ exit /b 0
 REM ========================================
 REM Function: UPLOAD
 REM Uploads .nupkg files and releases.win.json to the Go update server
-REM Requires UPDATE_SERVER_URL and UPDATE_SERVER_TOKEN environment variables
+REM Requires UPDATE_SERVER_HOST, UPDATE_SERVER_PORT, and UPDATE_SERVER_API_TOKEN environment variables
 REM ========================================
 :UPLOAD
 echo.
 echo [UPLOAD] Starting upload to channel: !CHANNEL!
 
 REM Check required environment variables
-if "!UPDATE_SERVER_URL!"=="" (
-    echo [UPLOAD] FAILED: UPDATE_SERVER_URL environment variable is not set
+if "!UPDATE_SERVER_HOST!"=="" (
+    echo [UPLOAD] FAILED: UPDATE_SERVER_HOST environment variable is not set
     echo [UPLOAD] Required environment variables:
-    echo [UPLOAD]   UPDATE_SERVER_URL   - Base URL of the update server (e.g. http://localhost:8080^)
-    echo [UPLOAD]   UPDATE_SERVER_TOKEN - Bearer token for authentication
-    exit /b 1
-)
-if "!UPDATE_SERVER_TOKEN!"=="" (
-    echo [UPLOAD] FAILED: UPDATE_SERVER_TOKEN environment variable is not set
-    echo [UPLOAD] Required environment variables:
-    echo [UPLOAD]   UPDATE_SERVER_URL   - Base URL of the update server (e.g. http://localhost:8080^)
-    echo [UPLOAD]   UPDATE_SERVER_TOKEN - Bearer token for authentication
+    echo [UPLOAD]   UPDATE_SERVER_HOST    - IP or hostname of the update server
+    echo [UPLOAD]   UPDATE_SERVER_PORT    - HTTP port of the update server
+    echo [UPLOAD]   UPDATE_SERVER_API_TOKEN - Bearer token for authentication
     exit /b 1
 )
 
-set "UPLOAD_URL=!UPDATE_SERVER_URL!/api/channels/!CHANNEL!/releases"
+REM Build URL from host and port (default port 80 if not set)
+if "!UPDATE_SERVER_PORT!"=="" (
+    set "UPDATE_SERVER_PORT=80"
+)
+set "UPLOAD_URL=http://!UPDATE_SERVER_HOST!:!UPDATE_SERVER_PORT!/api/channels/!CHANNEL!/releases"
+
+if "!UPDATE_SERVER_API_TOKEN!"=="" (
+    echo [UPLOAD] FAILED: UPDATE_SERVER_API_TOKEN environment variable is not set
+    echo [UPLOAD] Required environment variables:
+    echo [UPLOAD]   UPDATE_SERVER_HOST    - IP or hostname of the update server
+    echo [UPLOAD]   UPDATE_SERVER_PORT    - HTTP port of the update server
+    echo [UPLOAD]   UPDATE_SERVER_API_TOKEN - Bearer token for authentication
+    exit /b 1
+)
 echo [UPLOAD] Target: !UPLOAD_URL!
 
 REM Upload releases.win.json
 set "RELEASES_FILE=%PACK_OUTPUT%\releases.win.json"
 if exist "!RELEASES_FILE!" (
     echo [UPLOAD] Uploading releases.win.json...
-    for /f "tokens=* delims= " %%h in ('curl -s -o nul -w "%%{http_code}" --max-time 60 -H "Authorization: Bearer !UPDATE_SERVER_TOKEN!" -F "file=@!RELEASES_FILE!" "!UPLOAD_URL!" 2^>nul') do set HTTP_STATUS=%%h
+    for /f "tokens=* delims= " %%h in ('curl -s -o nul -w "%%{http_code}" --max-time 60 -H "Authorization: Bearer !UPDATE_SERVER_API_TOKEN!" -F "file=@!RELEASES_FILE!" "!UPLOAD_URL!" 2^>nul') do set HTTP_STATUS=%%h
     if "!HTTP_STATUS!"=="200" (
         echo [UPLOAD]   releases.win.json - OK (HTTP !HTTP_STATUS!^)
     ) else (
@@ -208,7 +215,7 @@ REM Upload all .nupkg files
 set UPLOAD_COUNT=0
 for %%f in ("%PACK_OUTPUT%\*.nupkg") do (
     echo [UPLOAD] Uploading %%~nxf...
-    for /f "tokens=* delims= " %%h in ('curl -s -o nul -w "%%{http_code}" --max-time 60 -H "Authorization: Bearer !UPDATE_SERVER_TOKEN!" -F "file=@%%f" "!UPLOAD_URL!" 2^>nul') do set HTTP_STATUS=%%h
+    for /f "tokens=* delims= " %%h in ('curl -s -o nul -w "%%{http_code}" --max-time 60 -H "Authorization: Bearer !UPDATE_SERVER_API_TOKEN!" -F "file=@%%f" "!UPLOAD_URL!" 2^>nul') do set HTTP_STATUS=%%h
     if "!HTTP_STATUS!"=="200" (
         echo [UPLOAD]   %%~nxf - OK (HTTP !HTTP_STATUS!^)
         set /a UPLOAD_COUNT+=1

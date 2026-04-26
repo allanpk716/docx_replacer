@@ -194,6 +194,7 @@ DocuFiller.exe cleanup --input <文件或目录路径> [--output <输出目录>]
 docx_replacer/                         # 主项目根目录
 ├── App.xaml.cs                        # 应用入口，DI 注册配置
 ├── DocuFiller.csproj                  # 项目文件
+├── .env                               # 环境变量配置（gitignore，包含服务器连接信息）
 ├── Configuration/                     # 配置类（AppSettings, LoggingSettings 等）
 ├── Models/                            # 数据模型
 ├── ViewModels/                        # 视图模型
@@ -215,14 +216,26 @@ docx_replacer/                         # 主项目根目录
 │   ├── Utils/                         # 资源工具
 │   ├── ViewModels/                    # 资源 ViewModel
 │   └── Views/                         # 资源视图
+├── update-server/                     # Go 更新服务器（Velopack release hosting）
+│   ├── main.go                        # 入口
+│   ├── handler/                       # HTTP 处理器（upload/list/promote/static）
+│   ├── middleware/                     # Bearer Token 鉴权
+│   ├── storage/                       # 文件系统存储 + 旧版本清理
+│   └── model/                         # Velopack ReleaseFeed 数据模型
 ├── Tests/                             # 单元测试和集成测试
 │   ├── DocuFiller.Tests/              # 主测试项目
 │   ├── Integration/                   # 集成测试
 │   ├── Data/                          # 测试数据
 │   └── Templates/                     # 测试模板
-├── scripts/                           # 构建和发布脚本
+├── scripts/                           # 构建和部署脚本
+│   ├── build.bat                      # 构建入口（可选上传到 beta/stable）
+│   ├── build-internal.bat             # 构建核心逻辑（Velopack 打包 + 上传）
+│   ├── install-ssh.bat                # OpenSSH 离线安装脚本（Windows Server）
+│   ├── post_reboot_test.py            # 更新服务器健康检查脚本
 │   └── config/                        # 脚本配置
 ├── docs/                              # 项目文档
+│   ├── update-server-deployment.md    # 🔑 更新服务器部署指南
+│   ├── ssh-offline-install.md         # 🔑 Windows Server SSH 离线安装指南
 │   ├── features/                      # 功能说明文档
 │   ├── plans/                         # 开发计划文档
 │   └── *.md                           # 其他文档
@@ -311,12 +324,63 @@ git tag v1.0.1-beta && git push origin v1.0.1-beta && scripts\release.bat
 
 ## 配置说明
 
-应用程序通过 `App.config` 文件进行配置：
+应用程序通过 `appsettings.json` 和 `App.config` 文件进行配置：
 
 - **日志配置**：日志级别、保留天数、文件路径
 - **文件处理**：最大文件大小、支持的扩展名
 - **性能配置**：并发处理数、超时时间
 - **UI配置**：自动保存、进度显示等
+
+### 更新服务配置
+
+在 `appsettings.json` 中配置自动更新：
+
+```json
+{
+  "Update": {
+    "UpdateUrl": "http://<服务器IP>:<端口>",
+    "Channel": "stable"
+  }
+}
+```
+
+- `UpdateUrl`：更新服务器地址（不含通道路径）
+- `Channel`：`stable` 或 `beta`
+
+## 部署文档
+
+### 更新服务器部署
+
+将 Go 更新服务器部署到 Windows Server，提供 Velopack 自动更新的 release 托管服务。
+
+> **完整指南**：[docs/update-server-deployment.md](docs/update-server-deployment.md)
+>
+> 涵盖：编译、上传、NSSM 服务注册、防火墙配置、API 测试、客户端配置、发布流程。
+
+**环境变量**（配置在 `.env` 文件中，已 gitignore）：
+
+| 变量 | 说明 |
+|------|------|
+| `UPDATE_SERVER_HOST` | 更新服务器 IP |
+| `UPDATE_SERVER_USER` | SSH 用户名 |
+| `UPDATE_SERVER_PASSWORD` | SSH 密码 |
+| `UPDATE_SERVER_SSH_PORT` | SSH 端口 |
+| `UPDATE_SERVER_PORT` | 更新服务 HTTP 端口 |
+| `UPDATE_SERVER_API_TOKEN` | API 鉴权 Token |
+
+### Windows Server SSH 配置
+
+为无法联网的 Windows Server 离线安装 OpenSSH Server。
+
+> **完整指南**：[docs/ssh-offline-install.md](docs/ssh-offline-install.md)
+>
+> 涵盖：离线安装步骤、一键安装脚本、端口修改、防火墙配置、常见问题排查。
+
+**快速使用**：
+
+1. 从 [Win32-OpenSSH Releases](https://github.com/PowerShell/Win32-OpenSSH/releases/latest) 下载 `OpenSSH-Win64.zip`
+2. 将 zip 和 `scripts/install-ssh.bat` 拷贝到服务器
+3. 以管理员身份运行：`install-ssh.bat 30000`
 
 ## 日志和错误处理
 
