@@ -1,4 +1,5 @@
 using System.Reflection;
+using Velopack;
 
 namespace DocuFiller.Utils
 {
@@ -7,32 +8,49 @@ namespace DocuFiller.Utils
     /// </summary>
     public static class VersionHelper
     {
+        private static readonly Lazy<string> _currentVersion = new(() =>
+        {
+            // 策略1：Velopack 安装环境 — 使用 UpdateManager 获取当前安装版本
+            try
+            {
+                var updateManager = new Velopack.UpdateManager("");
+                if (updateManager.IsInstalled)
+                {
+                    return updateManager.CurrentVersion?.ToString() ?? "1.0.0";
+                }
+            }
+            catch
+            {
+                // 非 Velopack 环境，fallback
+            }
+
+            // 策略2：开发环境 — 读取入口程序集的 AssemblyVersion
+            try
+            {
+                var assembly = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
+                var version = assembly.GetName().Version;
+                if (version != null)
+                {
+                    return $"{version.Major}.{version.Minor}.{version.Build}";
+                }
+            }
+            catch
+            {
+                // fallback
+            }
+
+            return "1.0.0";
+        });
+
         /// <summary>
         /// 获取当前应用程序版本
         /// </summary>
-        public static string GetCurrentVersion()
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            var assemblyName = assembly.GetName();
-            var version = assemblyName.Version?.ToString() ?? "1.0.0.0";
-
-            // 返回主版本.次版本.修订号（去掉构建号）
-            var parts = version.Split('.');
-            if (parts.Length >= 3)
-            {
-                return $"{parts[0]}.{parts[1]}.{parts[2]}";
-            }
-            return version;
-        }
+        public static string GetCurrentVersion() => _currentVersion.Value;
 
         /// <summary>
-        /// 获取完整的版本信息（包含构建号）
+        /// 获取完整的版本信息
         /// </summary>
-        public static string GetFullVersion()
-        {
-            var assembly = Assembly.GetExecutingAssembly();
-            return assembly.GetName().Version?.ToString() ?? "1.0.0.0";
-        }
+        public static string GetFullVersion() => GetCurrentVersion();
 
         /// <summary>
         /// 判断是否为开发版本

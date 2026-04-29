@@ -7,7 +7,7 @@
     <AssemblyName>DocuFiller</AssemblyName>
     <RootNamespace>DocuFiller</RootNamespace>
     <Version>1.1.1</Version>
-    <AssemblyVersion>1.1.1.0</AssemblyVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.1.1.0</FileVersion>
     <Title>DocuFiller</Title>
     <Description>Word文档批量填充工具</Description>
@@ -21,6 +21,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;CS0579</NoWarn>
+    <!--
+      GenerateAssemblyInfo=false + AssemblyVersion fixed at 1.0.0.0:
+      WPF BAML hardcodes the AssemblyVersion in resource URIs at compile time.
+      Changing AssemblyVersion would cause FileNotFoundException in InitializeComponent().
+      Use <Version> for NuGet/Velopack versioning; <FileVersion> for Windows file properties.
+      AssemblyVersion must never change from 1.0.0.0 unless GenerateAssemblyInfo is enabled.
+    -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <StartupObject>DocuFiller.Program</StartupObject>
