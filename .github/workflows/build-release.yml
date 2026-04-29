@@ -44,7 +44,7 @@ jobs:
       - name: Publish application
         run: |
           echo "[CLEAN_BUILD] Publishing DocuFiller..."
-          dotnet publish DocuFiller.csproj -c Release -r win-x64 --self-contained -o publish -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          dotnet publish DocuFiller.csproj -c Release -r win-x64 --self-contained -o publish
           echo "[CLEAN_BUILD] SUCCESS"
 
       # ── Velopack pack ────────────────────────────────────────
