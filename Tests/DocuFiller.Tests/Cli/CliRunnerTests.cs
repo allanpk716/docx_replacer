@@ -256,10 +256,12 @@ public class CliRunnerTests
         public bool IsUpdateUrlConfigured => true;
         public string Channel => "stable";
         public string UpdateSourceType => "GitHub";
+        public string EffectiveUpdateUrl => "";
 
         public Task<UpdateInfo?> CheckForUpdatesAsync() => Task.FromResult(UpdateInfoToReturn);
         public Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null) => Task.CompletedTask;
         public void ApplyUpdatesAndRestart() { }
+        public void ReloadSource(string updateUrl, string channel) { }
     }
 
     private static UpdateInfo CreateTestUpdateInfo(string version = "2.0.0")

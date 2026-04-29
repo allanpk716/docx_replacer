@@ -29,5 +29,18 @@ namespace DocuFiller.Services.Interfaces
 
         /// <summary>当前更新源类型（"GitHub" 或 "HTTP"），用于诊断和测试</summary>
         string UpdateSourceType { get; }
+
+        /// <summary>
+        /// 当前生效的完整更新源 URL（含通道路径），GitHub 模式返回空字符串。
+        /// </summary>
+        string EffectiveUpdateUrl { get; }
+
+        /// <summary>
+        /// 热重载更新源。<paramref name="updateUrl"/> 为空时走 GitHub Releases，非空时走 HTTP。
+        /// 同时持久化到 appsettings.json。
+        /// </summary>
+        /// <param name="updateUrl">更新源 URL，空字符串或 null 表示使用 GitHub Releases</param>
+        /// <param name="channel">更新通道（stable/beta），null 默认 "stable"</param>
+        void ReloadSource(string updateUrl, string channel);
     }
 }

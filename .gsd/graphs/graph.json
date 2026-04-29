@@ -588,6 +588,50 @@
       "label": "T03: 单元测试：UpdateCommand 路由、JSONL 格式、更新提醒逻辑",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M010",
+      "label": "M010",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M010:S01",
+      "label": "S01: UpdateService 热重载 + appsettings.json 写回",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M010/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M010:S01:T01",
+      "label": "T01: Add ReloadSource to IUpdateService + implement in-memory hot-reload + unit tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M010:S01:T02",
+      "label": "T02: Add appsettings.json write-back to ReloadSource + persistence tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M010:S02",
+      "label": "S02: 更新设置弹窗 + 状态栏源类型显示",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M010/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M010:S02:T01",
+      "label": "T01: Create UpdateSettingsWindow with ViewModel for editing UpdateUrl/Channel",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M010:S02:T02",
+      "label": "T02: Wire gear button into status bar, display source type, register window in DI",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -1106,7 +1150,43 @@
       "to": "task:M009:S04:T03",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M010",
+      "to": "slice:M010:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M010:S01",
+      "to": "task:M010:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M010:S01",
+      "to": "task:M010:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M010",
+      "to": "slice:M010:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M010:S02",
+      "to": "task:M010:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M010:S02",
+      "to": "task:M010:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-04-26T11:37:32.908Z"
+  "builtAt": "2026-04-29T09:51:47.648Z"
 }

@@ -391,15 +391,37 @@ namespace DocuFiller.ViewModels
         /// </summary>
         public string UpdateStatusMessage
         {
-            get => _updateStatus switch
+            get
             {
-                UpdateStatus.PortableVersion => "便携版不支持自动更新",
-                UpdateStatus.UpdateAvailable => "有新版本可用，点击更新",
-                UpdateStatus.UpToDate => "当前已是最新版本",
-                UpdateStatus.Checking => "正在检查更新...",
-                UpdateStatus.Error => "检查更新失败",
-                _ => string.Empty
-            };
+                var baseMessage = _updateStatus switch
+                {
+                    UpdateStatus.PortableVersion => "便携版不支持自动更新",
+                    UpdateStatus.UpdateAvailable => "有新版本可用，点击更新",
+                    UpdateStatus.UpToDate => "当前已是最新版本",
+                    UpdateStatus.Checking => "正在检查更新...",
+                    UpdateStatus.Error => "检查更新失败",
+                    _ => string.Empty
+                };
+
+                // 追加源类型标识
+                if (_updateService != null && _updateStatus != UpdateStatus.None && _updateStatus != UpdateStatus.Checking)
+                {
+                    if (_updateService.UpdateSourceType == "GitHub")
+                    {
+                        baseMessage += " (GitHub)";
+                    }
+                    else if (_updateService.UpdateSourceType == "HTTP")
+                    {
+                        var host = ExtractHostFromUrl(_updateService.EffectiveUpdateUrl);
+                        if (!string.IsNullOrEmpty(host))
+                        {
+                            baseMessage += $" (内网: {host})";
+                        }
+                    }
+                }
+
+                return baseMessage;
+            }
         }
 
         /// <summary>
@@ -448,6 +470,7 @@ namespace DocuFiller.ViewModels
         // 更新检查命令
         public ICommand CheckUpdateCommand { get; private set; } = null!;
         public ICommand UpdateStatusClickCommand { get; private set; } = null!;
+        public ICommand OpenUpdateSettingsCommand { get; private set; } = null!;
 
         // 文件夹拖拽相关命令
         public ICommand SwitchToSingleModeCommand { get; private set; } = null!;
@@ -488,6 +511,7 @@ namespace DocuFiller.ViewModels
             // 更新检查命令
             CheckUpdateCommand = new RelayCommand(async () => await CheckUpdateAsync(), () => CanCheckUpdate);
             UpdateStatusClickCommand = new RelayCommand(async () => await OnUpdateStatusClickAsync(), () => HasUpdateStatus);
+            OpenUpdateSettingsCommand = new RelayCommand(OpenUpdateSettings);
         }
         
 
@@ -753,6 +777,54 @@ namespace DocuFiller.ViewModels
                 _logger.LogError(ex, "打开清理窗口时发生错误");
                 MessageBox.Show($"打开清理窗口时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        /// <summary>
+        /// 打开更新源设置窗口
+        /// </summary>
+        private void OpenUpdateSettings()
+        {
+            try
+            {
+                var app = (App)Application.Current;
+                var settingsWindow = app.ServiceProvider.GetRequiredService<Views.UpdateSettingsWindow>();
+                settingsWindow.Owner = Application.Current.MainWindow;
+                var result = settingsWindow.ShowDialog();
+                if (result == true)
+                {
+                    // 用户保存了设置，刷新状态栏显示
+                    OnPropertyChanged(nameof(UpdateStatusMessage));
+                    _logger.LogInformation("更新源设置已保存，状态栏已刷新");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "打开更新源设置窗口时发生错误");
+                MessageBox.Show($"打开更新源设置窗口时发生错误：{ex.Message}", "错误", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// 从 URL 中提取主机部分（去除协议和路径）
+        /// </summary>
+        private static string ExtractHostFromUrl(string url)
+        {
+            if (string.IsNullOrEmpty(url))
+                return string.Empty;
+
+            // 去除协议
+            var hostPart = url;
+            if (hostPart.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                hostPart = hostPart["https://".Length..];
+            else if (hostPart.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                hostPart = hostPart["http://".Length..];
+
+            // 去除路径部分
+            var slashIndex = hostPart.IndexOf('/');
+            if (slashIndex >= 0)
+                hostPart = hostPart[..slashIndex];
+
+            return hostPart;
         }
         
         private void UpdateFileInfo()

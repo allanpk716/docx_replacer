@@ -19,6 +19,7 @@ DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，支持 GUI 和 C
 - GitHub CI/CD 发布流水线已建立（v* tag 触发自动发布到 GitHub Release）
 - UpdateService 多源切换（HTTP URL 优先 + GithubSource 备选），便携版检测
 - GUI 状态栏常驻更新提示（便携版/有新版本/检查失败三种状态）
+- 状态栏源类型显示 + 齿轮按钮打开 UpdateSettingsWindow 编辑更新源
 - CLI update 子命令（版本检查 JSONL + --yes 下载重启 + post-command 更新提醒）
 
 ## Architecture / Key Patterns
@@ -27,7 +28,7 @@ DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，支持 GUI 和 C
 - 双模式入口：`Program.Main` 检查 args 长度分流 CLI/GUI
 - CLI 使用 `AttachConsole(-1)` P/Invoke 解决 WinExe stdout 问题
 - Velopack `VelopackApp.Build().Run()` 必须在 Main 最先调用
-- 更新服务：`UpdateService` 封装 Velopack `UpdateManager`，多源切换（HTTP URL / GithubSource），配置驱动源选择
+- 更新服务：`UpdateService` 封装 Velopack `UpdateManager`，多源切换（HTTP URL / GithubSource），配置驱动源选择，`ReloadSource` 运行时热重载 + appsettings.json 持久化
 - 便携版检测：`UpdateManager.IsInstalled` 构造时缓存，区分安装版和便携版
 - Go 更新服务器：文件系统存储，stable/beta 双通道，Bearer Token 认证
 - GitHub CI/CD：v* tag 触发 Actions workflow，Velopack 打包，Release 自动创建
@@ -48,3 +49,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] M007: 更新服务器 — Go 语言内网更新服务器
 - [x] M008: Velopack 更新 UI — 自定义 WPF 更新弹窗
 - [x] M009: GitHub CI/CD 发布 + 多源更新提醒 — tag 驱动发布流水线，GUI/CLI 更新体验
+- [x] M010: GUI 更新源配置 — 界面编辑 UpdateUrl/Channel，热重载，状态栏源类型显示

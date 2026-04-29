@@ -35,3 +35,6 @@
 | D027 | M009-q7p4iu | architecture | IUpdateService 接口兼容策略 | 不改接口签名，IsUpdateUrlConfigured 语义扩展为"有任一更新源可用"（内网 Go 或 GitHub Releases 都算） | 内网 Go 服务器和 GitHub Releases 都算"有更新源"，调用方不需要知道具体走哪个源。最小化改动范围，避免连锁修改。 | Yes | agent |
 | D028 | M009-q7p4iu | scope | GitHub Release 通道策略 | GitHub Release 只分发 stable 版本（Velopack 默认 win 通道），beta 继续走内网 Go 服务器 | 公司大部分用户访问 GitHub 不顺畅，beta 测试在内网进行。GitHub 对外只发稳定版，减少维护复杂度。 | Yes | collaborative |
 | D029 | M009-q7p4iu | scope | 只支持安装版自动更新 | 只提供安装版（Setup.exe）的自动更新支持，便携版有明确提示告知用户使用安装版以获得自动更新能力 | 统一更新体验，避免便携版无法自更新导致的用户困惑。Velopack 自更新机制依赖安装版。 | Yes | collaborative |
+| D030 | M010-hpylzg | architecture | UpdateService 热重载方案 | 在 IUpdateService 接口新增 ReloadSource(string updateUrl, string channel) 方法，运行时重建 IUpdateSource，Singleton 生命周期不变 | UpdateService 构造函数一次性决定 SimpleWebSource/GithubSource。不改 DI 生命周期最简单，ReloadSource 接收新参数重建 IUpdateSource，后续 CheckForUpdatesAsync 自动用新源。改为 Transient 过于激进。 | No | collaborative |
+| D031 | M010-hpylzg | pattern | 更新设置弹窗形态 | 独立 WPF Window（UpdateSettingsWindow），状态栏齿轮图标按钮触发 | 独立窗口简单清晰，与 CleanupWindow 模式一致。下拉面板在 WPF 中实现复杂（Popup 定位问题）。 | No | collaborative |
+| D032 | M010-hpylzg | pattern | 状态栏更新源类型显示方式 | 在 UpdateStatusMessage 后追加源类型标识，如"当前已是最新版本 (GitHub)"或"当前已是最新版本 (内网: 192.168.1.100:8080)" | 最小改动，复用现有 TextBlock，不增加 UI 元素。UpdateService 已有 UpdateSourceType 属性。新增独立 TextBlock 会增加状态栏复杂度。 | Yes | collaborative |

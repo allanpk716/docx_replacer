@@ -27,6 +27,7 @@ public class UpdateCommandTests
         public string Channel => "stable";
         public bool IsInstalled => IsInstalledValue;
         public string UpdateSourceType => "GitHub";
+        public string EffectiveUpdateUrl => "";
 
         public Task<UpdateInfo?> CheckForUpdatesAsync() => Task.FromResult(UpdateInfoToReturn);
 
@@ -40,6 +41,8 @@ public class UpdateCommandTests
         {
             // No-op in tests — real implementation would restart the process
         }
+
+        public void ReloadSource(string updateUrl, string channel) { }
     }
 
     private static UpdateInfo CreateUpdateInfo(string version = "2.0.0")

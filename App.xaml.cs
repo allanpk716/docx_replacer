@@ -140,6 +140,7 @@ namespace DocuFiller
             services.AddTransient<CleanupControlProcessor>();
             services.AddTransient<IDocumentCleanupService, DocumentCleanupService>();
             services.AddTransient<CleanupViewModel>();
+            services.AddTransient<UpdateSettingsViewModel>();
 
             // 注册 CLI 子命令处理器
             services.AddSingleton<ICliCommand, InspectCommand>();
@@ -158,6 +159,7 @@ namespace DocuFiller
             // 注册主窗口
             services.AddTransient<MainWindow>();
             services.AddTransient<Views.CleanupWindow>();
+            services.AddTransient<Views.UpdateSettingsWindow>();
 
             return services.BuildServiceProvider();
         }

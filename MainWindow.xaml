@@ -18,6 +18,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
                 <TextBlock Grid.Column="0" Text="{Binding CurrentVersion, StringFormat='版本 {0}'}"
@@ -47,7 +48,30 @@
                     </TextBlock.TextDecorations>
                 </TextBlock>
 
-                <Button Grid.Column="3" Content="检查更新"
+                <Button Grid.Column="3" Content="⚙" ToolTip="更新源设置"
+                        Command="{Binding OpenUpdateSettingsCommand}"
+                        FontSize="16" Padding="8,2" Cursor="Hand"
+                        Background="Transparent" BorderBrush="#CCCCCC" BorderThickness="1"
+                        Foreground="#555555" VerticalAlignment="Center" Margin="5,0,5,0">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}"
+                                    CornerRadius="3"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E8E8E8"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <Button Grid.Column="4" Content="检查更新"
                         Command="{Binding CheckUpdateCommand}"
                         IsEnabled="{Binding CanCheckUpdate}"
                         FontSize="12" Padding="12,4" Cursor="Hand"

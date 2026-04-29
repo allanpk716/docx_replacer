@@ -2,19 +2,6 @@
 
 This file is the explicit capability and coverage contract for the project.
 
-## Active
-
-### R042 — CLI 每次命令执行后，仅在 actionable 时（未配置更新源、有新版本可用）追加一行 `{"type":"update","status":"success","data":{...}}` JSONL 输出。已最新版本时不输出。
-- Class: core-capability
-- Status: active
-- Description: CLI 每次命令执行后，仅在 actionable 时（未配置更新源、有新版本可用）追加一行 `{"type":"update","status":"success","data":{...}}` JSONL 输出。已最新版本时不输出。
-- Why it matters: 不干扰 JSONL 解析器的同时，让 CLI 用户感知更新状态
-- Source: user
-- Primary owning slice: M009-q7p4iu/S04
-- Supporting slices: none
-- Validation: mapped
-- Notes: 不影响现有 JSONL 输出格式，只是在末尾可能有条件地多一行
-
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -303,6 +290,17 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests.
 - Notes: 贯穿所有 slice 的约束
 
+### R029 — 支持在 UI 中通过设置弹窗切换更新源（内网 HTTP URL / GitHub）和更新通道（stable/beta）。修改后立即生效（热重载），同时持久化到 appsettings.json。状态栏显示当前更新源类型。
+- Class: operability
+- Status: validated
+- Description: 支持在 UI 中通过设置弹窗切换更新源（内网 HTTP URL / GitHub）和更新通道（stable/beta）。修改后立即生效（热重载），同时持久化到 appsettings.json。状态栏显示当前更新源类型。
+- Why it matters: 允许高级用户提前体验 beta 版本，同时不影响普通用户的稳定版本
+- Source: inferred
+- Primary owning slice: M010-hpylzg/S02
+- Supporting slices: none
+- Validation: UpdateSettingsWindow provides GUI for editing UpdateUrl/Channel with Save calling IUpdateService.ReloadSource. Settings persist to appsettings.json. Status bar shows source type suffix. dotnet build 0 errors, 192/192 tests pass.
+- Notes: 从 deferred 激活。M010 提供完整的 GUI 设置入口，包括 UpdateUrl 和 Channel 编辑、热重载、源类型显示。
+
 ### R030 — Go 单二进制更新服务器，启动时指定数据目录和端口。自动维护 stable/ 和 beta/ 子目录，每个目录存放 releases.win.json 和 .nupkg 文件。静态文件服务供 Velopack 客户端下载更新。
 - Class: core-capability
 - Status: validated
@@ -435,6 +433,17 @@ This file is the explicit capability and coverage contract for the project.
 - Validation: UpdateCommand implements ICliCommand with CommandName=update. Unit tests verify: no-yes outputs version info JSONL (currentVersion/latestVersion/hasUpdate/isInstalled/updateSourceType), --yes portable guard emits PORTABLE_NOT_SUPPORTED error, --yes no-update outputs ALREADY_UP_TO_DATE. Build passes, all 154 tests pass.
 - Notes: 纯 JSONL，无交互式 Y/N 确认。需要安装版才能执行更新。
 
+### R042 — CLI 每次命令执行后，仅在 actionable 时（未配置更新源、有新版本可用）追加一行 `{"type":"update","status":"success","data":{...}}` JSONL 输出。已最新版本时不输出。
+- Class: core-capability
+- Status: validated
+- Description: CLI 每次命令执行后，仅在 actionable 时（未配置更新源、有新版本可用）追加一行 `{"type":"update","status":"success","data":{...}}` JSONL 输出。已最新版本时不输出。
+- Why it matters: 不干扰 JSONL 解析器的同时，让 CLI 用户感知更新状态
+- Source: user
+- Primary owning slice: M009-q7p4iu/S04
+- Supporting slices: none
+- Validation: Post-command hook in CliRunner appends type=update JSONL only when exitCode==0, subcommand is not update, and updateInfo != null (new version available). Unit tests verify: update available → append, no update → no append, failed command → no append. Full test suite 154/154 pass.
+- Notes: 不影响现有 JSONL 输出格式，只是在末尾可能有条件地多一行
+
 ### R043 — 多源支持和常驻提示的改动不能破坏现有的状态栏"检查更新"按钮、弹窗确认、下载进度、重启应用流程
 - Class: constraint
 - Status: validated
@@ -445,6 +454,33 @@ This file is the explicit capability and coverage contract for the project.
 - Supporting slices: M009-q7p4iu/S02
 - Validation: S03 T02 验证：现有"检查更新"按钮保持不变（Grid.Column 从 2 移至 3），新增的更新提示 TextBlock 使用独立的 Grid 列和 InputBindings，不修改现有弹窗确认/下载进度/重启流程。dotnet test 172个测试全部通过，零回归。
 - Notes: S02 未修改现有方法签名（CheckForUpdatesAsync/DownloadUpdatesAsync/ApplyUpdatesAndRestart），仅新增属性。零回归确认需 S03/S04 集成验证。
+
+### R044 — UpdateService 支持运行时热重载更新源。调用 ReloadSource(updateUrl, channel) 后立即使用新的 URL/Channel 重建 UpdateManager，后续 CheckForUpdatesAsync 自动使用新源。同时持久化到 appsettings.json。UpdateUrl 为空时走 GitHub Releases，非空时走内网 HTTP 服务器。
+- Class: core-capability
+- Status: validated
+- Description: UpdateService 支持运行时热重载更新源。调用 ReloadSource(updateUrl, channel) 后立即使用新的 URL/Channel 重建 UpdateManager，后续 CheckForUpdatesAsync 自动使用新源。同时持久化到 appsettings.json。UpdateUrl 为空时走 GitHub Releases，非空时走内网 HTTP 服务器。
+- Why it matters: 让用户修改更新配置后不需要重启应用即可生效，降低使用门槛
+- Source: user
+- Primary owning slice: M010-hpylzg/S01
+- Validation: ReloadSource 方法通过 21 个单元测试验证（含 7 个内存热重载测试 + 4 个持久化测试）。测试覆盖：HTTP 源切换、GitHub 回退、通道更新、null/空值处理、尾斜杠规范化、appsettings.json 写回、写入失败不抛异常、其他配置节保留。dotnet test --filter "UpdateServiceTests" 全部通过。
+
+### R045 — 状态栏的更新提示文字中包含当前更新源类型信息（如"当前已是最新版本 (GitHub)"或"当前已是最新版本 (内网: 192.168.1.100:8080)"），帮助用户快速定位更新问题出在哪个源。
+- Class: primary-user-loop
+- Status: validated
+- Description: 状态栏的更新提示文字中包含当前更新源类型信息（如"当前已是最新版本 (GitHub)"或"当前已是最新版本 (内网: 192.168.1.100:8080)"），帮助用户快速定位更新问题出在哪个源。
+- Why it matters: 用户需要一眼看出当前更新走的是 GitHub 还是内网，方便排查更新失败问题
+- Source: user
+- Primary owning slice: M010-hpylzg/S02
+- Validation: UpdateStatusMessage getter appends "(GitHub)" or "(内网: host)" suffix via IUpdateService.UpdateSourceType and EffectiveUpdateUrl. Refreshed after dialog save.
+
+### R046 — 新增热重载和 GUI 设置弹窗功能后，现有更新检查流程（启动时自动检查、手动"检查更新"按钮、CheckUpdateAsync 弹窗确认、DownloadUpdatesAsync 下载、ApplyUpdatesAndRestart 重启）完全不受影响。
+- Class: quality-attribute
+- Status: validated
+- Description: 新增热重载和 GUI 设置弹窗功能后，现有更新检查流程（启动时自动检查、手动"检查更新"按钮、CheckUpdateAsync 弹窗确认、DownloadUpdatesAsync 下载、ApplyUpdatesAndRestart 重启）完全不受影响。
+- Why it matters: 现有更新体验稳定运行，新功能是增量补充，不能引入回归
+- Source: inferred
+- Primary owning slice: M010-hpylzg/S02
+- Validation: All 192 existing tests pass after changes. New code only adds OpenUpdateSettingsCommand and UpdateStatusMessage suffix — no modification to CheckUpdateAsync, DownloadUpdatesAsync, or ApplyUpdatesAndRestart flows.
 
 ## Deferred
 
@@ -458,17 +494,6 @@ This file is the explicit capability and coverage contract for the project.
 - Supporting slices: none
 - Validation: unmapped
 - Notes: M007 只做手动触发，自动检查作为后续增强
-
-### R029 — 支持在 UI 中切换更新渠道（stable/beta），不同渠道对应不同的更新源
-- Class: operability
-- Status: deferred
-- Description: 支持在 UI 中切换更新渠道（stable/beta），不同渠道对应不同的更新源
-- Why it matters: 允许高级用户提前体验 beta 版本，同时不影响普通用户的稳定版本
-- Source: inferred
-- Primary owning slice: none
-- Supporting slices: none
-- Validation: unmapped
-- Notes: 当前只有 stable 渠道
 
 ## Out of Scope
 
@@ -515,7 +540,7 @@ This file is the explicit capability and coverage contract for the project.
 | R026 | quality-attribute | validated | M007-wpaxa3/S04 | none | E2E test automation infrastructure created (e2e-update-test.bat, e2e-serve.py, e2e-update-test-guide.md) covering all 4 R026 scenarios. Automated pipeline checks pass (162 tests, DI wiring, config). Full manual E2E validation requires human tester on clean Windows with vpk installed — test guide provides step-by-step procedures. |
 | R027 | quality-attribute | validated | M007-wpaxa3/S01 | M007-wpaxa3/S02, M007-wpaxa3/S03 | dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests. |
 | R028 | core-capability | deferred | none | none | unmapped |
-| R029 | operability | deferred | none | none | unmapped |
+| R029 | operability | validated | M010-hpylzg/S02 | none | UpdateSettingsWindow provides GUI for editing UpdateUrl/Channel with Save calling IUpdateService.ReloadSource. Settings persist to appsettings.json. Status bar shows source type suffix. dotnet build 0 errors, 192/192 tests pass. |
 | R030 | core-capability | validated | M008-4uyz6m/S01 | none | Go update-server serves static files from /{channel}/releases.win.json and /{channel}/*.nupkg with Content-Type headers. Build compiles, 50 Go tests pass, curl integration tests verify static serving. |
 | R031 | core-capability | validated | M008-4uyz6m/S01 | none | POST /api/channels/{channel}/releases accepts multipart uploads (releases.win.json + .nupkg files), merges feeds by FileName to avoid duplicates, requires Bearer token auth. Tested with httptest integration tests and curl. |
 | R032 | core-capability | validated | M008-4uyz6m/S01 | none | POST /api/channels/{target}/promote?from={source}&version={version} copies matching files and merges feed entries. Returns 404 if version not found. Tested in handler_test.go (5 test cases). |
@@ -528,12 +553,15 @@ This file is the explicit capability and coverage contract for the project.
 | R039 | core-capability | validated | M009-q7p4iu/S02 | none | S02 通过 10 个单元测试验证：UpdateUrl 为空时 UpdateSourceType 为 "GitHub"（使用 GithubSource），UpdateUrl 非空时为 "HTTP"（使用 SimpleWebSource），Channel 默认 stable。接口签名未改，只新增属性。 |
 | R040 | primary-user-loop | validated | M009-q7p4iu/S03 | none | S03 T01+T02: MainWindowViewModel 新增 UpdateStatus 枚举（6种状态）+ 5个绑定属性 + InitializeUpdateStatusAsync 自动检查 + UpdateStatusClickCommand。MainWindow.xaml 状态栏新增 TextBlock 绑定到这些属性，点击触发更新流程。dotnet build 通过，172个测试全部通过。 |
 | R041 | core-capability | validated | M009-q7p4iu/S04 | none | UpdateCommand implements ICliCommand with CommandName=update. Unit tests verify: no-yes outputs version info JSONL (currentVersion/latestVersion/hasUpdate/isInstalled/updateSourceType), --yes portable guard emits PORTABLE_NOT_SUPPORTED error, --yes no-update outputs ALREADY_UP_TO_DATE. Build passes, all 154 tests pass. |
-| R042 | core-capability | active | M009-q7p4iu/S04 | none | mapped |
+| R042 | core-capability | validated | M009-q7p4iu/S04 | none | Post-command hook in CliRunner appends type=update JSONL only when exitCode==0, subcommand is not update, and updateInfo != null (new version available). Unit tests verify: update available → append, no update → no append, failed command → no append. Full test suite 154/154 pass. |
 | R043 | constraint | validated | M009-q7p4iu/S03 | M009-q7p4iu/S02 | S03 T02 验证：现有"检查更新"按钮保持不变（Grid.Column 从 2 移至 3），新增的更新提示 TextBlock 使用独立的 Grid 列和 InputBindings，不修改现有弹窗确认/下载进度/重启流程。dotnet test 172个测试全部通过，零回归。 |
+| R044 | core-capability | validated | M010-hpylzg/S01 | none | ReloadSource 方法通过 21 个单元测试验证（含 7 个内存热重载测试 + 4 个持久化测试）。测试覆盖：HTTP 源切换、GitHub 回退、通道更新、null/空值处理、尾斜杠规范化、appsettings.json 写回、写入失败不抛异常、其他配置节保留。dotnet test --filter "UpdateServiceTests" 全部通过。 |
+| R045 | primary-user-loop | validated | M010-hpylzg/S02 | none | UpdateStatusMessage getter appends "(GitHub)" or "(内网: host)" suffix via IUpdateService.UpdateSourceType and EffectiveUpdateUrl. Refreshed after dialog save. |
+| R046 | quality-attribute | validated | M010-hpylzg/S02 | none | All 192 existing tests pass after changes. New code only adds OpenUpdateSettingsCommand and UpdateStatusMessage suffix — no modification to CheckUpdateAsync, DownloadUpdatesAsync, or ApplyUpdatesAndRestart flows. |
 
 ## Coverage Summary
 
-- Active requirements: 1
-- Mapped to slices: 1
-- Validated: 39 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R043)
+- Active requirements: 0
+- Mapped to slices: 0
+- Validated: 44 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046)
 - Unmapped active requirements: 0

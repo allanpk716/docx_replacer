@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-26T11:36:00Z | Files: 151 | Described: 0/151
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-26T11:36:00Z","fingerprint":"e7be8a6264100431f18562e8f8d6049c3d235818","fileCount":151,"truncated":false} -->
+Generated: 2026-04-29T09:46:07Z | Files: 155 | Described: 0/155
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-29T09:46:07Z","fingerprint":"1bc4bb404058eda97bc58d146c34b31b61cc0eb3","fileCount":155,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -66,6 +66,8 @@ Generated: 2026-04-26T11:36:00Z | Files: 151 | Described: 0/151
 ### DocuFiller/Views/
 - `DocuFiller/Views/CleanupWindow.xaml`
 - `DocuFiller/Views/CleanupWindow.xaml.cs`
+- `DocuFiller/Views/UpdateSettingsWindow.xaml`
+- `DocuFiller/Views/UpdateSettingsWindow.xaml.cs`
 
 ### Exceptions/
 - `Exceptions/DataParsingException.cs`
@@ -88,6 +90,9 @@ Generated: 2026-04-26T11:36:00Z | Files: 151 | Described: 0/151
 - `Models/ProcessResult.cs`
 - `Models/ProgressEventArgs.cs`
 - `Models/TextFragment.cs`
+
+### Properties/
+- `Properties/AssemblyInfo.cs`
 
 ### Services/
 - `Services/CommentManager.cs`
@@ -171,6 +176,7 @@ Generated: 2026-04-26T11:36:00Z | Files: 151 | Described: 0/151
 - `ViewModels/MainWindowViewModel.cs`
 - `ViewModels/ObservableObject.cs`
 - `ViewModels/RelayCommand.cs`
+- `ViewModels/UpdateSettingsViewModel.cs`
 
 ### docs/
 - `docs/excel-data-user-guide.md`
