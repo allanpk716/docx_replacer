@@ -26,7 +26,7 @@ namespace DocuFiller.Utils
                         {
                             var doc = XDocument.Load(sqVersionPath);
                             // sq.version 使用 NuGet nuspec XML 命名空间
-                            var ns = doc.Root?.Name.Namespace;
+                            var ns = doc.Root?.Name.Namespace ?? XNamespace.None;
                             var versionElem = doc.Root?.Element(ns + "metadata")?.Element(ns + "version");
                             if (versionElem != null && !string.IsNullOrWhiteSpace(versionElem.Value))
                             {
