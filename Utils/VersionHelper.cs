@@ -1,5 +1,6 @@
+using System.IO;
 using System.Reflection;
-using Velopack;
+using System.Xml.Linq;
 
 namespace DocuFiller.Utils
 {
@@ -10,18 +11,34 @@ namespace DocuFiller.Utils
     {
         private static readonly Lazy<string> _currentVersion = new(() =>
         {
-            // 策略1：Velopack 安装环境 — 使用 UpdateManager 获取当前安装版本
+            // 策略1：Velopack 安装环境 — 从 sq.version 文件读取包版本
+            // Velopack 安装后在 exe 同级目录生成 sq.version（XML 格式），包含 <version>1.2.3</version>
             try
             {
-                var updateManager = new Velopack.UpdateManager("");
-                if (updateManager.IsInstalled)
+                var exePath = Environment.ProcessPath;
+                if (exePath != null)
                 {
-                    return updateManager.CurrentVersion?.ToString() ?? "1.0.0";
+                    var exeDir = Path.GetDirectoryName(exePath);
+                    if (exeDir != null)
+                    {
+                        var sqVersionPath = Path.Combine(exeDir, "sq.version");
+                        if (File.Exists(sqVersionPath))
+                        {
+                            var doc = XDocument.Load(sqVersionPath);
+                            // sq.version 使用 NuGet nuspec XML 命名空间
+                            var ns = doc.Root?.Name.Namespace;
+                            var versionElem = doc.Root?.Element(ns + "metadata")?.Element(ns + "version");
+                            if (versionElem != null && !string.IsNullOrWhiteSpace(versionElem.Value))
+                            {
+                                return versionElem.Value.Trim();
+                            }
+                        }
+                    }
                 }
             }
             catch
             {
-                // 非 Velopack 环境，fallback
+                // fallback
             }
 
             // 策略2：开发环境 — 读取入口程序集的 AssemblyVersion
