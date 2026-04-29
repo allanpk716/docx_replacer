@@ -6,7 +6,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>DocuFiller</AssemblyName>
     <RootNamespace>DocuFiller</RootNamespace>
-    <Version>1.1.1</Version>
+    <Version>1.1.4</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.1.1.0</FileVersion>
     <Title>DocuFiller</Title>
@@ -22,11 +22,19 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);1591;CS0579</NoWarn>
     <!--
-      GenerateAssemblyInfo=false + AssemblyVersion fixed at 1.0.0.0:
+      GenerateAssemblyInfo=false, but AssemblyVersion is set via a manual AssemblyInfo.cs file.
       WPF BAML hardcodes the AssemblyVersion in resource URIs at compile time.
       Changing AssemblyVersion would cause FileNotFoundException in InitializeComponent().
       Use <Version> for NuGet/Velopack versioning; <FileVersion> for Windows file properties.
-      AssemblyVersion must never change from 1.0.0.0 unless GenerateAssemblyInfo is enabled.
+      AssemblyVersion must never change from 1.0.0.0.
+      
+      Previously GenerateAssemblyInfo=false without manual AssemblyInfo.cs caused the C# compiler
+      to default AssemblyVersion to 0.0.0.0 in some CI environments (GitHub Actions with .NET 8 SDK),
+      while WPF BAML still referenced 1.0.0.0 from the MarkupCompilePass. This version mismatch
+      caused FileNotFoundException in App.InitializeComponent() at runtime.
+      
+      The fix: keep GenerateAssemblyInfo=false (to avoid duplicate attribute errors in WPF _wpftmp
+      projects) but add a manual Properties/AssemblyInfo.cs with [assembly: AssemblyVersion("1.0.0.0")].
     -->
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
@@ -115,6 +123,9 @@
     <Compile Remove="Tests\**" />
     <EmbeddedResource Remove="Tests\**" />
     <None Remove="Tests\**" />
+    <Compile Remove="test_data\**" />
+    <EmbeddedResource Remove="test_data\**" />
+    <None Remove="test_data\**" />
   </ItemGroup>
 
   <ItemGroup>
