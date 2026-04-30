@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M011-ns0oo0/S02/T03",
+  "timestamp": 1777530703439,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet test --filter \"FullyQualifiedName~DownloadProgressViewModelTests\" --verbosity minimal",
+      "exitCode": 0,
+      "durationMs": 3117,
+      "verdict": "pass"
+    }
+  ]
+}

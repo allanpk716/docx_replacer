@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -106,14 +107,14 @@ namespace DocuFiller.Services
         }
 
         /// <inheritdoc />
-        public async Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null)
+        public async Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null, CancellationToken cancellationToken = default)
         {
             if (updateInfo == null) throw new ArgumentNullException(nameof(updateInfo));
 
             _logger.LogInformation("开始下载更新: {Version}", updateInfo.TargetFullRelease.Version);
 
             var updateManager = CreateUpdateManager();
-            await updateManager.DownloadUpdatesAsync(updateInfo, progressCallback);
+            await updateManager.DownloadUpdatesAsync(updateInfo, progressCallback, cancellationToken);
 
             _logger.LogInformation("更新下载完成");
         }

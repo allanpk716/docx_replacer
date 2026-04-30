@@ -142,6 +142,9 @@ namespace DocuFiller
             services.AddTransient<CleanupViewModel>();
             services.AddTransient<UpdateSettingsViewModel>();
 
+            // 下载进度窗口（ViewModel 由 MainWindowViewModel 手动创建以传入参数）
+            services.AddTransient<Views.DownloadProgressWindow>();
+
             // 注册 CLI 子命令处理器
             services.AddSingleton<ICliCommand, InspectCommand>();
             services.AddSingleton<ICliCommand, FillCommand>();

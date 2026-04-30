@@ -4,6 +4,7 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
 
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
@@ -19,6 +20,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="xunit" Version="2.5.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
     <PackageReference Include="Velopack" Version="0.0.1298" />
@@ -44,6 +46,9 @@
     <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
     <Compile Include="..\DocuFiller\Utils\OpenXmlTableCellHelper.cs" Link="Utils\OpenXmlTableCellHelper.cs" />
     <Compile Include="..\Exceptions\*.cs" Link="Exceptions\%(Filename).cs" />
+    <Compile Include="..\ViewModels\UpdateSettingsViewModel.cs" Link="ViewModels\UpdateSettingsViewModel.cs" />
+    <Compile Include="..\ViewModels\DownloadProgressViewModel.cs" Link="ViewModels\DownloadProgressViewModel.cs" />
+    <Compile Include="..\ViewModels\RelayCommand.cs" Link="ViewModels\RelayCommand.cs" />
   </ItemGroup>
 
   <ItemGroup>

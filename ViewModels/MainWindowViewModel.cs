@@ -1290,15 +1290,54 @@ namespace DocuFiller.ViewModels
                 {
                     _logger.LogInformation("用户确认下载更新: {NewVersion}", newVersion);
 
-                    // 下载更新
-                    await _updateService.DownloadUpdatesAsync(updateInfo, progress =>
+                    // 创建 DownloadProgressViewModel 和进度窗口
+                    var totalBytes = updateInfo.TargetFullRelease.Size;
+                    var progressVm = new DownloadProgressViewModel(totalBytes, newVersion);
+
+                    var app = (App)Application.Current;
+                    var progressWindow = app.ServiceProvider.GetRequiredService<Views.DownloadProgressWindow>();
+                    progressWindow.SetViewModel(progressVm);
+
+                    _logger.LogInformation("下载开始: 版本 {Version}, 总大小 {Size} 字节", newVersion, totalBytes);
+
+                    // 在后台执行下载，进度窗口以模态方式显示
+                    _ = Task.Run(async () =>
                     {
-                        // 进度回调在后台线程执行，不需要更新 UI
-                        _logger.LogDebug("更新下载进度: {Progress}%", progress);
+                        try
+                        {
+                            await _updateService.DownloadUpdatesAsync(updateInfo, progress =>
+                            {
+                                _logger.LogDebug("更新下载进度: {Progress}%", progress);
+                                progressVm.UpdateProgress(progress);
+                            }, progressVm.CancellationToken);
+
+                            // 下载完成
+                            progressVm.MarkCompleted();
+                            _logger.LogInformation("更新下载完成，准备应用更新并重启");
+
+                            // 短暂延迟让用户看到完成状态
+                            await Task.Delay(800);
+
+                            // 关闭进度窗口
+                            progressVm.CloseCallback?.Invoke(true);
+
+                            // 应用更新并重启
+                            _updateService.ApplyUpdatesAndRestart();
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            _logger.LogInformation("用户取消下载更新");
+                            progressVm.MarkCancelled();
+                        }
+                        catch (Exception downloadEx)
+                        {
+                            _logger.LogError(downloadEx, "下载更新时发生错误");
+                            progressVm.MarkFailed(downloadEx.Message);
+                        }
                     });
 
-                    _logger.LogInformation("更新下载完成，准备应用更新并重启");
-                    _updateService.ApplyUpdatesAndRestart();
+                    // 模态显示进度窗口，阻塞主窗口直到关闭
+                    progressWindow.ShowDialog();
                 }
             }
             catch (Exception ex)

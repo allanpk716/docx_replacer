@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
@@ -259,7 +260,7 @@ public class CliRunnerTests
         public string EffectiveUpdateUrl => "";
 
         public Task<UpdateInfo?> CheckForUpdatesAsync() => Task.FromResult(UpdateInfoToReturn);
-        public Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null) => Task.CompletedTask;
+        public Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public void ApplyUpdatesAndRestart() { }
         public void ReloadSource(string updateUrl, string channel) { }
     }

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-04-30T04:47:45Z | Files: 155 | Described: 0/155
-<!-- gsd:codebase-meta {"generatedAt":"2026-04-30T04:47:45Z","fingerprint":"1bc4bb404058eda97bc58d146c34b31b61cc0eb3","fileCount":155,"truncated":false} -->
+Generated: 2026-04-30T06:31:46Z | Files: 161 | Described: 0/161
+<!-- gsd:codebase-meta {"generatedAt":"2026-04-30T06:31:46Z","fingerprint":"af237771df8803b30e11e591212e5dbe28a9dede","fileCount":161,"truncated":false} -->
 
 ### (root)/
 - `.gitignore`
@@ -66,6 +66,8 @@ Generated: 2026-04-30T04:47:45Z | Files: 155 | Described: 0/155
 ### DocuFiller/Views/
 - `DocuFiller/Views/CleanupWindow.xaml`
 - `DocuFiller/Views/CleanupWindow.xaml.cs`
+- `DocuFiller/Views/DownloadProgressWindow.xaml`
+- `DocuFiller/Views/DownloadProgressWindow.xaml.cs`
 - `DocuFiller/Views/UpdateSettingsWindow.xaml`
 - `DocuFiller/Views/UpdateSettingsWindow.xaml.cs`
 
@@ -124,11 +126,13 @@ Generated: 2026-04-30T04:47:45Z | Files: 155 | Described: 0/155
 ### Tests/
 - `Tests/ContentControlProcessorTests.cs`
 - `Tests/DocuFiller.Tests.csproj`
+- `Tests/DownloadProgressViewModelTests.cs`
 - `Tests/ExcelDataParserServiceTests.cs`
 - `Tests/ExcelIntegrationTests.cs`
 - `Tests/FormattedCellValueTests.cs`
 - `Tests/HeaderFooterCommentTests.cs`
 - `Tests/UpdateServiceTests.cs`
+- `Tests/UpdateSettingsViewModelTests.cs`
 - `Tests/verify-templates.bat`
 
 ### Tests/DocuFiller.Tests/
@@ -173,6 +177,7 @@ Generated: 2026-04-30T04:47:45Z | Files: 155 | Described: 0/155
 - `Utils/VersionHelper.cs`
 
 ### ViewModels/
+- `ViewModels/DownloadProgressViewModel.cs`
 - `ViewModels/MainWindowViewModel.cs`
 - `ViewModels/ObservableObject.cs`
 - `ViewModels/RelayCommand.cs`
@@ -180,6 +185,7 @@ Generated: 2026-04-30T04:47:45Z | Files: 155 | Described: 0/155
 
 ### docs/
 - `docs/excel-data-user-guide.md`
+- `docs/release-guide.md`
 - `docs/ssh-offline-install.md`
 - `docs/update-server-deployment.md`
 

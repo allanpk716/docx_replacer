@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Velopack;
 
@@ -13,7 +14,7 @@ namespace DocuFiller.Services.Interfaces
         Task<UpdateInfo?> CheckForUpdatesAsync();
 
         /// <summary>下载更新包</summary>
-        Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null);
+        Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null, CancellationToken cancellationToken = default);
 
         /// <summary>应用已下载的更新并重启应用</summary>
         void ApplyUpdatesAndRestart();

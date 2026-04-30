@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using DocuFiller.Services.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.ViewModels
@@ -26,34 +27,24 @@ namespace DocuFiller.ViewModels
         /// </summary>
         internal Action<bool?>? CloseCallback { get; set; }
 
-        public UpdateSettingsViewModel(IUpdateService updateService, ILogger<UpdateSettingsViewModel> logger)
+        public UpdateSettingsViewModel(
+            IUpdateService updateService,
+            ILogger<UpdateSettingsViewModel> logger,
+            IConfiguration configuration)
         {
             _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // 从 IUpdateService 读取当前值
+            // 从 IConfiguration 直接读取原始值（决策 D033）
             _sourceTypeDisplay = _updateService.UpdateSourceType;
-            _channel = _updateService.Channel;
 
-            // EffectiveUpdateUrl 包含通道路径后缀（如 "http://host/stable/"），
-            // 需要剥离尾部的 "/{channel}/" 以恢复用户输入的原始 URL
-            if (_updateService.UpdateSourceType == "GitHub")
-            {
-                _updateUrl = string.Empty;
-            }
-            else
-            {
-                var effectiveUrl = _updateService.EffectiveUpdateUrl;
-                var suffix = "/" + _channel + "/";
-                if (!string.IsNullOrEmpty(effectiveUrl) && effectiveUrl.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-                {
-                    _updateUrl = effectiveUrl.Substring(0, effectiveUrl.Length - suffix.Length);
-                }
-                else
-                {
-                    _updateUrl = effectiveUrl;
-                }
-            }
+            var rawUrl = configuration?["Update:UpdateUrl"];
+            _updateUrl = string.IsNullOrWhiteSpace(rawUrl) ? string.Empty : rawUrl.Trim();
+
+            var rawChannel = configuration?["Update:Channel"];
+            _channel = string.IsNullOrWhiteSpace(rawChannel)
+                ? _updateService.Channel
+                : rawChannel.Trim();
 
             Channels = new ObservableCollection<string> { "stable", "beta" };
             SaveCommand = new RelayCommand(ExecuteSave);

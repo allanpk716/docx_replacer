@@ -1,5 +1,6 @@
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
@@ -31,7 +32,7 @@ public class UpdateCommandTests
 
         public Task<UpdateInfo?> CheckForUpdatesAsync() => Task.FromResult(UpdateInfoToReturn);
 
-        public Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null)
+        public Task DownloadUpdatesAsync(UpdateInfo updateInfo, Action<int>? progressCallback = null, CancellationToken cancellationToken = default)
         {
             progressCallback?.Invoke(100);
             return Task.CompletedTask;
