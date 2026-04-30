@@ -2,6 +2,7 @@
 
 This file is the explicit capability and coverage contract for the project.
 
+
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
