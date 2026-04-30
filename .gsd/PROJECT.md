@@ -21,8 +21,6 @@ DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，支持 GUI 和 C
 - GUI 状态栏常驻更新提示（便携版/有新版本/检查失败三种状态）
 - 状态栏源类型显示 + 齿轮按钮打开 UpdateSettingsWindow 编辑更新源
 - CLI update 子命令（版本检查 JSONL + --yes 下载重启 + post-command 更新提醒）
-- 更新设置窗口正确回显 appsettings.json 中的 UpdateUrl/Channel 原始值
-- 下载更新时弹出模态进度窗口，实时显示进度条、速度、ETA，支持取消
 
 ## Architecture / Key Patterns
 
@@ -35,8 +33,6 @@ DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，支持 GUI 和 C
 - Go 更新服务器：文件系统存储，stable/beta 双通道，Bearer Token 认证
 - GitHub CI/CD：v* tag 触发 Actions workflow，Velopack 打包，Release 自动创建
 - CLI post-command hook：成功命令后条件性追加更新提醒 JSONL
-- IConfiguration 注入 ViewModel 直接读取 appsettings.json 原始配置值（避免从运行时服务属性反推）
-- 模态窗口运行时参数通过调用方手动创建 ViewModel + SetViewModel() 注入（Decision D034）
 
 ## Capability Contract
 
@@ -54,4 +50,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 - [x] M008: Velopack 更新 UI — 自定义 WPF 更新弹窗
 - [x] M009: GitHub CI/CD 发布 + 多源更新提醒 — tag 驱动发布流水线，GUI/CLI 更新体验
 - [x] M010: GUI 更新源配置 — 界面编辑 UpdateUrl/Channel，热重载，状态栏源类型显示
-- [x] M011: 更新体验修复 — URL 回显修复 + 下载进度弹窗
+- [ ] M011: 更新体验修复 — URL 回显修复 + 下载进度弹窗
