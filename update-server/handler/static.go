@@ -52,6 +52,12 @@ func (h *StaticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Velopack SimpleWebSource requests {baseUri}/RELEASES (legacy format).
+	// Map this to releases.win.json transparently.
+	if filename == "RELEASES" {
+		filename = "releases.win.json"
+	}
+
 	filePath := filepath.Join(h.Store.DataDir, channel, filename)
 
 	// Security: prevent path traversal
