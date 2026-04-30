@@ -52,9 +52,12 @@ func (h *StaticHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Velopack SimpleWebSource requests {baseUri}/RELEASES (legacy format).
-	// Map this to releases.win.json transparently.
-	if filename == "RELEASES" {
+	// Velopack SimpleWebSource requests the release feed by channel name.
+	// With ExplicitChannel="stable", it requests "releases.stable.json".
+	// We store the feed as "releases.win.json" (the OS-based name from vpk pack).
+	// Map all known feed names to releases.win.json transparently.
+	switch filename {
+	case "RELEASES", "releases", "releases.stable.json", "releases.beta.json", "releases.win.json":
 		filename = "releases.win.json"
 	}
 
