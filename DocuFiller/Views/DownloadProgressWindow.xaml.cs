@@ -31,11 +31,15 @@ namespace DocuFiller.Views
             _viewModel = viewModel;
             DataContext = _viewModel;
 
-            // Inject close callback so ViewModel can close this window
+            // Inject close callback so ViewModel can close this window.
+            // Must dispatch to UI thread because CloseCallback is invoked from Task.Run background thread.
             _viewModel.CloseCallback = (dialogResult) =>
             {
-                DialogResult = dialogResult;
-                Close();
+                Dispatcher.Invoke(() =>
+                {
+                    DialogResult = dialogResult;
+                    Close();
+                });
             };
         }
 
