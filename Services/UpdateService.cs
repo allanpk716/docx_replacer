@@ -29,15 +29,27 @@ namespace DocuFiller.Services
         /// </summary>
         internal string AppSettingsPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
 
+        /// <summary>
+        /// 持久化配置文件路径，位于安装目录上一级（Velopack 更新时不覆盖）。
+        /// Velopack 安装结构: AppData\Local\DocuFiller\current\ ← 更新时替换
+        ///                     AppData\Local\DocuFiller\update-config.json ← 更新时保留
+        /// </summary>
+        internal string? PersistentConfigPath { get; set; }
+
         public UpdateService(ILogger<UpdateService> logger, IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            var url = configuration?["Update:UpdateUrl"];
+            // 初始化持久化配置路径：安装目录上一级
+            PersistentConfigPath = GetPersistentConfigPath();
+
+            // 优先读取持久化配置（更新后保留），fallback 到 appsettings.json
+            var (persistedUrl, persistedChannel) = ReadPersistentConfig();
+            var url = !string.IsNullOrWhiteSpace(persistedUrl) ? persistedUrl : (configuration?["Update:UpdateUrl"] ?? "");
             var rawUrl = string.IsNullOrWhiteSpace(url) ? "" : url;
 
-            // Channel 为空或 null 时默认 "stable"
-            var channel = configuration?["Update:Channel"];
+            // Channel: 持久化配置 > appsettings.json > 默认 "stable"
+            var channel = !string.IsNullOrWhiteSpace(persistedChannel) ? persistedChannel : (configuration?["Update:Channel"] ?? "");
             _channel = string.IsNullOrWhiteSpace(channel) ? "stable" : channel.Trim();
 
             if (!string.IsNullOrWhiteSpace(rawUrl))
@@ -67,8 +79,63 @@ namespace DocuFiller.Services
                 _isInstalled = false;
             }
 
-            _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}",
-                _sourceType, _channel, _updateUrl != "" ? _updateUrl : "GitHub Releases", _isInstalled);
+            _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}，持久化配置: {ConfigPath}",
+                _sourceType, _channel, _updateUrl != "" ? _updateUrl : "GitHub Releases", _isInstalled,
+                PersistentConfigPath != null ? PersistentConfigPath : "未启用");
+        }
+
+        /// <summary>
+        /// 获取持久化配置文件路径。
+        /// Velopack 安装时，应用目录结构为: root\current\，上一级 root\ 就是安装根目录，更新时不覆盖。
+        /// 非安装环境（开发/便携版）返回 null。
+        /// </summary>
+        private string? GetPersistentConfigPath()
+        {
+            try
+            {
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                if (baseDir == null) return null;
+
+                // Velopack 安装的应用运行在 root\current\ 下，上一级就是安装根目录
+                var parentDir = Directory.GetParent(baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                if (parentDir == null) return null;
+
+                // 验证确实是 Velopack 安装结构（上一级有 Update.exe）
+                var updateExe = Path.Combine(parentDir.FullName, "Update.exe");
+                if (!File.Exists(updateExe)) return null;
+
+                return Path.Combine(parentDir.FullName, "update-config.json");
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 从持久化配置文件读取 UpdateUrl 和 Channel。
+        /// 文件格式: {"UpdateUrl":"http://...","Channel":"stable"}
+        /// </summary>
+        private (string? updateUrl, string? channel) ReadPersistentConfig()
+        {
+            try
+            {
+                if (PersistentConfigPath == null || !File.Exists(PersistentConfigPath))
+                    return (null, null);
+
+                var json = File.ReadAllText(PersistentConfigPath);
+                var node = JsonNode.Parse(json);
+                if (node == null) return (null, null);
+
+                var url = node["UpdateUrl"]?.GetValue<string>();
+                var channel = node["Channel"]?.GetValue<string>();
+                return (url, channel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "读取持久化配置文件失败，使用 appsettings.json 配置");
+                return (null, null);
+            }
         }
 
         /// <inheritdoc />
@@ -169,10 +236,32 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 将更新源配置持久化到 appsettings.json 文件
+        /// 将更新源配置持久化到 appsettings.json 文件（安装目录内）和持久化配置文件（安装目录上一级）。
+        /// 持久化配置文件在 Velopack 更新时不会被覆盖，确保更新后配置不丢失。
         /// </summary>
         private void PersistToAppSettings(string updateUrl, string channel)
         {
+            // 1. 写入持久化配置文件（安装目录上一级，更新时不覆盖）
+            if (PersistentConfigPath != null)
+            {
+                try
+                {
+                    var config = new JsonObject
+                    {
+                        ["UpdateUrl"] = updateUrl ?? "",
+                        ["Channel"] = channel ?? "stable"
+                    };
+                    var options = new JsonSerializerOptions { WriteIndented = true };
+                    File.WriteAllText(PersistentConfigPath, config.ToJsonString(options));
+                    _logger.LogInformation("已将更新源配置持久化到: {Path}", PersistentConfigPath);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "持久化更新源配置到 {Path} 失败", PersistentConfigPath);
+                }
+            }
+
+            // 2. 同步写入 appsettings.json（安装目录内，供 UpdateSettingsViewModel 读取）
             try
             {
                 var path = AppSettingsPath;
@@ -189,7 +278,7 @@ namespace DocuFiller.Services
                 node["Update"]!["Channel"] = channel;
                 var options = new JsonSerializerOptions { WriteIndented = true };
                 File.WriteAllText(path, node.ToJsonString(options));
-                _logger.LogInformation("已将更新源配置持久化到 appsettings.json");
+                _logger.LogInformation("已将更新源配置同步到 appsettings.json");
             }
             catch (Exception ex)
             {
