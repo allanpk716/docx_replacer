@@ -2,6 +2,16 @@
 
 This file is the explicit capability and coverage contract for the project.
 
+## Active
+
+### R056 — update-config.json 存储在用户 home 目录（~/.docx_replacer/），完全独立于 Velopack 安装目录。Setup.exe 安装和 Velopack 自动更新都不得覆盖此文件。GUI 和 CLI 共享同一配置路径。
+- Class: core-capability
+- Status: active
+- Description: update-config.json 存储在用户 home 目录（~/.docx_replacer/），完全独立于 Velopack 安装目录。Setup.exe 安装和 Velopack 自动更新都不得覆盖此文件。GUI 和 CLI 共享同一配置路径。
+- Why it matters: 当前配置文件放在 Velopack 安装目录下，每次安装/更新被覆盖导致内网更新地址丢失，是反复出现的 bug
+- Source: user
+- Primary owning slice: M013-ueix00/S01
+
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -664,10 +674,11 @@ This file is the explicit capability and coverage contract for the project.
 | R053 | quality-attribute | validated | M012-li0ip5/S01 | none | All three GroupBox elements removed from both Tabs. Replaced with TextBlock labels + Separator lines. grep confirms 0 GroupBox references in MainWindow.xaml. |
 | R054 | failure-visibility | validated | M012-li0ip5/S02 | none | Window element now has AllowDrop="True" and PreviewDragOver="Window_PreviewDragOver". Code-behind calls Activate() when window is not active during drag-over. Verified: dotnet build 0 errors, 4 AllowDrop targets, 7 Drop handlers, 3 DragEnter, 4 DragOver, Window_PreviewDragOver at L34. |
 | R055 | core-capability | validated | M012-li0ip5/S01 | none | Tab 2 uses same DockPanel structure, same font sizes (12-14px), same label width (65px) and button sizes as Tab 1. Output settings GroupBox removed, replaced with inline layout. CleanupDropZoneBorder compressed (Padding 30→12). |
+| R056 | core-capability | active | M013-ueix00/S01 | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 0
-- Mapped to slices: 0
+- Active requirements: 1
+- Mapped to slices: 1
 - Validated: 53 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055)
 - Unmapped active requirements: 0

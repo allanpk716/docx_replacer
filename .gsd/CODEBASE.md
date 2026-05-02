@@ -1,15 +1,17 @@
 # Codebase Map
 
-Generated: 2026-05-02T02:33:19Z | Files: 161 | Described: 0/161
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-02T02:33:19Z","fingerprint":"af237771df8803b30e11e591212e5dbe28a9dede","fileCount":161,"truncated":false} -->
+Generated: 2026-05-02T13:15:39Z | Files: 163 | Described: 0/163
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-02T13:15:39Z","fingerprint":"bc367dcbfbc47425994b01d2908d9a6167799267","fileCount":163,"truncated":false} -->
 
 ### (root)/
+- `.env.example`
 - `.gitignore`
 - `App.config`
 - `App.xaml`
 - `App.xaml.cs`
 - `appsettings.Development.json`
 - `appsettings.json`
+- `CHANGELOG.md`
 - `CLAUDE.md`
 - `Directory.Build.props`
 - `DocuFiller.csproj`

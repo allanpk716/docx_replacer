@@ -44,3 +44,5 @@
 | D036 |  | layout | GroupBox 替换方案 | 去掉 GroupBox，用 TextBlock 标签 + Separator 分隔线 | 三个 GroupBox 的 header 行和内边距共约 120px，替换为标签+分隔线后只需约 30px，节省 90px。 | Yes | collaborative |
 | D037 |  | layout | 窗口默认尺寸 | Width=900 Height=550，MinWidth=800 MinHeight=500 | 紧凑布局后内容不需要大窗口。900x550 在 1366x768（减任务栏 ~728px 可用）下充裕显示。 | Yes | collaborative |
 | D038 |  | layout | 全局字号调整范围 | TabControl 标题 14px、标签 13px、正文 12px | 当前 FontSize=16 是空间浪费主因之一。降至 12-14px 后内容密度显著提升且仍清晰可读。 | Yes | collaborative |
+| D039 |  | architecture | update-config.json 存储路径 | %USERPROFILE%\.docx_replacer\update-config.json | 用户明确要求 ~/.docx_replacer/ 目录。完全独立于 Velopack 安装目录，安装/更新/卸载都不会触及。 | Yes | human |
+| D040 |  | scope | 旧路径 update-config.json 不做自动迁移 | 不迁移旧路径配置，用户重新配置 | 用户明确表示不需要迁移，重新配置即可。迁移逻辑增加复杂度且只需执行一次。 | No | human |
