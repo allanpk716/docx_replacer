@@ -156,7 +156,7 @@ If no commits:
 **Content:**
 ```batch
 REM Update Server Configuration
-set UPDATE_SERVER_HOST=172.18.200.47
+set UPDATE_SERVER_HOST=<INTERNAL_SERVER_IP>
 set UPDATE_SERVER_PORT=58100
 set UPDATE_SERVER_API_TOKEN=your-token-here
 set PROGRAM_ID=docufiller

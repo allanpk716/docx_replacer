@@ -8,7 +8,7 @@
 
 | 环境变量 | 说明 | 示例 |
 |----------|------|------|
-| `UPDATE_SERVER_HOST` | 更新服务器的 IP 或主机名 | `172.18.200.47` |
+| `UPDATE_SERVER_HOST` | 更新服务器的 IP 或主机名 | `<INTERNAL_SERVER_IP>` |
 | `UPDATE_SERVER_USER` | 服务器 SSH 登录用户名 | `Administrator` |
 | `UPDATE_SERVER_PASSWORD` | 服务器 SSH 登录密码 | `your-password` |
 | `UPDATE_SERVER_SSH_PORT` | SSH 端口 | `30000` |
@@ -19,7 +19,7 @@
 
 ```
 # Update Server Connection
-UPDATE_SERVER_HOST=172.18.200.47
+UPDATE_SERVER_HOST=<INTERNAL_SERVER_IP>
 UPDATE_SERVER_USER=Administrator
 UPDATE_SERVER_PASSWORD=your-password
 UPDATE_SERVER_SSH_PORT=30000
@@ -295,7 +295,7 @@ Restart-Service sshd
 
 | 项目 | 值 |
 |------|-----|
-| 服务器 | `172.18.200.47` |
+| 服务器 | `<INTERNAL_SERVER_IP>` |
 | SSH 端口 | `30000` |
 | 更新服务端口 | `30001` |
 | 服务安装路径 | `C:\WorkSpace\update-server` |

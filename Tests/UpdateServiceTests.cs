@@ -319,12 +319,12 @@ namespace DocuFiller.Tests
                 var service = new UpdateService(CreateLogger(), config);
                 service.AppSettingsPath = tempPath;
 
-                service.ReloadSource("http://192.168.1.100:8080", "beta");
+                service.ReloadSource("http://update-server.example.com:8080", "beta");
 
                 // 验证文件内容
                 var json = File.ReadAllText(tempPath);
                 var node = System.Text.Json.Nodes.JsonNode.Parse(json)!;
-                Assert.Equal("http://192.168.1.100:8080", node["Update"]!["UpdateUrl"]!.GetValue<string>());
+                Assert.Equal("http://update-server.example.com:8080", node["Update"]!["UpdateUrl"]!.GetValue<string>());
                 Assert.Equal("beta", node["Update"]!["Channel"]!.GetValue<string>());
             }
             finally

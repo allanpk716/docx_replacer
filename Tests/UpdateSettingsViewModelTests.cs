@@ -21,7 +21,7 @@ namespace DocuFiller.Tests
             _mockUpdateService = new Mock<IUpdateService>();
             _mockUpdateService.Setup(s => s.Channel).Returns("stable");
             _mockUpdateService.Setup(s => s.UpdateSourceType).Returns("HTTP");
-            _mockUpdateService.Setup(s => s.EffectiveUpdateUrl).Returns("http://172.18.200.47:30001/stable/");
+            _mockUpdateService.Setup(s => s.EffectiveUpdateUrl).Returns("http://<INTERNAL_SERVER_IP>:30001/stable/");
 
             using var loggerFactory = LoggerFactory.Create(builder => { });
             _logger = new Logger<UpdateSettingsViewModel>(loggerFactory);
@@ -46,13 +46,13 @@ namespace DocuFiller.Tests
         public void Constructor_HttpUrl_ReturnsRawUrlFromConfig()
         {
             // Arrange
-            var config = BuildConfiguration(updateUrl: "http://172.18.200.47:30001", channel: "stable");
+            var config = BuildConfiguration(updateUrl: "http://<INTERNAL_SERVER_IP>:30001", channel: "stable");
 
             // Act
             var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
 
             // Assert
-            Assert.Equal("http://172.18.200.47:30001", vm.UpdateUrl);
+            Assert.Equal("http://<INTERNAL_SERVER_IP>:30001", vm.UpdateUrl);
         }
 
         [Fact]

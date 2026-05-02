@@ -74,7 +74,7 @@ Installation complete!
 ```bash
 # 映射端口范围 30000-30010 到虚拟机
 iptables -t nat -A PREROUTING -i vmbr0 -p tcp -m multiport \
-  --dports 30000:30010 -j DNAT --to-destination 10.88.88.11:30000-30010
+  --dports 30000:30010 -j DNAT --to-destination <INTERNAL_SERVER_IP>:30000-30010
 ```
 
 ## 手动安装（不使用脚本）

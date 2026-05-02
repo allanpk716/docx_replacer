@@ -85,6 +85,7 @@ scripts/config/publish-config.bat
 .gsd/exec/
 .gsd/reports/
 .gsd/graphs/
+.gsd/extensions/
 .gsd/QUEUE.md
 
 # ── Build artifacts ──
