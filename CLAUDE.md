@@ -11,6 +11,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - 修复脚本时优先在原脚本上修改，非必需情况不要创建新脚本
 - **图片处理**：使用 MCP/Agent 截图或图片识别能力时，提交前需确保图片尺寸小于 1000x1000 像素
 - **文档管理**：项目计划文件统一存放在 `docs\plans` 目录中
+- **发布安全**：发布到内网更新服务器时，凭据从项目根目录 `.env` 文件读取。发布前必须检查 `.env` 是否存在且包含 `UPDATE_SERVER_HOST`、`UPDATE_SERVER_PORT`、`UPDATE_SERVER_API_TOKEN`。如果缺失，立即告知用户配置。绝不能在任何代码、脚本或文档中硬编码凭据。`.env.example` 提供了模板。
 
 ## Build and Development Commands
 

@@ -135,8 +135,9 @@ func (h *UploadHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// mergeReleaseFeed parses the uploaded releases JSON, merges it with the existing
-// feed for the channel, and writes the result. Returns list of newly added versions.
+// mergeReleaseFeed replaces the release feed for a channel with the uploaded feed.
+// Velopack expects releases.win.json to contain only the latest version entry.
+// Each upload replaces the entire feed, but .nupkg files are retained for delta updates.
 func (h *UploadHandler) mergeReleaseFeed(channel string, uploadedData []byte) ([]string, error) {
 	// Parse uploaded feed
 	var uploaded model.ReleaseFeed
@@ -144,34 +145,17 @@ func (h *UploadHandler) mergeReleaseFeed(channel string, uploadedData []byte) ([
 		return nil, fmt.Errorf("parse uploaded releases: %w", err)
 	}
 
-	// Read existing feed
-	existing, err := h.Store.ReadReleaseFeed(channel)
-	if err != nil {
-		return nil, fmt.Errorf("read existing feed: %w", err)
-	}
-
-	// Build dedup set from existing assets
-	existingNames := map[string]bool{}
-	for _, a := range existing.Assets {
-		existingNames[a.FileName] = true
-	}
-
-	// Merge new assets
+	// Collect versions from uploaded assets
 	var addedVersions []string
 	for _, asset := range uploaded.Assets {
-		if existingNames[asset.FileName] {
-			continue // skip duplicate
-		}
-		existing.Assets = append(existing.Assets, asset)
-		existingNames[asset.FileName] = true
 		if asset.Version != "" {
 			addedVersions = append(addedVersions, asset.Version)
 		}
 	}
 
-	// Write merged feed
-	if err := h.Store.WriteReleaseFeed(channel, existing); err != nil {
-		return nil, fmt.Errorf("write merged feed: %w", err)
+	// Replace feed entirely — Velopack expects only the latest release entry
+	if err := h.Store.WriteReleaseFeed(channel, &uploaded); err != nil {
+		return nil, fmt.Errorf("write release feed: %w", err)
 	}
 
 	return addedVersions, nil

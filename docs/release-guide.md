@@ -56,6 +56,21 @@ gh release upload v<版本号> <文件路径> --repo allanpk716/docx_replacer
 
 ## 内网更新服务器上传
 
+> **凭据来源**：所有敏感信息（服务器地址、端口、API Token）从项目根目录的 `.env` 文件读取。
+> `.env` 已在 `.gitignore` 中排除，不会被提交。
+> 如果 `.env` 不存在或缺少字段，发布前会报错提示配置。
+>
+> `.env` 所需字段：
+>
+> | 字段 | 说明 |
+> |------|------|
+> | `UPDATE_SERVER_HOST` | 服务器 IP 或主机名 |
+> | `UPDATE_SERVER_PORT` | HTTP 端口 |
+> | `UPDATE_SERVER_API_TOKEN` | Bearer Token |
+> | `UPDATE_SERVER_SSH_PORT` | SSH 端口（仅 SSH 部署用） |
+> | `UPDATE_SERVER_USER` | SSH 用户名（仅 SSH 部署用） |
+> | `UPDATE_SERVER_PASSWORD` | SSH 密码（仅 SSH 部署用） |
+
 ### 下载产物
 
 ```bash
@@ -66,21 +81,28 @@ gh release download v<版本号> --repo allanpk716/docx_replacer --clobber
 ### 上传到 stable 通道
 
 ```bash
+# 从 .env 加载环境变量（bash）
+set -a; source .env; set +a
+
 # 上传 .nupkg（更新包）
-curl -X POST "http://172.18.200.47:30001/api/channels/stable/releases" \
-  -H "Authorization: Bearer oZgPOFJYi8w3G2" \
+curl -X POST "http://${UPDATE_SERVER_HOST}:${UPDATE_SERVER_PORT}/api/channels/stable/releases" \
+  -H "Authorization: Bearer ${UPDATE_SERVER_API_TOKEN}" \
   -F "file=@DocuFiller-<版本号>-full.nupkg"
 
 # 上传 releases.win.json（版本清单，multipart field name 必须是 file）
-curl -X POST "http://172.18.200.47:30001/api/channels/stable/releases" \
-  -H "Authorization: Bearer oZgPOFJYi8w3G2" \
+curl -X POST "http://${UPDATE_SERVER_HOST}:${UPDATE_SERVER_PORT}/api/channels/stable/releases" \
+  -H "Authorization: Bearer ${UPDATE_SERVER_API_TOKEN}" \
   -F "file=@releases.win.json"
 ```
+
+### 上传到 beta 通道
+
+将上面 URL 中的 `stable` 替换为 `beta` 即可。
 
 ### 验证
 
 ```bash
-curl -s "http://172.18.200.47:30001/api/channels/stable/releases"
+curl -s "http://${UPDATE_SERVER_HOST}:${UPDATE_SERVER_PORT}/api/channels/stable/releases"
 ```
 
 确认新版本出现在版本列表中。
