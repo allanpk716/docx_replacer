@@ -30,18 +30,26 @@ namespace DocuFiller.Services
         internal string AppSettingsPath { get; set; } = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "appsettings.json");
 
         /// <summary>
-        /// 持久化配置文件路径，位于安装目录上一级（Velopack 更新时不覆盖）。
-        /// Velopack 安装结构: AppData\Local\DocuFiller\current\ ← 更新时替换
-        ///                     AppData\Local\DocuFiller\update-config.json ← 更新时保留
+        /// 持久化配置文件路径，位于 %USERPROFILE%\.docx_replacer\update-config.json。
+        /// 完全独立于 Velopack 安装目录，安装/更新/卸载都不会触及此文件。
         /// </summary>
         internal string? PersistentConfigPath { get; set; }
 
         public UpdateService(ILogger<UpdateService> logger, IConfiguration configuration)
+            : this(logger, configuration, persistentConfigPath: null)
+        {
+        }
+
+        /// <summary>
+        /// 内部构造函数，允许测试注入持久化配置路径。
+        /// </summary>
+        internal UpdateService(ILogger<UpdateService> logger, IConfiguration configuration, string? persistentConfigPath)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // 初始化持久化配置路径：安装目录上一级
-            PersistentConfigPath = GetPersistentConfigPath();
+            // 初始化持久化配置路径：用户目录下的 .docx_replacer/
+            // 如果测试传入了路径则使用测试路径，否则使用默认路径
+            PersistentConfigPath = persistentConfigPath ?? GetPersistentConfigPath();
 
             // 优先读取持久化配置（更新后保留），fallback 到 appsettings.json
             var (persistedUrl, persistedChannel) = ReadPersistentConfig();
@@ -81,7 +89,7 @@ namespace DocuFiller.Services
 
             _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}，持久化配置: {ConfigPath}",
                 _sourceType, _channel, _updateUrl != "" ? _updateUrl : "GitHub Releases", _isInstalled,
-                PersistentConfigPath != null ? PersistentConfigPath : "未启用");
+                PersistentConfigPath);
 
             // 启动时同步持久化配置：如果 Velopack 安装目录存在但 update-config.json 不存在，
             // 将当前有效的 URL 和通道写入，防止 Velopack 更新覆盖 appsettings.json 后配置丢失。
@@ -90,30 +98,12 @@ namespace DocuFiller.Services
 
         /// <summary>
         /// 获取持久化配置文件路径。
-        /// Velopack 安装时，应用目录结构为: root\current\，上一级 root\ 就是安装根目录，更新时不覆盖。
-        /// 非安装环境（开发/便携版）返回 null。
+        /// 固定返回 %USERPROFILE%\.docx_replacer\update-config.json，所有环境通用。
         /// </summary>
-        private string? GetPersistentConfigPath()
+        public static string GetPersistentConfigPath()
         {
-            try
-            {
-                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                if (baseDir == null) return null;
-
-                // Velopack 安装的应用运行在 root\current\ 下，上一级就是安装根目录
-                var parentDir = Directory.GetParent(baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                if (parentDir == null) return null;
-
-                // 验证确实是 Velopack 安装结构（上一级有 Update.exe）
-                var updateExe = Path.Combine(parentDir.FullName, "Update.exe");
-                if (!File.Exists(updateExe)) return null;
-
-                return Path.Combine(parentDir.FullName, "update-config.json");
-            }
-            catch
-            {
-                return null;
-            }
+            var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return Path.Combine(userProfile, ".docx_replacer", "update-config.json");
         }
 
         /// <summary>
@@ -129,6 +119,13 @@ namespace DocuFiller.Services
 
             try
             {
+                var dir = Path.GetDirectoryName(PersistentConfigPath);
+                if (dir != null && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                    _logger.LogInformation("已创建持久化配置目录: {Dir}", dir);
+                }
+
                 var config = new JsonObject
                 {
                     ["UpdateUrl"] = currentRawUrl ?? "",
@@ -289,11 +286,18 @@ namespace DocuFiller.Services
         /// </summary>
         private void PersistToAppSettings(string updateUrl, string channel)
         {
-            // 1. 写入持久化配置文件（安装目录上一级，更新时不覆盖）
+            // 1. 写入持久化配置文件（%USERPROFILE%\.docx_replacer\，更新时不覆盖）
             if (PersistentConfigPath != null)
             {
                 try
                 {
+                    var dir = Path.GetDirectoryName(PersistentConfigPath);
+                    if (dir != null && !Directory.Exists(dir))
+                    {
+                        Directory.CreateDirectory(dir);
+                        _logger.LogInformation("已创建持久化配置目录: {Dir}", dir);
+                    }
+
                     var config = new JsonObject
                     {
                         ["UpdateUrl"] = updateUrl ?? "",

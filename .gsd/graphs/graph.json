@@ -720,6 +720,50 @@
       "label": "T02: Build verification and drag handler integrity check",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M013",
+      "label": "M013",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M013:S01",
+      "label": "S01: 配置路径迁移到 ~/.docx_replacer/",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M013/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M013:S01:T01",
+      "label": "T01: Migrate persistent config path to ~/.docx_replacer/ in UpdateService and UpdateSettingsViewModel",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M013:S01:T02",
+      "label": "T02: Update tests and add path verification tests for new config location",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M013:S02",
+      "label": "S02: 测试更新与验证",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M013/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M013:S02:T01",
+      "label": "T01: 新增 UpdateService 持久化配置边界测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M013:S02:T02",
+      "label": "T02: 验证 UpdateSettingsViewModel 路径一致性和全量回归",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -1346,7 +1390,43 @@
       "to": "task:M012:S02:T02",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M013",
+      "to": "slice:M013:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M013:S01",
+      "to": "task:M013:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M013:S01",
+      "to": "task:M013:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M013",
+      "to": "slice:M013:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M013:S02",
+      "to": "task:M013:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M013:S02",
+      "to": "task:M013:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-02T01:37:27.884Z"
+  "builtAt": "2026-05-02T12:30:06.373Z"
 }

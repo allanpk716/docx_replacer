@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Input;
+using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -111,24 +112,14 @@ namespace DocuFiller.ViewModels
         }
 
         /// <summary>
-        /// 从持久化配置文件（安装目录上一级的 update-config.json）读取 UpdateUrl 和 Channel。
-        /// Velopack 更新时不覆盖此文件，因此是配置的"真实来源"。
+        /// 从持久化配置文件（%USERPROFILE%\.docx_replacer\update-config.json）读取 UpdateUrl 和 Channel。
+        /// 完全独立于 Velopack 安装目录，因此是配置的"真实来源"。
         /// </summary>
         private static (string? updateUrl, string? channel) ReadPersistentConfig()
         {
             try
             {
-                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
-                if (baseDir == null) return (null, null);
-
-                var parentDir = Directory.GetParent(baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-                if (parentDir == null) return (null, null);
-
-                // 验证是 Velopack 安装结构
-                var updateExe = Path.Combine(parentDir.FullName, "Update.exe");
-                if (!File.Exists(updateExe)) return (null, null);
-
-                var configPath = Path.Combine(parentDir.FullName, "update-config.json");
+                var configPath = UpdateService.GetPersistentConfigPath();
                 if (!File.Exists(configPath)) return (null, null);
 
                 var json = File.ReadAllText(configPath);
