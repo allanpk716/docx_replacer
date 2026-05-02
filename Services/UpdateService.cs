@@ -20,6 +20,7 @@ namespace DocuFiller.Services
         private readonly ILogger<UpdateService> _logger;
         private IUpdateSource _updateSource;
         private string _updateUrl;
+        private string _baseUrl; // 不含通道后缀的基础 URL（如 http://server/），用于回退时重建 SimpleWebSource
         private string _channel;
         private string _sourceType;
         private readonly bool _isInstalled;
@@ -63,13 +64,15 @@ namespace DocuFiller.Services
             if (!string.IsNullOrWhiteSpace(rawUrl))
             {
                 // HTTP URL 模式：内网 Go 服务器
-                _updateUrl = rawUrl.TrimEnd('/') + "/" + _channel + "/";
+                _baseUrl = rawUrl.TrimEnd('/') + "/";
+                _updateUrl = _baseUrl + _channel + "/";
                 _updateSource = new SimpleWebSource(_updateUrl);
                 _sourceType = "HTTP";
             }
             else
             {
                 // GitHub Releases 模式：外网用户备选
+                _baseUrl = "";
                 _updateUrl = "";
                 _updateSource = new GithubSource("https://github.com/allanpk716/docx_replacer", accessToken: null, prerelease: false);
                 _sourceType = "GitHub";
@@ -199,12 +202,14 @@ namespace DocuFiller.Services
 
             // 当前通道无更新时，尝试回退到 stable 通道查找。
             // 场景：用户安装了 beta 版（如 1.3.3-beta1），后来 stable 版（1.3.3）发布了。
-            // Velopack 的通道隔离机制导致 ExplicitChannel=beta 只查 beta 通道的包，
-            // 而 stable 的 release 不在 beta 通道中。回退到 stable 通道可以检测到跨通道更新。
-            if (_channel != "stable")
+            // HTTP 模式：用 _baseUrl + targetChannel 创建新 SimpleWebSource 重建 UpdateManager；
+            // GitHub 模式：跳过回退（GitHub Releases 没有通道目录分离）。
+            if (_channel != "stable" && _sourceType == "HTTP")
             {
                 _logger.LogInformation("通道 {Channel} 无更新，回退到 stable 通道检查", _channel);
-                var stableManager = CreateUpdateManagerForChannel("stable");
+                var stableUrl = _baseUrl + "stable/";
+                var stableSource = new SimpleWebSource(stableUrl);
+                var stableManager = new UpdateManager(stableSource, new UpdateOptions());
                 var stableInfo = await stableManager.CheckForUpdatesAsync();
 
                 if (stableInfo != null)
@@ -261,12 +266,14 @@ namespace DocuFiller.Services
 
             if (!string.IsNullOrWhiteSpace(updateUrl))
             {
-                _updateUrl = updateUrl.TrimEnd('/') + "/" + channel + "/";
+                _baseUrl = updateUrl.TrimEnd('/') + "/";
+                _updateUrl = _baseUrl + channel + "/";
                 _updateSource = new SimpleWebSource(_updateUrl);
                 _sourceType = "HTTP";
             }
             else
             {
+                _baseUrl = "";
                 _updateUrl = "";
                 _updateSource = new GithubSource("https://github.com/allanpk716/docx_replacer", accessToken: null, prerelease: false);
                 _sourceType = "GitHub";
@@ -340,20 +347,16 @@ namespace DocuFiller.Services
 
         private UpdateManager CreateUpdateManager()
         {
-            // AllowVersionDowngrade is required when using ExplicitChannel for channel switching.
-            // Without it, Velopack refuses to offer updates when switching between channels
-            // (e.g. from beta 1.3.3-beta2 to stable 1.3.3), even if the target version is
-            // semantically higher. Velopack treats cross-channel updates as potential downgrades.
-            return CreateUpdateManagerForChannel(_channel);
+            // 使用默认 UpdateOptions，Velopack 按 OS 自动选择 channel (win)，
+            // feed 文件名为 releases.win.json。
+            return new UpdateManager(_updateSource, new UpdateOptions());
         }
 
         private UpdateManager CreateUpdateManagerForChannel(string channel)
         {
-            return new UpdateManager(_updateSource, new UpdateOptions
-            {
-                ExplicitChannel = channel,
-                AllowVersionDowngrade = true
-            });
+            // channel 参数仅用于构造 UpdateSource，UpdateOptions 保持默认。
+            // Velopack 按 OS 自动选择 channel，feed 文件名为 releases.win.json。
+            return new UpdateManager(_updateSource, new UpdateOptions());
         }
     }
 }

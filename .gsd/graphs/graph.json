@@ -764,6 +764,31 @@
       "label": "T02: 验证 UpdateSettingsViewModel 路径一致性和全量回归",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M014",
+      "label": "M014",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M014:S01",
+      "label": "S01: 去掉 ExplicitChannel，修复更新检测逻辑",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M014/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M014:S01:T01",
+      "label": "T01: 修改 UpdateService 核心：去掉 ExplicitChannel，修正回退逻辑",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M014:S01:T02",
+      "label": "T02: 验证编译和测试，确认无残留 ExplicitChannel 引用",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -1426,7 +1451,25 @@
       "to": "task:M013:S02:T02",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M014",
+      "to": "slice:M014:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M014:S01",
+      "to": "task:M014:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M014:S01",
+      "to": "task:M014:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-02T12:30:06.373Z"
+  "builtAt": "2026-05-02T15:56:22.216Z"
 }

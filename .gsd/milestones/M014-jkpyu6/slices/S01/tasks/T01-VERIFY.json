@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M014-jkpyu6/S01/T01",
+  "timestamp": 1777737248087,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet build 无错误，grep -n ExplicitChannel Services/UpdateService.cs 无结果",
+      "exitCode": 1,
+      "durationMs": 205,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}
