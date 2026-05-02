@@ -1,7 +1,10 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Input;
 using DocuFiller.Services.Interfaces;
@@ -35,13 +38,20 @@ namespace DocuFiller.ViewModels
             _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            // 从 IConfiguration 直接读取原始值（决策 D033）
             _sourceTypeDisplay = _updateService.UpdateSourceType;
 
-            var rawUrl = configuration?["Update:UpdateUrl"];
+            // 优先从持久化配置文件（update-config.json）读取，fallback 到 IConfiguration。
+            // Velopack 更新会覆盖安装目录下的 appsettings.json（URL 重置为空），
+            // 但安装目录上一级的 update-config.json 不受影响。
+            var (persistedUrl, persistedChannel) = ReadPersistentConfig();
+            var rawUrl = !string.IsNullOrWhiteSpace(persistedUrl)
+                ? persistedUrl
+                : (configuration?["Update:UpdateUrl"] ?? "");
             _updateUrl = string.IsNullOrWhiteSpace(rawUrl) ? string.Empty : rawUrl.Trim();
 
-            var rawChannel = configuration?["Update:Channel"];
+            var rawChannel = !string.IsNullOrWhiteSpace(persistedChannel)
+                ? persistedChannel
+                : (configuration?["Update:Channel"] ?? "");
             _channel = string.IsNullOrWhiteSpace(rawChannel)
                 ? _updateService.Channel
                 : rawChannel.Trim();
@@ -98,6 +108,39 @@ namespace DocuFiller.ViewModels
         private void ExecuteCancel()
         {
             CloseCallback?.Invoke(false);
+        }
+
+        /// <summary>
+        /// 从持久化配置文件（安装目录上一级的 update-config.json）读取 UpdateUrl 和 Channel。
+        /// Velopack 更新时不覆盖此文件，因此是配置的"真实来源"。
+        /// </summary>
+        private static (string? updateUrl, string? channel) ReadPersistentConfig()
+        {
+            try
+            {
+                var baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                if (baseDir == null) return (null, null);
+
+                var parentDir = Directory.GetParent(baseDir.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                if (parentDir == null) return (null, null);
+
+                // 验证是 Velopack 安装结构
+                var updateExe = Path.Combine(parentDir.FullName, "Update.exe");
+                if (!File.Exists(updateExe)) return (null, null);
+
+                var configPath = Path.Combine(parentDir.FullName, "update-config.json");
+                if (!File.Exists(configPath)) return (null, null);
+
+                var json = File.ReadAllText(configPath);
+                var node = JsonNode.Parse(json);
+                if (node == null) return (null, null);
+
+                return (node["UpdateUrl"]?.GetValue<string>(), node["Channel"]?.GetValue<string>());
+            }
+            catch
+            {
+                return (null, null);
+            }
         }
 
         #region INotifyPropertyChanged

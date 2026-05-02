@@ -82,6 +82,10 @@ namespace DocuFiller.Services
             _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}，持久化配置: {ConfigPath}",
                 _sourceType, _channel, _updateUrl != "" ? _updateUrl : "GitHub Releases", _isInstalled,
                 PersistentConfigPath != null ? PersistentConfigPath : "未启用");
+
+            // 启动时同步持久化配置：如果 Velopack 安装目录存在但 update-config.json 不存在，
+            // 将当前有效的 URL 和通道写入，防止 Velopack 更新覆盖 appsettings.json 后配置丢失。
+            EnsurePersistentConfigSync(rawUrl);
         }
 
         /// <summary>
@@ -109,6 +113,35 @@ namespace DocuFiller.Services
             catch
             {
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// 确保 Velopack 安装目录下的持久化配置文件与当前有效配置同步。
+        /// Velopack 更新会覆盖 current\ 目录下的 appsettings.json（URL 被重置为空），
+        /// 但安装根目录的 update-config.json 不受影响。
+        /// 如果 update-config.json 不存在但有有效配置，主动创建以防止下次更新丢失。
+        /// </summary>
+        private void EnsurePersistentConfigSync(string currentRawUrl)
+        {
+            if (PersistentConfigPath == null) return;
+            if (File.Exists(PersistentConfigPath)) return;
+
+            try
+            {
+                var config = new JsonObject
+                {
+                    ["UpdateUrl"] = currentRawUrl ?? "",
+                    ["Channel"] = _channel
+                };
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                File.WriteAllText(PersistentConfigPath, config.ToJsonString(options));
+                _logger.LogInformation("已自动创建持久化配置文件: {Path} (URL={Url}, Channel={Channel})",
+                    PersistentConfigPath, currentRawUrl ?? "(empty)", _channel);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "自动创建持久化配置文件失败，非关键错误");
             }
         }
 
@@ -156,7 +189,7 @@ namespace DocuFiller.Services
         /// <inheritdoc />
         public async Task<UpdateInfo?> CheckForUpdatesAsync()
         {
-            _logger.LogInformation("开始检查更新，更新源: {UpdateUrl}", _updateUrl);
+            _logger.LogInformation("开始检查更新，更新源: {UpdateUrl}，通道: {Channel}", _updateUrl, _channel);
 
             var updateManager = CreateUpdateManager();
             var updateInfo = await updateManager.CheckForUpdatesAsync();
@@ -164,13 +197,28 @@ namespace DocuFiller.Services
             if (updateInfo != null)
             {
                 _logger.LogInformation("发现新版本: {Version}", updateInfo.TargetFullRelease.Version);
-            }
-            else
-            {
-                _logger.LogInformation("当前已是最新版本");
+                return updateInfo;
             }
 
-            return updateInfo;
+            // 当前通道无更新时，尝试回退到 stable 通道查找。
+            // 场景：用户安装了 beta 版（如 1.3.3-beta1），后来 stable 版（1.3.3）发布了。
+            // Velopack 的通道隔离机制导致 ExplicitChannel=beta 只查 beta 通道的包，
+            // 而 stable 的 release 不在 beta 通道中。回退到 stable 通道可以检测到跨通道更新。
+            if (_channel != "stable")
+            {
+                _logger.LogInformation("通道 {Channel} 无更新，回退到 stable 通道检查", _channel);
+                var stableManager = CreateUpdateManagerForChannel("stable");
+                var stableInfo = await stableManager.CheckForUpdatesAsync();
+
+                if (stableInfo != null)
+                {
+                    _logger.LogInformation("stable 通道发现新版本: {Version}", stableInfo.TargetFullRelease.Version);
+                    return stableInfo;
+                }
+            }
+
+            _logger.LogInformation("当前已是最新版本");
+            return null;
         }
 
         /// <inheritdoc />
@@ -288,7 +336,20 @@ namespace DocuFiller.Services
 
         private UpdateManager CreateUpdateManager()
         {
-            return new UpdateManager(_updateSource, new UpdateOptions { ExplicitChannel = _channel });
+            // AllowVersionDowngrade is required when using ExplicitChannel for channel switching.
+            // Without it, Velopack refuses to offer updates when switching between channels
+            // (e.g. from beta 1.3.3-beta2 to stable 1.3.3), even if the target version is
+            // semantically higher. Velopack treats cross-channel updates as potential downgrades.
+            return CreateUpdateManagerForChannel(_channel);
+        }
+
+        private UpdateManager CreateUpdateManagerForChannel(string channel)
+        {
+            return new UpdateManager(_updateSource, new UpdateOptions
+            {
+                ExplicitChannel = channel,
+                AllowVersionDowngrade = true
+            });
         }
     }
 }
