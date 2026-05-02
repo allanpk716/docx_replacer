@@ -5,9 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:DocuFiller.Views"
         mc:Ignorable="d"
-        Title="DocuFiller - Word文档批量填充工具" Height="900" Width="1400"
-        MinHeight="800" MinWidth="1200"
-        WindowStartupLocation="CenterScreen">
+        Title="DocuFiller - Word文档批量填充工具" Height="550" Width="900"
+        MinHeight="500" MinWidth="800"
+        WindowStartupLocation="CenterScreen"
+        AllowDrop="True"
+        PreviewDragOver="Window_PreviewDragOver">
     
     <DockPanel>
         <!-- 底部状态栏 -->
@@ -103,338 +105,267 @@
 
         <!-- 主要内容区域 -->
         <Grid Margin="15">
-    <TabControl Margin="0,10,0,10" FontSize="16">
+    <TabControl Margin="0,5,0,5" FontSize="14">
             
             <!-- 关键词替换选项卡 -->
-            <TabItem Header="关键词替换" FontSize="16">
-                <StackPanel>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                                  HorizontalScrollBarVisibility="Disabled"
-                                  Margin="5">
-                        <Grid Margin="10">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- 模板文件选择 -->
-                            <GroupBox Grid.Row="0" Header="模板文件/文件夹" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
-                                <Grid Margin="15">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <!-- 路径显示 -->
-                                    <Grid Grid.Row="0" Margin="0,0,0,10">
-                                        <TextBox x:Name="TemplatePathTextBox"
-                                                 Style="{StaticResource TextBoxStyle}"
-                                                 Text="{Binding TemplatePath, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsReadOnly="True" FontSize="14"/>
-                                    </Grid>
-
-                                    <!-- 文件拖拽区域 -->
-                                    <Border Grid.Row="1" x:Name="TemplateDropBorder"
-                                            BorderBrush="#BDC3C7" BorderThickness="2"
-                                            CornerRadius="4" Height="80"
-                                            AllowDrop="True"
-                                            Drop="TemplateDropBorder_Drop"
-                                            DragEnter="TemplateDropBorder_DragEnter"
-                                            DragLeave="TemplateDropBorder_DragLeave"
-                                            DragOver="TemplateDropBorder_DragOver">
-                                        <Grid>
-                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <TextBlock x:Name="TemplateDropHint"
-                                                           Text="拖拽单个 docx 文件或包含 docx 文件的文件夹到此处"
-                                                           Foreground="#95A5A6"
-                                                           FontStyle="Italic"
-                                                           HorizontalAlignment="Center"
-                                                           TextWrapping="Wrap"
-                                                           Margin="10,5"/>
-                                                <TextBlock Text="{Binding TemplateFolderPath}"
-                                                           Foreground="#2C3E50"
-                                                           FontWeight="Medium"
-                                                           HorizontalAlignment="Center"
-                                                           TextWrapping="Wrap"
-                                                           Margin="10,0"
-                                                           Visibility="{Binding TemplateFolderPath, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                                <TextBlock Text="找到 {Binding FoundDocxFilesCount} 个DOCX文件"
-                                                           Foreground="#27AE60"
-                                                           FontWeight="Bold"
-                                                           HorizontalAlignment="Center"
-                                                           Margin="10,5"
-                                                           Visibility="{Binding FoundDocxFilesCount, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </GroupBox>
-
-                            <!-- 数据文件选择 -->
-                            <GroupBox Grid.Row="1" Header="数据文件" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,15" FontSize="16">
-                                <Grid Margin="15">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <!-- 路径显示 -->
-                                    <Grid Grid.Row="0">
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <TextBox Grid.Row="0"
-                                                 Style="{StaticResource TextBoxStyle}"
-                                                 Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsReadOnly="True" FontSize="14"/>
-                                        <TextBlock Grid.Row="1"
-                                                   Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
-                                                   Margin="0,5,0,0"
-                                                   FontSize="12"
-                                                   Foreground="#7F8C8D"
-                                                   Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                    </Grid>
-
-                                    <!-- 数据文件拖拽区域 -->
-                                    <Border Grid.Row="1" x:Name="DataFileDropBorder"
-                                            BorderBrush="#BDC3C7" BorderThickness="2"
-                                            CornerRadius="4" Height="70" Margin="0,0,0,10"
-                                            AllowDrop="True"
-                                            Drop="DataFileDropBorder_Drop"
-                                            DragEnter="DataFileDropBorder_DragEnter"
-                                            DragLeave="DataFileDropBorder_DragLeave"
-                                            DragOver="DataFileDropBorder_DragOver">
-                                        <Grid>
-                                            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                                <TextBlock x:Name="DataFileDropHint"
-                                                           Text="拖拽 Excel (.xlsx) 数据文件到此处"
-                                                           Foreground="#95A5A6"
-                                                           FontStyle="Italic"
-                                                           HorizontalAlignment="Center"
-                                                           TextWrapping="Wrap"
-                                                           Margin="10,5"/>
-                                                <TextBlock Text="{Binding DataPath}"
-                                                           Foreground="#2C3E50"
-                                                           FontWeight="Medium"
-                                                           HorizontalAlignment="Center"
-                                                           TextWrapping="Wrap"
-                                                           Margin="10,0"
-                                                           Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
-                                            </StackPanel>
-                                        </Grid>
-                                    </Border>
-                                </Grid>
-                            </GroupBox>
-
-                            <!-- 输出设置 -->
-                            <GroupBox Grid.Row="2" Header="输出设置" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10" FontSize="16">
-                                <Grid Margin="15">
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
-                                    </Grid.RowDefinitions>
-
-                                    <!-- 输出目录 -->
-                                    <Grid Grid.Row="0" Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="Auto"/>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="Auto"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBlock Grid.Column="0" Text="输出目录:"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,10,0" FontWeight="Medium"/>
-
-                                        <TextBox Grid.Column="1"
-                                                 Style="{StaticResource TextBoxStyle}"
-                                                 Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                                 IsReadOnly="True" Margin="0,0,15,0" FontSize="14"/>
-
-                                        <Button Grid.Column="2" Content="浏览..."
-                                                Style="{StaticResource PrimaryButton}"
-                                                Command="{Binding BrowseOutputCommand}"
-                                                Width="90" Height="40" FontSize="14"/>
-                                    </Grid>
-                                </Grid>
-                            </GroupBox>
-                        </Grid>
-                    </ScrollViewer>
-
-                    <!-- 进度显示区域 -->
-                    <GroupBox Header="处理进度" Style="{StaticResource GroupBoxStyle}" Margin="10,0,0,10" FontSize="16">
-                        <Grid Margin="15">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <Grid Grid.Row="0" Margin="0,0,0,5">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Column="0"
-                                           Text="{Binding ProgressMessage}"
-                                           VerticalAlignment="Center" FontSize="14"/>
-
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding ProgressText}"
-                                           VerticalAlignment="Center"
-                                           FontWeight="Bold" FontSize="14"/>
-                            </Grid>
-
-                            <ProgressBar Grid.Row="1"
-                                         Value="{Binding ProgressPercentage}"
-                                         Maximum="100"
-                                         Height="25"
-                                         Background="#ECF0F1"
-                                         Foreground="#3498DB"/>
-                        </Grid>
-                    </GroupBox>
-
-                    <!-- 操作按钮区域 -->
-                    <Grid Margin="10,10,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-
-                        <Button Grid.Column="1" Content="开始处理"
-                                Style="{StaticResource PrimaryButton}"
-                                Command="{Binding StartProcessCommand}"
-                                Width="120" Height="45" FontSize="16" Margin="0,0,15,0"/>
-
-                        <Button Grid.Column="2" Content="取消处理"
-                                Style="{StaticResource ProcessButton}"
-                                Command="{Binding CancelProcessCommand}"
-                                Width="120" Height="45" FontSize="16" Margin="0,0,15,0"/>
-
-                        <Button Grid.Column="3" Content="退出"
-                                Style="{StaticResource ProcessButton}"
-                                Command="{Binding ExitCommand}"
-                                Width="100" Height="45" FontSize="16"/>
-                    </Grid>
-                </StackPanel>
-            </TabItem>
-
-            <!-- 审核清理选项卡 -->
-            <TabItem Header="审核清理" FontSize="16">
-                <Grid Margin="10">
+            <TabItem Header="关键词替换" FontSize="14">
+                <DockPanel>
+                <Grid Margin="10,8" DockPanel.Dock="Top">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <!-- 输出设置 -->
-                    <GroupBox Grid.Row="0" Header="输出设置" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,10" FontSize="14">
-                        <Grid Margin="10">
+                    <!-- 模板文件行 -->
+                    <Grid Grid.Row="0" Margin="0,0,0,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="65"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="模板文件" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox Grid.Column="1" x:Name="TemplatePathTextBox"
+                                 Style="{StaticResource TextBoxStyle}"
+                                 Text="{Binding TemplatePath, UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="True" FontSize="12" Margin="0,0,5,0"
+                                 AllowDrop="True"
+                                 Drop="TemplatePathTextBox_Drop"
+                                 DragEnter="TemplatePathTextBox_DragEnter"
+                                 DragLeave="TemplatePathTextBox_DragLeave"
+                                 DragOver="TemplatePathTextBox_DragOver"/>
+                        <Button Grid.Column="2" Content="浏览" ToolTip="选择模板文件"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding BrowseTemplateCommand}"
+                                Width="55" Height="28" FontSize="12" Margin="0,0,3,0"/>
+                        <Button Grid.Column="3" Content="文件夹" ToolTip="选择包含模板的文件夹"
+                                Style="{StaticResource ProcessButton}"
+                                Command="{Binding BrowseTemplateFolderCommand}"
+                                Width="60" Height="28" FontSize="12"/>
+                    </Grid>
+
+                    <!-- 模板信息提示 -->
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="65,0,0,3">
+                        <TextBlock Text="{Binding TemplateFolderPath}" FontSize="11" Foreground="#7F8C8D"
+                                   Visibility="{Binding TemplateFolderPath, Converter={StaticResource StringToVisibilityConverter}}"
+                                   Margin="0,0,10,0"/>
+                        <TextBlock FontSize="11" Foreground="#27AE60" FontWeight="Bold"
+                                   Visibility="{Binding FoundDocxFilesCount, Converter={StaticResource StringToVisibilityConverter}}">
+                            <TextBlock.Text>
+                                <MultiBinding StringFormat="找到 {0} 个DOCX文件">
+                                    <Binding Path="FoundDocxFilesCount"/>
+                                </MultiBinding>
+                            </TextBlock.Text>
+                        </TextBlock>
+                    </StackPanel>
+
+                    <!-- 分隔线 -->
+                    <Separator Grid.Row="2" Margin="0,3"/>
+
+                    <!-- 数据文件行 -->
+                    <Grid Grid.Row="3" Margin="0,3,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="65"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="数据文件" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox Grid.Column="1" x:Name="DataPathTextBox"
+                                 Style="{StaticResource TextBoxStyle}"
+                                 Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="True" FontSize="12" Margin="0,0,5,0"
+                                 AllowDrop="True"
+                                 Drop="DataPathTextBox_Drop"
+                                 DragEnter="DataPathTextBox_DragEnter"
+                                 DragLeave="DataPathTextBox_DragLeave"
+                                 DragOver="DataPathTextBox_DragOver"/>
+                        <Button Grid.Column="2" Content="浏览"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding BrowseDataCommand}"
+                                Width="55" Height="28" FontSize="12"/>
+                    </Grid>
+
+                    <!-- 数据类型提示 -->
+                    <TextBlock Grid.Row="4" Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
+                               Margin="65,2,0,3" FontSize="11" Foreground="#7F8C8D"
+                               Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
+
+                    <!-- 分隔线 -->
+                    <Separator Grid.Row="5" Margin="0,3"/>
+
+                    <!-- 输出目录行 -->
+                    <Grid Grid.Row="6" Margin="0,3,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="65"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="输出目录" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox Grid.Column="1"
+                                 Style="{StaticResource TextBoxStyle}"
+                                 Text="{Binding OutputDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="True" FontSize="12" Margin="0,0,5,0"/>
+                        <Button Grid.Column="2" Content="浏览"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding BrowseOutputCommand}"
+                                Width="55" Height="28" FontSize="12"/>
+                    </Grid>
+
+                    <!-- 处理进度区域 -->
+                    <StackPanel Grid.Row="7" Margin="0,8,0,0">
+                        <Grid Margin="0,0,0,3">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-
-                            <TextBlock Grid.Column="0" Text="输出目录:"
-                                       VerticalAlignment="Center"
-                                       Margin="0,0,10,0" FontWeight="Medium"/>
-
-                            <TextBox Grid.Column="1"
-                                     Style="{StaticResource TextBoxStyle}"
-                                     Text="{Binding CleanupOutputDirectory, UpdateSourceTrigger=PropertyChanged}"
-                                     IsReadOnly="True" FontSize="13"
-                                     Margin="0,0,10,0"/>
-
-                            <Button Grid.Column="2" Content="浏览..."
-                                    Style="{StaticResource PrimaryButton}"
-                                    Command="{Binding BrowseCleanupOutputCommand}"
-                                    Width="80" Height="35" FontSize="13"
-                                    Margin="0,0,5,0"/>
-
-                            <Button Grid.Column="3" Content="打开输出文件夹"
-                                    Style="{StaticResource ProcessButton}"
-                                    Command="{Binding OpenCleanupOutputFolderCommand}"
-                                    Width="110" Height="35" FontSize="13"/>
+                            <TextBlock Grid.Column="0" Text="{Binding ProgressMessage}"
+                                       VerticalAlignment="Center" FontSize="12"/>
+                            <TextBlock Grid.Column="1" Text="{Binding ProgressText}"
+                                       VerticalAlignment="Center" FontWeight="Bold" FontSize="12"/>
                         </Grid>
-                    </GroupBox>
-
-                    <!-- 拖放区域 + 文件列表 -->
-                    <Border Grid.Row="1" Grid.RowSpan="2" BorderBrush="#DDDDDD" BorderThickness="1" Padding="10" CornerRadius="5">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- 拖放提示 -->
-                            <Border Grid.Row="0" x:Name="CleanupDropZoneBorder"
-                                     BorderBrush="#CCCCCC" BorderThickness="2"
-                                     Padding="30" Background="#F9F9F9"
-                                     AllowDrop="True"
-                                     Drop="CleanupDropZoneBorder_Drop"
-                                     DragEnter="CleanupDropZoneBorder_DragEnter"
-                                     DragLeave="CleanupDropZoneBorder_DragLeave"
-                                     DragOver="CleanupDropZoneBorder_DragOver"
-                                     Margin="0,0,0,10">
-                                <Grid>
-                                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                                        <TextBlock Text="将文件或文件夹拖放到此处" FontSize="14" Foreground="#666666" HorizontalAlignment="Center"/>
-                                        <TextBlock Text="支持 .docx 文件" FontSize="12" Foreground="#999999" HorizontalAlignment="Center" Margin="0,5,0,0"/>
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-
-                            <!-- 文件列表 -->
-                            <Grid Grid.Row="1">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-
-                                <ListView Grid.Column="0" ItemsSource="{Binding CleanupFileItems}" SelectionMode="Extended">
-                                    <ListView.View>
-                                        <GridView>
-                                            <GridViewColumn Width="40" Header=""/>
-                                            <GridViewColumn Width="300" Header="文件名" DisplayMemberBinding="{Binding FileName}"/>
-                                            <GridViewColumn Width="100" Header="大小" DisplayMemberBinding="{Binding FileSizeDisplay}"/>
-                                            <GridViewColumn Width="150" Header="状态" DisplayMemberBinding="{Binding StatusDisplay}"/>
-                                        </GridView>
-                                    </ListView.View>
-                                </ListView>
-
-                                <StackPanel Grid.Column="1" Margin="10,0,0,0">
-                                    <Button Content="移除选中" Width="100" Height="30" Margin="0,0,0,5" Command="{Binding RemoveSelectedCleanupCommand}"/>
-                                    <Button Content="清空列表" Width="100" Height="30" Command="{Binding ClearCleanupListCommand}"/>
-                                </StackPanel>
-                            </Grid>
-                        </Grid>
-                    </Border>
-
-                    <!-- 进度 -->
-                    <StackPanel Grid.Row="3" Margin="0,10,0,10">
-                        <TextBlock Text="{Binding CleanupProgressStatus}" Margin="0,0,0,5"/>
-                        <ProgressBar Height="25" Value="{Binding CleanupProgressPercent}" Maximum="100"/>
-                    </StackPanel>
-
-                    <!-- 按钮 -->
-                    <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <Button Content="开始清理" Width="120" Height="35" Margin="0,0,10,0"
-                                IsEnabled="{Binding CanStartCleanup}" Command="{Binding StartCleanupCommand}"
-                                Style="{StaticResource PrimaryButton}"/>
-                        <Button Content="关闭" Width="100" Height="35" Command="{Binding CloseCleanupCommand}"
-                                Style="{StaticResource ProcessButton}"/>
+                        <ProgressBar Value="{Binding ProgressPercentage}" Maximum="100"
+                                     Height="18" Background="#ECF0F1" Foreground="#3498DB"/>
                     </StackPanel>
                 </Grid>
+
+                <!-- 操作按钮区域 -->
+                <Grid Margin="10,0,10,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1" Content="开始处理"
+                            Style="{StaticResource PrimaryButton}"
+                            Command="{Binding StartProcessCommand}"
+                            Width="100" Height="32" FontSize="13" Margin="0,0,8,0"/>
+                    <Button Grid.Column="2" Content="取消处理"
+                            Style="{StaticResource ProcessButton}"
+                            Command="{Binding CancelProcessCommand}"
+                            Width="100" Height="32" FontSize="13" Margin="0,0,8,0"/>
+                    <Button Grid.Column="3" Content="退出"
+                            Style="{StaticResource ProcessButton}"
+                            Command="{Binding ExitCommand}"
+                            Width="70" Height="32" FontSize="13"/>
+                </Grid>
+                </DockPanel>
+            </TabItem>
+
+            <!-- 审核清理选项卡 -->
+            <TabItem Header="审核清理" FontSize="14">
+                <DockPanel>
+                <Grid Margin="10,8" DockPanel.Dock="Top">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- 输出目录行 -->
+                    <Grid Grid.Row="0" Margin="0,0,0,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="65"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="输出目录" VerticalAlignment="Center" FontSize="13"/>
+                        <TextBox Grid.Column="1"
+                                 Style="{StaticResource TextBoxStyle}"
+                                 Text="{Binding CleanupOutputDirectory, UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="True" FontSize="12" Margin="0,0,5,0"/>
+                        <Button Grid.Column="2" Content="浏览"
+                                Style="{StaticResource PrimaryButton}"
+                                Command="{Binding BrowseCleanupOutputCommand}"
+                                Width="55" Height="28" FontSize="12" Margin="0,0,3,0"/>
+                        <Button Grid.Column="3" Content="打开文件夹"
+                                Style="{StaticResource ProcessButton}"
+                                Command="{Binding OpenCleanupOutputFolderCommand}"
+                                Width="75" Height="28" FontSize="12"/>
+                    </Grid>
+
+                    <!-- 分隔线 -->
+                    <Separator Grid.Row="1" Margin="0,3"/>
+
+                    <!-- 拖放区域 -->
+                    <Border Grid.Row="2" x:Name="CleanupDropZoneBorder"
+                             BorderBrush="#CCCCCC" BorderThickness="2"
+                             Padding="12" Background="#F9F9F9"
+                             AllowDrop="True"
+                             Drop="CleanupDropZoneBorder_Drop"
+                             DragEnter="CleanupDropZoneBorder_DragEnter"
+                             DragLeave="CleanupDropZoneBorder_DragLeave"
+                             DragOver="CleanupDropZoneBorder_DragOver"
+                             Margin="0,5,0,5" CornerRadius="3">
+                        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBlock Text="将文件或文件夹拖放到此处" FontSize="12" Foreground="#666666" HorizontalAlignment="Center"/>
+                            <TextBlock Text="支持 .docx 文件" FontSize="11" Foreground="#999999" HorizontalAlignment="Center" Margin="0,3,0,0"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 文件列表 -->
+                    <Grid Grid.Row="3" Margin="0,3">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <ListView Grid.Column="0" ItemsSource="{Binding CleanupFileItems}" SelectionMode="Extended" FontSize="12">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Width="35" Header=""/>
+                                    <GridViewColumn Width="250" Header="文件名" DisplayMemberBinding="{Binding FileName}"/>
+                                    <GridViewColumn Width="80" Header="大小" DisplayMemberBinding="{Binding FileSizeDisplay}"/>
+                                    <GridViewColumn Width="120" Header="状态" DisplayMemberBinding="{Binding StatusDisplay}"/>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+
+                        <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                            <Button Content="移除选中" Width="70" Height="26" FontSize="12" Margin="0,0,0,3"
+                                    Command="{Binding RemoveSelectedCleanupCommand}"
+                                    Style="{StaticResource ProcessButton}"/>
+                            <Button Content="清空列表" Width="70" Height="26" FontSize="12"
+                                    Command="{Binding ClearCleanupListCommand}"
+                                    Style="{StaticResource ProcessButton}"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- 进度 -->
+                    <StackPanel Grid.Row="4" Margin="0,5,0,0">
+                        <TextBlock Text="{Binding CleanupProgressStatus}" FontSize="12" Margin="0,0,0,3"/>
+                        <ProgressBar Height="16" Value="{Binding CleanupProgressPercent}" Maximum="100"
+                                     Background="#ECF0F1" Foreground="#3498DB"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- 操作按钮 -->
+                <Grid Margin="10,0,10,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1" Content="开始清理"
+                            Style="{StaticResource PrimaryButton}"
+                            IsEnabled="{Binding CanStartCleanup}"
+                            Command="{Binding StartCleanupCommand}"
+                            Width="100" Height="32" FontSize="13" Margin="0,0,8,0"/>
+                    <Button Grid.Column="2" Content="退出"
+                            Style="{StaticResource ProcessButton}"
+                            Command="{Binding CloseCleanupCommand}"
+                            Width="70" Height="32" FontSize="13"/>
+                </Grid>
+                </DockPanel>
             </TabItem>
 
         </TabControl>

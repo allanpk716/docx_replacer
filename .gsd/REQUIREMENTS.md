@@ -2,42 +2,6 @@
 
 This file is the explicit capability and coverage contract for the project.
 
-
-## Active
-
-### R047 — 更新设置窗口正确回显 appsettings.json 中已配置的 UpdateUrl
-- Class: primary-user-loop
-- Status: active
-- Description: 用户在 appsettings.json 中手动配置了 UpdateUrl 后，打开更新设置窗口时，URL 输入框应正确显示当前配置的 URL 值，而非空白
-- Why it matters: 用户无法确认当前生效的更新源配置，也无法在已有配置基础上微调
-- Source: user
-- Primary owning slice: M011-ns0oo0/S01
-- Supporting slices: none
-- Validation: mapped
-- Notes: 跨版本更新后（如 v1.1.4→v1.2.0），appsettings.json 中的配置值保留但界面不显示
-
-### R048 — 下载更新时显示独立进度弹窗，含进度条、下载速度、预估剩余时间
-- Class: primary-user-loop
-- Status: active
-- Description: 用户确认下载更新后，弹出独立的模态进度窗口，实时显示下载进度条（0-100%）、当前下载速度（MB/s）和预估剩余时间
-- Why it matters: 用户不知道下载进展，无法判断是否卡住或需要等待多久
-- Source: user
-- Primary owning slice: M011-ns0oo0/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: Velopack DownloadUpdatesAsync 提供 Action<int> 回调（0-100），VelopackAsset.Size 提供包总字节数
-
-### R049 — 下载进度弹窗支持取消操作，取消后仅停止下载不退出应用
-- Class: primary-user-loop
-- Status: active
-- Description: 下载进度弹窗提供取消按钮，用户点击后中断下载操作（传递 CancellationToken 给 Velopack），应用继续正常运行
-- Why it matters: 用户可能误触发更新或网络环境变化需要中止下载
-- Source: user
-- Primary owning slice: M011-ns0oo0/S02
-- Supporting slices: none
-- Validation: mapped
-- Notes: Velopack DownloadUpdatesAsync 接受 CancellationToken 参数
-
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -518,6 +482,103 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M010-hpylzg/S02
 - Validation: All 192 existing tests pass after changes. New code only adds OpenUpdateSettingsCommand and UpdateStatusMessage suffix — no modification to CheckUpdateAsync, DownloadUpdatesAsync, or ApplyUpdatesAndRestart flows.
 
+### R047 — 用户在 appsettings.json 中手动配置了 UpdateUrl 后，打开更新设置窗口时，URL 输入框应正确显示当前配置的 URL 值，而非空白
+- Class: primary-user-loop
+- Status: validated
+- Description: 用户在 appsettings.json 中手动配置了 UpdateUrl 后，打开更新设置窗口时，URL 输入框应正确显示当前配置的 URL 值，而非空白
+- Why it matters: 用户无法确认当前生效的更新源配置，也无法在已有配置基础上微调
+- Source: user
+- Primary owning slice: M011-ns0oo0/S01
+- Supporting slices: none
+- Validation: M011-ns0oo0 milestone validation: UpdateSettingsViewModel 构造函数直接从 IConfiguration["Update:UpdateUrl"] 读取原始 URL 值（决策 D033），11 个单元测试覆盖所有场景。dotnet build 0 错误 0 警告，dotnet test 203/203 通过。旧 EffectiveUpdateUrl 剥离逻辑完全移除（grep 确认 0 匹配）。
+- Notes: 跨版本更新后（如 v1.1.4→v1.2.0），appsettings.json 中的配置值保留但界面不显示
+
+### R048 — 用户确认下载更新后，弹出独立的模态进度窗口，实时显示下载进度条（0-100%）、当前下载速度（MB/s）和预估剩余时间
+- Class: primary-user-loop
+- Status: validated
+- Description: 用户确认下载更新后，弹出独立的模态进度窗口，实时显示下载进度条（0-100%）、当前下载速度（MB/s）和预估剩余时间
+- Why it matters: 用户不知道下载进展，无法判断是否卡住或需要等待多久
+- Source: user
+- Primary owning slice: M011-ns0oo0/S02
+- Supporting slices: none
+- Validation: M011-ns0oo0 milestone validation: DownloadProgressWindow XAML 模态弹窗（ProgressBar 0-100%, 速度 MB/s, ETA TextBlock）。DownloadProgressViewModel 通过累积平均速度计算实现实时跟踪。MainWindowViewModel.CheckUpdateAsync 集成 Task.Run + ShowDialog 模式。38 个单元测试通过。全部 203 个测试通过。
+- Notes: Velopack DownloadUpdatesAsync 提供 Action<int> 回调（0-100），VelopackAsset.Size 提供包总字节数
+
+### R049 — 下载进度弹窗提供取消按钮，用户点击后中断下载操作（传递 CancellationToken 给 Velopack），应用继续正常运行
+- Class: primary-user-loop
+- Status: validated
+- Description: 下载进度弹窗提供取消按钮，用户点击后中断下载操作（传递 CancellationToken 给 Velopack），应用继续正常运行
+- Why it matters: 用户可能误触发更新或网络环境变化需要中止下载
+- Source: user
+- Primary owning slice: M011-ns0oo0/S02
+- Supporting slices: none
+- Validation: M011-ns0oo0 milestone validation: Cancel 按钮绑定 CancelCommand 触发 CancellationTokenSource.Cancel()。OperationCanceledException 被捕获，应用继续正常运行。OnClosing 覆写防止下载期间直接 X 按钮关闭。单元测试验证取消状态转换。全部 203 个测试通过。
+- Notes: Velopack DownloadUpdatesAsync 接受 CancellationToken 参数
+
+### R050 — 主窗口两个 Tab（关键词替换、审核清理）的所有控件在 1366x768 分辨率下无需滚动即可完整可见和操作
+- Class: core-capability
+- Status: validated
+- Description: 主窗口两个 Tab（关键词替换、审核清理）的所有控件在 1366x768 分辨率下无需滚动即可完整可见和操作
+- Why it matters: 用户在 13-14 寸笔记本上无法看全界面内容，严重影响使用体验
+- Source: user
+- Primary owning slice: M012-li0ip5/S01
+- Supporting slices: none
+- Validation: Window size changed to 900x550 (MinWidth=800 MinHeight=500), two Tabs compacted with 12-14px font sizes, no GroupBox, no ScrollViewer. dotnet build passes with 0 errors.
+- Notes: 窗口默认尺寸从 1400x900 降至 900x550，最小尺寸从 1200x800 降至 800x500
+
+### R051 — 模板文件和数据文件的拖放区域从独立 Border（70-80px 高）改为路径文本框内支持拖放，节省垂直空间
+- Class: core-capability
+- Status: validated
+- Description: 模板文件和数据文件的拖放区域从独立 Border（70-80px 高）改为路径文本框内支持拖放，节省垂直空间
+- Why it matters: 原拖放区域是垂直空间的最大消耗者，改为单行后可节省约 150px
+- Source: user
+- Primary owning slice: M012-li0ip5/S01
+- Supporting slices: none
+- Validation: TemplateDropBorder and DataFileDropBorder removed, replaced by TextBox with AllowDrop=True and DragEnter/DragLeave/DragOver/Drop event handlers. AllowDrop appears 3 times in MainWindow.xaml. dotnet build passes.
+- Notes: 路径文本框旁保留浏览按钮，文本框本身支持拖放文件/文件夹
+
+### R052 — TabControl、GroupBox 标题、按钮等控件的字号从 FontSize=16 降至 12-14px 范围
+- Class: quality-attribute
+- Status: validated
+- Description: TabControl、GroupBox 标题、按钮等控件的字号从 FontSize=16 降至 12-14px 范围
+- Why it matters: 大字号是空间浪费的主要原因之一，降号后内容密度显著提升
+- Source: user
+- Primary owning slice: M012-li0ip5/S01
+- Supporting slices: none
+- Validation: TabControl FontSize=14, Tab headers=14, labels=13px, body text=12px. App.xaml global styles adjusted (ModernTextBoxStyle Padding 8,4, HeaderLabelStyle FontSize 13, button Padding 12,6). All FontSize values in 11-14px range.
+- Notes: Tab 标题 14px、标签 13px、正文 12px
+
+### R053 — 三个 GroupBox（模板文件、数据文件、输出设置）替换为简洁的文字标签 + 分隔线，去掉 header 行和内边距
+- Class: quality-attribute
+- Status: validated
+- Description: 三个 GroupBox（模板文件、数据文件、输出设置）替换为简洁的文字标签 + 分隔线，去掉 header 行和内边距
+- Why it matters: 三个 GroupBox 的 header 行和内边距共约 90px 额外空间
+- Source: user
+- Primary owning slice: M012-li0ip5/S01
+- Supporting slices: none
+- Validation: All three GroupBox elements removed from both Tabs. Replaced with TextBlock labels + Separator lines. grep confirms 0 GroupBox references in MainWindow.xaml.
+
+### R054 — 当 DocuFiller 窗口不是前台窗口时，从资源管理器拖拽文件到窗口内仍能正常触发拖放事件
+- Class: failure-visibility
+- Status: validated
+- Description: 当 DocuFiller 窗口不是前台窗口时，从资源管理器拖拽文件到窗口内仍能正常触发拖放事件
+- Why it matters: 当前存在 bug：窗口未聚焦时拖放失效，需要先点击窗口才能拖放
+- Source: user
+- Primary owning slice: M012-li0ip5/S02
+- Supporting slices: none
+- Validation: Window element now has AllowDrop="True" and PreviewDragOver="Window_PreviewDragOver". Code-behind calls Activate() when window is not active during drag-over. Verified: dotnet build 0 errors, 4 AllowDrop targets, 7 Drop handlers, 3 DragEnter, 4 DragOver, Window_PreviewDragOver at L34.
+- Notes: WPF 已知问题，需在 Window 级别处理拖放激活
+
+### R055 — 审核清理 Tab 的布局同步紧凑化（字号、间距、控件尺寸），与关键词替换 Tab 风格一致
+- Class: core-capability
+- Status: validated
+- Description: 审核清理 Tab 的布局同步紧凑化（字号、间距、控件尺寸），与关键词替换 Tab 风格一致
+- Why it matters: 两个 Tab 视觉风格统一，审核清理 Tab 也需在小屏下完整显示
+- Source: user
+- Primary owning slice: M012-li0ip5/S01
+- Supporting slices: none
+- Validation: Tab 2 uses same DockPanel structure, same font sizes (12-14px), same label width (65px) and button sizes as Tab 1. Output settings GroupBox removed, replaced with inline layout. CleanupDropZoneBorder compressed (Padding 30→12).
+
 ## Deferred
 
 ### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
@@ -594,14 +655,19 @@ This file is the explicit capability and coverage contract for the project.
 | R044 | core-capability | validated | M010-hpylzg/S01 | none | ReloadSource 方法通过 21 个单元测试验证（含 7 个内存热重载测试 + 4 个持久化测试）。测试覆盖：HTTP 源切换、GitHub 回退、通道更新、null/空值处理、尾斜杠规范化、appsettings.json 写回、写入失败不抛异常、其他配置节保留。dotnet test --filter "UpdateServiceTests" 全部通过。 |
 | R045 | primary-user-loop | validated | M010-hpylzg/S02 | none | UpdateStatusMessage getter appends "(GitHub)" or "(内网: host)" suffix via IUpdateService.UpdateSourceType and EffectiveUpdateUrl. Refreshed after dialog save. |
 | R046 | quality-attribute | validated | M010-hpylzg/S02 | none | All 192 existing tests pass after changes. New code only adds OpenUpdateSettingsCommand and UpdateStatusMessage suffix — no modification to CheckUpdateAsync, DownloadUpdatesAsync, or ApplyUpdatesAndRestart flows. |
-
-| R047 | primary-user-loop | active | M011-ns0oo0/S01 | none | mapped |
-| R048 | primary-user-loop | active | M011-ns0oo0/S02 | none | mapped |
-| R049 | primary-user-loop | active | M011-ns0oo0/S02 | none | mapped |
+| R047 | primary-user-loop | validated | M011-ns0oo0/S01 | none | M011-ns0oo0 milestone validation: UpdateSettingsViewModel 构造函数直接从 IConfiguration["Update:UpdateUrl"] 读取原始 URL 值（决策 D033），11 个单元测试覆盖所有场景。dotnet build 0 错误 0 警告，dotnet test 203/203 通过。旧 EffectiveUpdateUrl 剥离逻辑完全移除（grep 确认 0 匹配）。 |
+| R048 | primary-user-loop | validated | M011-ns0oo0/S02 | none | M011-ns0oo0 milestone validation: DownloadProgressWindow XAML 模态弹窗（ProgressBar 0-100%, 速度 MB/s, ETA TextBlock）。DownloadProgressViewModel 通过累积平均速度计算实现实时跟踪。MainWindowViewModel.CheckUpdateAsync 集成 Task.Run + ShowDialog 模式。38 个单元测试通过。全部 203 个测试通过。 |
+| R049 | primary-user-loop | validated | M011-ns0oo0/S02 | none | M011-ns0oo0 milestone validation: Cancel 按钮绑定 CancelCommand 触发 CancellationTokenSource.Cancel()。OperationCanceledException 被捕获，应用继续正常运行。OnClosing 覆写防止下载期间直接 X 按钮关闭。单元测试验证取消状态转换。全部 203 个测试通过。 |
+| R050 | core-capability | validated | M012-li0ip5/S01 | none | Window size changed to 900x550 (MinWidth=800 MinHeight=500), two Tabs compacted with 12-14px font sizes, no GroupBox, no ScrollViewer. dotnet build passes with 0 errors. |
+| R051 | core-capability | validated | M012-li0ip5/S01 | none | TemplateDropBorder and DataFileDropBorder removed, replaced by TextBox with AllowDrop=True and DragEnter/DragLeave/DragOver/Drop event handlers. AllowDrop appears 3 times in MainWindow.xaml. dotnet build passes. |
+| R052 | quality-attribute | validated | M012-li0ip5/S01 | none | TabControl FontSize=14, Tab headers=14, labels=13px, body text=12px. App.xaml global styles adjusted (ModernTextBoxStyle Padding 8,4, HeaderLabelStyle FontSize 13, button Padding 12,6). All FontSize values in 11-14px range. |
+| R053 | quality-attribute | validated | M012-li0ip5/S01 | none | All three GroupBox elements removed from both Tabs. Replaced with TextBlock labels + Separator lines. grep confirms 0 GroupBox references in MainWindow.xaml. |
+| R054 | failure-visibility | validated | M012-li0ip5/S02 | none | Window element now has AllowDrop="True" and PreviewDragOver="Window_PreviewDragOver". Code-behind calls Activate() when window is not active during drag-over. Verified: dotnet build 0 errors, 4 AllowDrop targets, 7 Drop handlers, 3 DragEnter, 4 DragOver, Window_PreviewDragOver at L34. |
+| R055 | core-capability | validated | M012-li0ip5/S01 | none | Tab 2 uses same DockPanel structure, same font sizes (12-14px), same label width (65px) and button sizes as Tab 1. Output settings GroupBox removed, replaced with inline layout. CleanupDropZoneBorder compressed (Padding 30→12). |
 
 ## Coverage Summary
 
-- Active requirements: 3
-- Mapped to slices: 3
-- Validated: 44 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046)
+- Active requirements: 0
+- Mapped to slices: 0
+- Validated: 53 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055)
 - Unmapped active requirements: 0

@@ -676,6 +676,50 @@
       "label": "T03: Write unit tests for DownloadProgressViewModel and updated DownloadUpdatesAsync",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M012",
+      "label": "M012",
+      "type": "milestone",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M012:S01",
+      "label": "S01: 主界面布局紧凑化",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M012/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M012:S01:T01",
+      "label": "T01: 关键词替换 Tab 紧凑化与拖放迁移",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M012:S01:T02",
+      "label": "T02: 审核清理 Tab 紧凑化与编译验证",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M012:S02",
+      "label": "S02: 拖放焦点修复与最终验证",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M012/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M012:S02:T01",
+      "label": "T01: Add Window-level AllowDrop and PreviewDragOver activation handler",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M012:S02:T02",
+      "label": "T02: Build verification and drag handler integrity check",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -1266,7 +1310,43 @@
       "to": "task:M011:S02:T03",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M012",
+      "to": "slice:M012:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M012:S01",
+      "to": "task:M012:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M012:S01",
+      "to": "task:M012:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M012",
+      "to": "slice:M012:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M012:S02",
+      "to": "task:M012:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M012:S02",
+      "to": "task:M012:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-04-30T06:33:17.010Z"
+  "builtAt": "2026-05-02T01:37:27.884Z"
 }

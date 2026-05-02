@@ -40,3 +40,7 @@
 | D032 | M010-hpylzg | pattern | 状态栏更新源类型显示方式 | 在 UpdateStatusMessage 后追加源类型标识，如"当前已是最新版本 (GitHub)"或"当前已是最新版本 (内网: 192.168.1.100:8080)" | 最小改动，复用现有 TextBlock，不增加 UI 元素。UpdateService 已有 UpdateSourceType 属性。新增独立 TextBlock 会增加状态栏复杂度。 | Yes | collaborative |
 | D033 | M011-ns0oo0/S01 | architecture | URL 回显数据源选择 | 直接从 IConfiguration 读取 Update:UpdateUrl 原始值，不从 EffectiveUpdateUrl 剥离 | EffectiveUpdateUrl 是拼接了通道路径后缀的完整 URL（如 http://host/stable/），剥离逻辑容易出边界问题（尾部斜杠、大小写等）。IConfiguration 中的 Update:UpdateUrl 就是用户输入的原始值，直接读取更可靠、更简单。 | No | agent |
 | D034 | M011-ns0oo0/S02 | architecture | 下载进度弹窗形态 | 独立模态 WPF Window（DownloadProgressWindow），阻塞主窗口 | 用户明确要求"类似安装进度"的独立弹窗，阻塞式等待。非模态可能让用户误操作主窗口。进度数据来自 Velopack Action<int> 回调 + VelopackAsset.Size 计算速度和剩余时间。 | No | agent |
+| D035 |  | layout | 拖放区域从独立 Border 改为路径 TextBox 内支持 | 去掉独立拖放 Border，路径 TextBox 设置 AllowDrop=True | 两个拖放 Border 共占约 150px 垂直空间，改为单行路径栏可大幅节省空间。TextBox AllowDrop 是 WPF 标准做法。 | Yes | collaborative |
+| D036 |  | layout | GroupBox 替换方案 | 去掉 GroupBox，用 TextBlock 标签 + Separator 分隔线 | 三个 GroupBox 的 header 行和内边距共约 120px，替换为标签+分隔线后只需约 30px，节省 90px。 | Yes | collaborative |
+| D037 |  | layout | 窗口默认尺寸 | Width=900 Height=550，MinWidth=800 MinHeight=500 | 紧凑布局后内容不需要大窗口。900x550 在 1366x768（减任务栏 ~728px 可用）下充裕显示。 | Yes | collaborative |
+| D038 |  | layout | 全局字号调整范围 | TabControl 标题 14px、标签 13px、正文 12px | 当前 FontSize=16 是空间浪费主因之一。降至 12-14px 后内容密度显著提升且仍清晰可读。 | Yes | collaborative |

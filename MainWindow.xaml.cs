@@ -28,6 +28,20 @@ namespace DocuFiller
         }
         
         /// <summary>
+        /// 窗口级 PreviewDragOver 处理器：当窗口未激活时自动调用 Activate()，
+        /// 使子控件的拖放事件处理器能正常接收 OLE 拖放消息。
+        /// </summary>
+        private void Window_PreviewDragOver(object sender, DragEventArgs e)
+        {
+            if (!IsActive)
+            {
+                Activate();
+                _logger.LogInformation("Window activated for drag-drop");
+            }
+            e.Handled = false;
+        }
+
+        /// <summary>
         /// 窗口关闭时的处理
         /// </summary>
         /// <param name="e">取消事件参数</param>
@@ -56,11 +70,11 @@ namespace DocuFiller
         }
         
         #region 数据文件拖拽事件处理
-        
+
         /// <summary>
         /// 数据文件拖拽进入事件
         /// </summary>
-        private void DataFileDropBorder_DragEnter(object sender, DragEventArgs e)
+        private void DataPathTextBox_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -68,12 +82,11 @@ namespace DocuFiller
                 if (files.Length == 1 && IsDataFile(files[0]))
                 {
                     e.Effects = DragDropEffects.Copy;
-                    // 添加视觉反馈
-                    if (sender is System.Windows.Controls.Border border)
+                    if (sender is System.Windows.Controls.TextBox textBox)
                     {
-                        border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3)); // 蓝色
-                        border.BorderThickness = new Thickness(3);
-                        border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3)); // 半透明蓝色
+                        textBox.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3));
+                        textBox.BorderThickness = new Thickness(2);
+                        textBox.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3));
                     }
                     _logger.LogDebug("数据文件拖拽进入: {FilePath}", files[0]);
                 }
@@ -90,25 +103,24 @@ namespace DocuFiller
             }
             e.Handled = true;
         }
-        
+
         /// <summary>
         /// 数据文件拖拽离开事件
         /// </summary>
-        private void DataFileDropBorder_DragLeave(object sender, DragEventArgs e)
+        private void DataPathTextBox_DragLeave(object sender, DragEventArgs e)
         {
-            // 恢复原始样式
-            if (sender is System.Windows.Controls.Border border)
+            if (sender is System.Windows.Controls.TextBox textBox)
             {
-                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7)); // 原始灰色
-                border.BorderThickness = new Thickness(2);
-                border.Background = Brushes.Transparent;
+                textBox.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
+                textBox.BorderThickness = new Thickness(1);
+                textBox.Background = Brushes.White;
             }
         }
-        
+
         /// <summary>
         /// 数据文件拖拽悬停事件
         /// </summary>
-        private void DataFileDropBorder_DragOver(object sender, DragEventArgs e)
+        private void DataPathTextBox_DragOver(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -128,11 +140,11 @@ namespace DocuFiller
             }
             e.Handled = true;
         }
-        
+
         /// <summary>
         /// 数据文件拖拽放置事件
         /// </summary>
-        private void DataFileDropBorder_Drop(object sender, DragEventArgs e)
+        private void DataPathTextBox_Drop(object sender, DragEventArgs e)
         {
             try
             {
@@ -144,13 +156,11 @@ namespace DocuFiller
                         var filePath = files[0];
                         if (IsDataFile(filePath))
                         {
-                            // 设置数据路径并自动预览
                             if (DataContext is MainWindowViewModel viewModel)
                             {
                                 _logger.LogDebug("数据文件拖放 - 设置DataPath: {FilePath}", filePath);
                                 viewModel.DataPath = filePath;
                                 _logger.LogDebug("数据文件拖放 - DataPath已设置为: {DataPath}", viewModel.DataPath);
-                                // 自动触发预览
                                 viewModel.PreviewDataCommand?.Execute(null);
                             }
                         }
@@ -169,16 +179,15 @@ namespace DocuFiller
             }
             finally
             {
-                // 恢复原始样式
-                if (sender is System.Windows.Controls.Border border)
+                if (sender is System.Windows.Controls.TextBox textBox)
                 {
-                    border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
-                    border.BorderThickness = new Thickness(2);
-                    border.Background = Brushes.Transparent;
+                    textBox.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
+                    textBox.BorderThickness = new Thickness(1);
+                    textBox.Background = Brushes.White;
                 }
             }
         }
-        
+
         /// <summary>
         /// 检查是否为Excel文件
         /// </summary>
@@ -198,15 +207,15 @@ namespace DocuFiller
         {
             return IsExcelFile(filePath);
         }
-        
+
         #endregion
-        
-        #region 文件夹拖拽事件处理
+
+        #region 模板文件拖拽事件处理
 
         /// <summary>
-        /// 拖拽进入事件
+        /// 模板文件拖拽进入事件
         /// </summary>
-        private void TemplateDropBorder_DragEnter(object sender, DragEventArgs e)
+        private void TemplatePathTextBox_DragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -215,24 +224,25 @@ namespace DocuFiller
                 {
                     var path = files[0];
                     bool isValid = false;
-                    string hintText = string.Empty;
 
                     if (File.Exists(path) && IsDocxFile(path))
                     {
                         isValid = true;
-                        hintText = $"可处理文件: {Path.GetFileName(path)}";
                     }
                     else if (Directory.Exists(path))
                     {
                         isValid = true;
-                        hintText = $"可处理文件夹: {Path.GetFileName(path)} (包含子文件夹)";
                     }
 
                     if (isValid)
                     {
                         e.Effects = DragDropEffects.Copy;
-                        UpdateBorderStyle(sender as System.Windows.Controls.Border, true);
-                        UpdateHintText(hintText);
+                        if (sender is System.Windows.Controls.TextBox textBox)
+                        {
+                            textBox.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3));
+                            textBox.BorderThickness = new Thickness(2);
+                            textBox.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3));
+                        }
                     }
                     else
                     {
@@ -244,18 +254,22 @@ namespace DocuFiller
         }
 
         /// <summary>
-        /// 拖拽离开事件
+        /// 模板文件拖拽离开事件
         /// </summary>
-        private void TemplateDropBorder_DragLeave(object sender, DragEventArgs e)
+        private void TemplatePathTextBox_DragLeave(object sender, DragEventArgs e)
         {
-            RestoreBorderStyle(sender as System.Windows.Controls.Border);
-            UpdateHintText("拖拽单个 docx 文件或包含 docx 文件的文件夹到此处");
+            if (sender is System.Windows.Controls.TextBox textBox)
+            {
+                textBox.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
+                textBox.BorderThickness = new Thickness(1);
+                textBox.Background = Brushes.White;
+            }
         }
 
         /// <summary>
-        /// 拖拽悬停事件
+        /// 模板文件拖拽悬停事件
         /// </summary>
-        private void TemplateDropBorder_DragOver(object sender, DragEventArgs e)
+        private void TemplatePathTextBox_DragOver(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -281,9 +295,9 @@ namespace DocuFiller
         }
 
         /// <summary>
-        /// 模板文件/文件夹拖拽放置事件（统一处理）
+        /// 模板文件拖拽放置事件
         /// </summary>
-        private async void TemplateDropBorder_Drop(object sender, DragEventArgs e)
+        private async void TemplatePathTextBox_Drop(object sender, DragEventArgs e)
         {
             try
             {
@@ -296,15 +310,12 @@ namespace DocuFiller
 
                         if (DataContext is MainWindowViewModel viewModel)
                         {
-                            // 判断是文件还是文件夹
                             if (File.Exists(path) && IsDocxFile(path))
                             {
-                                // 单个文件处理
                                 await viewModel.HandleSingleFileDropAsync(path);
                             }
                             else if (Directory.Exists(path))
                             {
-                                // 文件夹处理（包含子文件夹）
                                 await viewModel.HandleFolderDropAsync(path);
                             }
                             else
@@ -329,11 +340,15 @@ namespace DocuFiller
             }
             finally
             {
-                RestoreBorderStyle(sender as System.Windows.Controls.Border);
-                UpdateHintText("拖拽单个 docx 文件或包含 docx 文件的文件夹到此处");
+                if (sender is System.Windows.Controls.TextBox textBox)
+                {
+                    textBox.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
+                    textBox.BorderThickness = new Thickness(1);
+                    textBox.Background = Brushes.White;
+                }
             }
         }
-        
+
         #endregion
 
         #region 辅助方法
@@ -351,20 +366,20 @@ namespace DocuFiller
         }
 
         /// <summary>
-        /// 恢复边框样式
+        /// 恢复边框样式（供清理功能拖放区域使用）
         /// </summary>
         private void RestoreBorderStyle(System.Windows.Controls.Border? border)
         {
             if (border != null)
             {
-                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xBD, 0xC3, 0xC7));
+                border.BorderBrush = new SolidColorBrush(Color.FromRgb(0xCC, 0xCC, 0xCC));
                 border.BorderThickness = new Thickness(2);
-                border.Background = Brushes.Transparent;
+                border.Background = new SolidColorBrush(Color.FromRgb(0xF9, 0xF9, 0xF9));
             }
         }
 
         /// <summary>
-        /// 更新边框样式
+        /// 更新边框样式（供清理功能拖放区域使用）
         /// </summary>
         private void UpdateBorderStyle(System.Windows.Controls.Border? border, bool isActive)
         {
@@ -373,19 +388,6 @@ namespace DocuFiller
                 border.BorderBrush = new SolidColorBrush(Color.FromRgb(0x21, 0x96, 0xF3));
                 border.BorderThickness = new Thickness(3);
                 border.Background = new SolidColorBrush(Color.FromArgb(0x20, 0x21, 0x96, 0xF3));
-            }
-        }
-
-        /// <summary>
-        /// 更新提示文本
-        /// </summary>
-        private void UpdateHintText(string text)
-        {
-            // 使用 FindName 查找元素，避免直接引用未定义的名称
-            var hintElement = FindName("TemplateDropHint") as System.Windows.Controls.TextBlock;
-            if (hintElement != null)
-            {
-                hintElement.Text = text;
             }
         }
 

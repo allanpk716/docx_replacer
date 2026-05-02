@@ -1,4 +1,4 @@
-# M008-4uyz6m: 双通道更新系统 — Go 更新服务器 + stable/beta 通道 + 自动化发布
+# M008-4uyz6m: 双通道更新系统 - Go 更新服务器 + stable/beta 通道 + 自动化发布
 
 **Vision:** 为 DocuFiller 的 Velopack 自动更新引入 stable/beta 双通道机制：开发 Go 轻量更新服务器管理多通道版本发布（上传、promote、自动清理），客户端通过 appsettings.json 选择通道即时切换，发布脚本一条命令完成构建+推送。
 
