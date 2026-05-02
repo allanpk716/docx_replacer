@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "1-3-3-beta-github-1-3-3-stable-1-3-3-beta",
+  "issue": "1.3.3 beta 版本升级后,设置的内网的更新地址又不见了.并且,之前推送了github和内网的1.3.3 的stable版本,现在的 1.3.3 beta 版本无法正常升级",
+  "status": "active",
+  "phase": "continued",
+  "createdAt": 1777695096785,
+  "updatedAt": 1777695108676,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\1-3-3-beta-github-1-3-3-stable-1-3-3-beta.log",
+  "lastError": null
+}

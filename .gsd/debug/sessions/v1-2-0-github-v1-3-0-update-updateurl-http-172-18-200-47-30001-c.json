@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "v1-2-0-github-v1-3-0-update-updateurl-http-172-18-200-47-30001-c",
+  "issue": "我现在使用  v1.2.0 启动看到 github 提示是最新的，但是最新是 v1.3.0，然后我也填写了内网更新地址：  \"Update\": {\n    \"UpdateUrl\": \"http://172.18.200.47:30001\",\n    \"Channel\": \"stable\"\n  }，点击检查也是说最新的。那么是 v1.2.0 这个已经安装的版本有问题吗？还是要怎么修复？",
+  "status": "active",
+  "phase": "continued",
+  "createdAt": 1777594378334,
+  "updatedAt": 1777594397644,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\v1-2-0-github-v1-3-0-update-updateurl-http-172-18-200-47-30001-c.log",
+  "lastError": null
+}

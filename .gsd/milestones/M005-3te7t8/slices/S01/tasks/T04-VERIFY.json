@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T04",
+  "unitId": "M005-3te7t8/S01/T04",
+  "timestamp": 1776959398547,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "执行 DocuFiller.exe --help 输出完整 JSONL 帮助文档，包含 fill/cleanup/inspect 三个子命令的参数和使用示例",
+      "exitCode": 1,
+      "durationMs": 20,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

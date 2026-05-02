@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M008-4uyz6m/S03/T01",
+  "timestamp": 1777075240050,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "grep -c UPLOAD scripts/build-internal.bat (expect >= 3)",
+      "exitCode": 0,
+      "durationMs": 21,
+      "verdict": "pass",
+      "note": "Re-verified via PowerShell Select-String: 33 lines containing UPLOAD (>= 3 required). Original grep check failed because grep is not available on Windows."
+    },
+    {
+      "command": "grep -c CHANNEL scripts/build-internal.bat (expect >= 3)",
+      "exitCode": 0,
+      "durationMs": 21,
+      "verdict": "pass",
+      "note": "Re-verified via PowerShell Select-String: 12 lines containing CHANNEL (>= 3 required)."
+    },
+    {
+      "command": "grep -q UPDATE_SERVER_URL scripts/build-internal.bat",
+      "exitCode": 0,
+      "durationMs": 21,
+      "verdict": "pass",
+      "note": "Re-verified via PowerShell Select-String: 6 occurrences found."
+    },
+    {
+      "command": "grep -q UPDATE_SERVER_TOKEN scripts/build-internal.bat",
+      "exitCode": 0,
+      "durationMs": 21,
+      "verdict": "pass",
+      "note": "Re-verified via PowerShell Select-String: 7 occurrences found."
+    },
+    {
+      "command": "build-internal.bat standalone backward compatibility",
+      "exitCode": 0,
+      "durationMs": 0,
+      "verdict": "pass",
+      "note": "Code inspection: `if defined CHANNEL` at line 72 gates upload. When CHANNEL is empty, upload is skipped entirely."
+    }
+  ],
+  "retryAttempt": 2,
+  "maxRetries": 2
+}

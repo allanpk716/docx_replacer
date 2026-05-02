@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "github-docufiller-win-setup-exe-docufiller-ui-2",
+  "issue": "我现在使用 github\n 最新发布的DocuFiller-win-Setup.exe 安装，然后双击桌面的DocuFiller，我发现程序启动了，在后台可以看到进程，但是我看不到它的 UI 界面",
+  "status": "resolved",
+  "phase": "completed",
+  "createdAt": 1777429280625,
+  "updatedAt": 1777443838291,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\github-docufiller-win-setup-exe-docufiller-ui-2.log",
+  "lastError": null
+}

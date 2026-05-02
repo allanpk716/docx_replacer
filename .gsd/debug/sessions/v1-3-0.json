@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "v1-3-0",
+  "issue": "现在 v1.3.0 点击更新后下载完毕,提示,下载失败,调用线程无法访问对象,因为另一个线程拥有该对象",
+  "status": "active",
+  "phase": "continued",
+  "createdAt": 1777608005842,
+  "updatedAt": 1777608016593,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\v1-3-0.log",
+  "lastError": null
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M008-4uyz6m/S01/T02",
+  "timestamp": 1777047655281,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-server",
+      "exitCode": 0,
+      "durationMs": 20,
+      "verdict": "pass"
+    },
+    {
+      "command": "go build -o bin/update-server.exe .",
+      "exitCode": 1,
+      "durationMs": 452,
+      "verdict": "fail"
+    },
+    {
+      "command": "echo BUILD_OK",
+      "exitCode": 0,
+      "durationMs": 18,
+      "verdict": "pass"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

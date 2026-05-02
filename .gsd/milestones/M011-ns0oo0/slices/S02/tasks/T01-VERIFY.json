@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M011-ns0oo0/S02/T01",
+  "timestamp": 1777529961057,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet build --verbosity minimal returns 0 errors",
+      "exitCode": 1,
+      "durationMs": 219,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

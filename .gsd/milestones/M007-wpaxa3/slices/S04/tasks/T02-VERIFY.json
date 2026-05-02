@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M007-wpaxa3/S04/T02",
+  "timestamp": 1777012751458,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "test -f docs/plans/e2e-update-test-guide.md",
+      "exitCode": 1,
+      "durationMs": 19,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}
