@@ -1,6 +1,14 @@
 {
   "nodes": [
     {
+      "id": "milestone:M015",
+      "label": "M015: GitHub 更新源从 API 切换到 CDN 直连",
+      "type": "milestone",
+      "description": "Active milestone: M015",
+      "confidence": "EXTRACTED",
+      "sourceFile": "STATE.md"
+    },
+    {
       "id": "concept:phase:validating-milestone",
       "label": "Phase: validating-milestone",
       "type": "concept",
@@ -789,6 +797,19 @@
       "label": "T02: 验证编译和测试，确认无残留 ExplicitChannel 引用",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M015:S01",
+      "label": "S01: GithubSource 替换为 SimpleWebSource",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M015:S01:T01",
+      "label": "T01: Replace GithubSource with SimpleWebSource CDN URL and update tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -1469,7 +1490,19 @@
       "to": "task:M014:S01:T02",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "slice:M015:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M015:S01",
+      "to": "task:M015:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-02T15:56:22.216Z"
+  "builtAt": "2026-05-02T16:50:24.938Z"
 }

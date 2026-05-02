@@ -133,7 +133,7 @@ namespace DocuFiller.Tests
             {
                 Assert.True(service.IsUpdateUrlConfigured);
                 Assert.Equal("GitHub", service.UpdateSourceType);
-                Assert.Equal("", service.EffectiveUpdateUrl);
+                Assert.Equal("https://github.com/allanpk716/docx_replacer/releases/latest/download/", service.EffectiveUpdateUrl);
             }
             finally { CleanupTestService(service); }
         }
@@ -279,7 +279,7 @@ namespace DocuFiller.Tests
                 service.ReloadSource("", "stable");
 
                 Assert.Equal("GitHub", service.UpdateSourceType);
-                Assert.Equal("", service.EffectiveUpdateUrl);
+                Assert.Equal("https://github.com/allanpk716/docx_replacer/releases/latest/download/", service.EffectiveUpdateUrl);
             }
             finally { CleanupTestService(service); }
         }
@@ -315,7 +315,7 @@ namespace DocuFiller.Tests
                 service.ReloadSource(null, "stable");
 
                 Assert.Equal("GitHub", service.UpdateSourceType);
-                Assert.Equal("", service.EffectiveUpdateUrl);
+                Assert.Equal("https://github.com/allanpk716/docx_replacer/releases/latest/download/", service.EffectiveUpdateUrl);
             }
             finally { CleanupTestService(service); }
         }

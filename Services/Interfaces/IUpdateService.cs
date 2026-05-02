@@ -32,7 +32,7 @@ namespace DocuFiller.Services.Interfaces
         string UpdateSourceType { get; }
 
         /// <summary>
-        /// 当前生效的完整更新源 URL（含通道路径），GitHub 模式返回空字符串。
+        /// 当前生效的完整更新源 URL（含通道路径）。GitHub 模式返回 CDN 直连 URL。
         /// </summary>
         string EffectiveUpdateUrl { get; }
 

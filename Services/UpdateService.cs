@@ -71,10 +71,11 @@ namespace DocuFiller.Services
             }
             else
             {
-                // GitHub Releases 模式：外网用户备选
-                _baseUrl = "";
-                _updateUrl = "";
-                _updateSource = new GithubSource("https://github.com/allanpk716/docx_replacer", accessToken: null, prerelease: false);
+                // GitHub Releases 模式：CDN 直连，无 API rate limit
+                var cdnBaseUrl = "https://github.com/allanpk716/docx_replacer/releases/latest/download/";
+                _baseUrl = cdnBaseUrl;
+                _updateUrl = cdnBaseUrl;
+                _updateSource = new SimpleWebSource(_updateUrl);
                 _sourceType = "GitHub";
             }
 
@@ -91,7 +92,7 @@ namespace DocuFiller.Services
             }
 
             _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}，持久化配置: {ConfigPath}",
-                _sourceType, _channel, _updateUrl != "" ? _updateUrl : "GitHub Releases", _isInstalled,
+                _sourceType, _channel, _updateUrl, _isInstalled,
                 PersistentConfigPath);
 
             // 启动时同步持久化配置：如果 Velopack 安装目录存在但 update-config.json 不存在，
@@ -261,8 +262,8 @@ namespace DocuFiller.Services
             _logger.LogInformation("热重载更新源：源类型 {OldSourceType} → {NewSourceType}，通道 {OldChannel} → {NewChannel}，URL {OldUrl} → {NewUrl}",
                 oldSourceType, string.IsNullOrWhiteSpace(updateUrl) ? "GitHub" : "HTTP",
                 oldChannel, channel,
-                oldUpdateUrl != "" ? oldUpdateUrl : "GitHub Releases",
-                string.IsNullOrWhiteSpace(updateUrl) ? "GitHub Releases" : updateUrl);
+                oldUpdateUrl,
+                string.IsNullOrWhiteSpace(updateUrl) ? "GitHub CDN" : updateUrl);
 
             if (!string.IsNullOrWhiteSpace(updateUrl))
             {
@@ -273,16 +274,17 @@ namespace DocuFiller.Services
             }
             else
             {
-                _baseUrl = "";
-                _updateUrl = "";
-                _updateSource = new GithubSource("https://github.com/allanpk716/docx_replacer", accessToken: null, prerelease: false);
+                var cdnBaseUrl = "https://github.com/allanpk716/docx_replacer/releases/latest/download/";
+                _baseUrl = cdnBaseUrl;
+                _updateUrl = cdnBaseUrl;
+                _updateSource = new SimpleWebSource(_updateUrl);
                 _sourceType = "GitHub";
             }
 
             _channel = channel;
 
             _logger.LogInformation("更新源热重载完成，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}",
-                _sourceType, _channel, _updateUrl != "" ? _updateUrl : "GitHub Releases");
+                _sourceType, _channel, _updateUrl);
 
             PersistToAppSettings(updateUrl, _channel);
         }
