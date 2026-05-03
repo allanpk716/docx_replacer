@@ -8,10 +8,107 @@
         Title="DocuFiller - Word文档批量填充工具" Height="550" Width="900"
         MinHeight="500" MinWidth="800"
         WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
         AllowDrop="True"
         PreviewDragOver="Window_PreviewDragOver">
     
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="32"
+                      ResizeBorderThickness="4"
+                      GlassFrameThickness="0"
+                      CornerRadius="0"/>
+    </WindowChrome.WindowChrome>
+    
     <DockPanel>
+        <!-- 自定义标题栏 -->
+        <Border DockPanel.Dock="Top" Background="#F0F0F0" Height="32"
+                WindowChrome.IsHitTestVisibleInChrome="True">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 应用图标和标题 -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Margin="10,0,0,0"
+                            VerticalAlignment="Center">
+                    <TextBlock Text="📄" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBlock Text="DocuFiller" FontSize="13" FontWeight="Medium"
+                               Foreground="#333333" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- 图钉按钮 (置顶开关) -->
+                <Button Grid.Column="2" x:Name="PinButton"
+                        ToolTip="置顶窗口"
+                        Command="{Binding ToggleTopmostCommand}"
+                        FontSize="16" Padding="8,4" Cursor="Hand"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="#888888" VerticalAlignment="Center"
+                        Margin="0,0,4,0"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E0E0E0"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                    <TextBlock x:Name="PinIcon" Text="📌" FontSize="14"/>
+                </Button>
+
+                <!-- 最小化按钮 -->
+                <Button Grid.Column="3" Content="─" ToolTip="最小化"
+                        Click="MinimizeButton_Click"
+                        FontSize="14" Padding="12,4" Cursor="Hand"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="#555555" VerticalAlignment="Center"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E0E0E0"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- 关闭按钮 -->
+                <Button Grid.Column="4" Content="✕" ToolTip="关闭"
+                        Click="CloseButton_Click"
+                        FontSize="14" Padding="12,4" Cursor="Hand"
+                        Background="Transparent" BorderThickness="0"
+                        Foreground="#555555" VerticalAlignment="Center"
+                        WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#E81123"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Border>
+
         <!-- 底部状态栏 -->
         <Border DockPanel.Dock="Bottom" Background="#F5F5F5" BorderBrush="#DDDDDD" BorderThickness="0,1,0,0" Padding="15,6">
             <Grid>
@@ -120,6 +217,8 @@
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
                     <!-- 模板文件行 -->
@@ -165,11 +264,15 @@
                         </TextBlock>
                     </StackPanel>
 
+                    <!-- 模板拖放提示 -->
+                    <TextBlock Grid.Row="2" Text="提示：可将 .docx 文件或文件夹拖放到上方文本框"
+                               Margin="65,0,0,2" FontSize="11" Foreground="#AAAAAA"/>
+
                     <!-- 分隔线 -->
-                    <Separator Grid.Row="2" Margin="0,3"/>
+                    <Separator Grid.Row="3" Margin="0,3"/>
 
                     <!-- 数据文件行 -->
-                    <Grid Grid.Row="3" Margin="0,3,0,0">
+                    <Grid Grid.Row="4" Margin="0,3,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="65"/>
                             <ColumnDefinition Width="*"/>
@@ -192,15 +295,19 @@
                     </Grid>
 
                     <!-- 数据类型提示 -->
-                    <TextBlock Grid.Row="4" Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
+                    <TextBlock Grid.Row="5" Text="{Binding DataFileTypeDisplay, StringFormat='数据类型: {0}'}"
                                Margin="65,2,0,3" FontSize="11" Foreground="#7F8C8D"
                                Visibility="{Binding DataPath, Converter={StaticResource StringToVisibilityConverter}}"/>
 
+                    <!-- 数据拖放提示 -->
+                    <TextBlock Grid.Row="6" Text="提示：可将 Excel 文件拖放到上方文本框"
+                               Margin="65,0,0,2" FontSize="11" Foreground="#AAAAAA"/>
+
                     <!-- 分隔线 -->
-                    <Separator Grid.Row="5" Margin="0,3"/>
+                    <Separator Grid.Row="7" Margin="0,3"/>
 
                     <!-- 输出目录行 -->
-                    <Grid Grid.Row="6" Margin="0,3,0,0">
+                    <Grid Grid.Row="8" Margin="0,3,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="65"/>
                             <ColumnDefinition Width="*"/>
@@ -218,7 +325,7 @@
                     </Grid>
 
                     <!-- 处理进度区域 -->
-                    <StackPanel Grid.Row="7" Margin="0,8,0,0">
+                    <StackPanel Grid.Row="9" Margin="0,8,0,0">
                         <Grid Margin="0,0,0,3">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>

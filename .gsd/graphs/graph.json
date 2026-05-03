@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M015",
-      "label": "M015: GitHub 更新源从 API 切换到 CDN 直连",
+      "id": "milestone:M016",
+      "label": "M016: 窗口置顶开关 + 拖放提示",
       "type": "milestone",
-      "description": "Active milestone: M015",
+      "description": "Active milestone: M016",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -799,6 +799,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M015",
+      "label": "M015: GitHub 更新源从 API 切换到 CDN 直连",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-ROADMAP.md"
+    },
+    {
       "id": "slice:M015:S01",
       "label": "S01: GithubSource 替换为 SimpleWebSource",
       "type": "slice",
@@ -810,6 +817,91 @@
       "label": "T01: Replace GithubSource with SimpleWebSource CDN URL and update tests",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M016:S01",
+      "label": "S01: 窗口置顶按钮 + 拖放提示",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M016:S01:T01",
+      "label": "T01: WindowChrome 标题栏 + 图钉按钮 + 拖放提示",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "decision:M015:1",
+      "label": "使用 SimpleWebSource + CDN URL 替代 GithubSource，消除 API rate limit。GitHub 模式下 `new GithubSource(\"allanpk716/docx_replacer\")` 替换为 `new SimpleWebSource(\"https://github.com/allanpk716/docx_replacer/releases/latest/download/\")`，保持 UpdateSourceType 枚举不变确保上层透明。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M015:2",
+      "label": "保持 UpdateSourceType 为 \"GitHub\" 不变。虽然底层实现从 GithubSource 切换为 SimpleWebSource，但 UI 和设置界面的源类型标签不受影响，降低变更面。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Key Decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M015:3",
+      "label": "Velopack 的 GithubSource 内部调用 GitHub REST API（/repos/{owner}/{repo}/releases/latest），匿名请求受 60 次/小时 rate limit 限制，对于频繁检查更新的场景（如每次启动）容易触发。SimpleWebSource 直接下载 CDN 文件无此限制。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M015:4",
+      "label": "替换底层更新源实现时，保持上层抽象（枚举、接口）不变可以将变更面隔离在服务层内部，测试只需调整断言值而非重构测试结构。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M015:5",
+      "label": "更新源统一模式：将 GitHub 和内网 HTTP 两种更新源统一到 SimpleWebSource 实现，仅在 URL 构造上区分（CDN URL vs HTTP URL），使两种模式共享相同的下载和更新管道。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M015:1",
+      "label": "Velopack 的 GithubSource 内部调用 GitHub REST API（/repos/{owner}/{repo}/releases/latest），匿名请求受 60 次/小时 rate limit 限制，对于频繁检查更新的场景（如每次启动）容易触发。SimpleWebSource 直接下载 CDN 文件无此限制。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M015:2",
+      "label": "替换底层更新源实现时，保持上层抽象（枚举、接口）不变可以将变更面隔离在服务层内部，测试只需调整断言值而非重构测试结构。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/Verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M015:3",
+      "label": "更新源统一模式：将 GitHub 和内网 HTTP 两种更新源统一到 SimpleWebSource 实现，仅在 URL 构造上区分（CDN URL vs HTTP URL），使两种模式共享相同的下载和更新管道。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M015:1",
+      "label": "更新源统一模式：将 GitHub 和内网 HTTP 两种更新源统一到 SimpleWebSource 实现，仅在 URL 构造上区分（CDN URL vs HTTP URL），使两种模式共享相同的下载和更新管道。",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M015/M015-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -1502,7 +1594,73 @@
       "to": "task:M015:S01:T01",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "slice:M016:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M016:S01",
+      "to": "task:M016:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "decision:M015:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "decision:M015:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "decision:M015:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "decision:M015:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "decision:M015:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "lesson:M015:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "lesson:M015:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "lesson:M015:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M015",
+      "to": "pattern:M015:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-02T16:50:24.938Z"
+  "builtAt": "2026-05-03T02:27:28.497Z"
 }

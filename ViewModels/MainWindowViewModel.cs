@@ -60,6 +60,7 @@ namespace DocuFiller.ViewModels
         private string _progressText = "0%";
         private double _progressPercentage = 0;
         private bool _isProcessing = false;
+        private bool _isTopmost = false;
         private DataStatistics _dataStatistics = new();
         // 文件夹拖拽相关属性
         private string? _templateFolderPath;
@@ -195,6 +196,12 @@ namespace DocuFiller.ViewModels
                     OnPropertyChanged(nameof(CanCancelProcess));
                 }
             }
+        }
+
+        public bool IsTopmost
+        {
+            get => _isTopmost;
+            set => SetProperty(ref _isTopmost, value);
         }
         
         public DataStatistics DataStatistics
@@ -477,6 +484,7 @@ namespace DocuFiller.ViewModels
         public ICommand SwitchToFolderModeCommand { get; private set; } = null!;
         public ICommand ProcessFolderCommand { get; private set; } = null!;
         public ICommand BrowseTemplateFolderCommand { get; private set; } = null!;
+        public ICommand ToggleTopmostCommand { get; private set; } = null!;
         
         #endregion
         
@@ -507,6 +515,7 @@ namespace DocuFiller.ViewModels
             SwitchToFolderModeCommand = new RelayCommand(() => IsFolderMode = true);
             ProcessFolderCommand = new RelayCommand(async () => await ProcessFolderAsync(), () => CanProcessFolder);
             BrowseTemplateFolderCommand = new RelayCommand(BrowseTemplateFolder);
+            ToggleTopmostCommand = new RelayCommand(ToggleTopmost);
 
             // 更新检查命令
             CheckUpdateCommand = new RelayCommand(async () => await CheckUpdateAsync(), () => CanCheckUpdate);
@@ -757,6 +766,11 @@ namespace DocuFiller.ViewModels
             _cancellationTokenSource?.Cancel();
         }
         
+        private void ToggleTopmost()
+        {
+            IsTopmost = !IsTopmost;
+        }
+
         private void ExitApplication()
         {
             Application.Current.Shutdown();

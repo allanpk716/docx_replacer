@@ -25,6 +25,42 @@ namespace DocuFiller
             // 从依赖注入容器获取ViewModel
             var app = (App)Application.Current;
             DataContext = app.ServiceProvider.GetRequiredService<MainWindowViewModel>();
+            
+            // 绑定 IsTopmost 到 Window.Topmost
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.PropertyChanged += (s, e) =>
+                {
+                    if (e.PropertyName == nameof(MainWindowViewModel.IsTopmost))
+                    {
+                        Topmost = vm.IsTopmost;
+                        UpdatePinButtonVisual(vm.IsTopmost);
+                    }
+                };
+            }
+        }
+
+        private void UpdatePinButtonVisual(bool isTopmost)
+        {
+            if (PinIcon != null)
+            {
+                PinIcon.Text = isTopmost ? "📌" : "📍";
+                PinIcon.Opacity = isTopmost ? 1.0 : 0.5;
+            }
+            if (PinButton != null)
+            {
+                PinButton.ToolTip = isTopmost ? "取消置顶" : "置顶窗口";
+            }
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
         }
         
         /// <summary>
