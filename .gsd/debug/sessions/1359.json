@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "1359",
+  "issue": "1359 我发现现在程序启动后，看到置顶按钮是默认显示已经置顶的，但是实际没有置顶，其他窗体可以遮挡它的。但是我点击一下置顶按钮，按钮的样式没有变化，但是置顶生效了。",
+  "status": "closed",
+  "phase": "resolved",
+  "createdAt": 1777787989943,
+  "updatedAt": 1777789500000,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\1359.log",
+  "lastError": null,
+  "resolution": "XAML PinIcon 初始状态与 ViewModel 不一致：XAML 硬编码 📌（已置顶）但 _isTopmost=false。将 XAML 初始值改为 📍 + Opacity=0.5 与 ViewModel 同步。"
+}

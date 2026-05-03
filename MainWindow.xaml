@@ -60,7 +60,7 @@
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Button.Template>
-                    <TextBlock x:Name="PinIcon" Text="📌" FontSize="14"/>
+                    <TextBlock x:Name="PinIcon" Text="📍" Opacity="0.5" FontSize="14"/>
                 </Button>
 
                 <!-- 最小化按钮 -->
