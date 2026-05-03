@@ -503,7 +503,7 @@ namespace DocuFiller.Services
         /// <returns>处理结果</returns>
         public async Task<ProcessResult> ProcessFolderAsync(FolderProcessRequest request, CancellationToken cancellationToken = default)
         {
-            ProcessResult result = new ProcessResult { IsSuccess = true };
+            ProcessResult result = new ProcessResult { IsSuccess = true, StartTime = DateTime.Now };
             List<string> processedFiles = new List<string>();
             List<string> failedFiles = new List<string>();
 
@@ -569,6 +569,8 @@ namespace DocuFiller.Services
                 {
                     try
                     {
+                        currentOperation++;
+
                         _logger.LogInformation($"处理模板文件: {templateFile.Name}");
 
                         // 验证模板文件
@@ -577,6 +579,10 @@ namespace DocuFiller.Services
                         {
                             _logger.LogWarning($"模板文件验证失败: {templateFile.Name} - {validationResult.ErrorMessage}");
                             failedFiles.Add($"{templateFile.Name}: {validationResult.ErrorMessage}");
+
+                            // 验证失败也要更新进度
+                            _progressReporter.ReportProgress(currentOperation, totalOperations,
+                                $"跳过 {templateFile.Name} - 验证失败 ({currentOperation}/{totalOperations})", templateFile.Name);
                             continue;
                         }
 
@@ -589,8 +595,6 @@ namespace DocuFiller.Services
                             _ = Directory.CreateDirectory(outputSubDir);
                             _logger.LogDebug($"创建子目录: {outputSubDir}");
                         }
-
-                        currentOperation++;
 
                         // 生成输出文件名 - 保持原始文件名
                         string outputFileName = templateFile.Name;
@@ -625,6 +629,10 @@ namespace DocuFiller.Services
                     {
                         _logger.LogError(ex, $"处理模板文件时发生异常: {templateFile.Name}");
                         failedFiles.Add($"{templateFile.Name}: {ex.Message}");
+
+                        // 异常也要更新进度，确保进度条不会卡住
+                        _progressReporter.ReportProgress(currentOperation, totalOperations,
+                            $"处理失败 {templateFile.Name} ({currentOperation}/{totalOperations})", templateFile.Name);
                     }
                 }
 
@@ -643,6 +651,10 @@ namespace DocuFiller.Services
 
                 _logger.LogInformation($"批量处理完成 - 成功: {processedFiles.Count}，失败: {failedFiles.Count}");
                 _logger.LogInformation($"输出目录: {timestampOutputDir}");
+
+                // 报告最终完成状态，确保进度条达到 100%
+                _progressReporter.ReportCompleted(totalOperations,
+                    $"批量处理完成，成功: {processedFiles.Count}，失败: {failedFiles.Count}");
             }
             catch (Exception ex)
             {
@@ -650,6 +662,10 @@ namespace DocuFiller.Services
                 result.IsSuccess = false;
                 result.AddError($"批量处理失败: {ex.Message}");
                 result.ErrorMessage = $"批量处理失败: {ex.Message}";
+            }
+            finally
+            {
+                result.EndTime = DateTime.Now;
             }
 
             return result;

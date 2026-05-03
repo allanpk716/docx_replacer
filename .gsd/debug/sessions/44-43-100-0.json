@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "44-43-100-0",
+  "issue": "我发现如果一次要处理多个关键词替换文件的时候，比如有44个，最后处理完成所有后，进度条会停止在43个位置少一个，也就是看到的不是100%进度，并且执行的耗时统计不是负数就是0",
+  "status": "resolved",
+  "phase": "completed",
+  "createdAt": 1777787314279,
+  "updatedAt": 1777792000000,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\44-43-100-0.log",
+  "lastError": null,
+  "resolution": "Fixed: (1) moved currentOperation++ to loop top, added progress report in validation-failure and catch paths, added ReportCompleted() after loop. (2) Added StartTime at result creation and EndTime in finally block."
+}
