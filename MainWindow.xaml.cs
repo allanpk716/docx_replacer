@@ -4,6 +4,7 @@ using DocuFiller.ViewModels;
 using DocuFiller.Models;
 using System;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.IO;
 using System.Linq;
@@ -511,6 +512,7 @@ namespace DocuFiller
 
                         // 刷新 CanStartCleanup 属性
                         viewModel.OnPropertyChanged(nameof(viewModel.CanStartCleanup));
+                        CommandManager.InvalidateRequerySuggested();
                     }
                 }
             }

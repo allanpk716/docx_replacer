@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "mode": "debug",
+  "slug": "05031403",
+  "issue": "05031403 现在拖动文件和文件夹后，需要出发失焦事件，否则"开始处理"就不会亮起可以点击，你还有办法处理让交互体验更好吗？",
+  "status": "resolved",
+  "phase": "completed",
+  "createdAt": 1777788328766,
+  "updatedAt": 1777788830000,
+  "logPath": "C:\\WorkSpace\\agent\\docx_replacer\\.gsd\\debug\\05031403.log",
+  "lastError": null,
+  "resolution": "WPF 拖放通过 OLE 机制不触发 CommandManager.RequerySuggested，导致 CanExecute 不更新。在 7 处 OnPropertyChanged(CanStart*) 后添加 CommandManager.InvalidateRequerySuggested()。"
+}

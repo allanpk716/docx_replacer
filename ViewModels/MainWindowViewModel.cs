@@ -138,6 +138,7 @@ namespace DocuFiller.ViewModels
                 {
                     UpdateFileInfo();
                     OnPropertyChanged(nameof(CanStartProcess));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -151,6 +152,7 @@ namespace DocuFiller.ViewModels
                 {
                     UpdateFileInfo();
                     OnPropertyChanged(nameof(CanStartProcess));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -194,6 +196,7 @@ namespace DocuFiller.ViewModels
                 {
                     OnPropertyChanged(nameof(CanStartProcess));
                     OnPropertyChanged(nameof(CanCancelProcess));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -259,6 +262,7 @@ namespace DocuFiller.ViewModels
                 {
                     OnPropertyChanged(nameof(CanStartProcess));
                     OnPropertyChanged(nameof(DisplayMode));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -315,6 +319,7 @@ namespace DocuFiller.ViewModels
                 if (SetProperty(ref _isCleanupProcessing, value))
                 {
                     OnPropertyChanged(nameof(CanStartCleanup));
+                    CommandManager.InvalidateRequerySuggested();
                 }
             }
         }
@@ -1473,6 +1478,7 @@ namespace DocuFiller.ViewModels
             CleanupProgressStatus = "等待处理...";
             CleanupProgressPercent = 0;
             OnPropertyChanged(nameof(CanStartCleanup));
+            CommandManager.InvalidateRequerySuggested();
         }
 
         /// <summary>
