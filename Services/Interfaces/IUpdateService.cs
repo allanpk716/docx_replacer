@@ -25,8 +25,11 @@ namespace DocuFiller.Services.Interfaces
         /// <summary>当前更新通道（stable/beta），默认 stable</summary>
         string Channel { get; }
 
-        /// <summary>当前应用是否为安装版（便携版返回 false）</summary>
+        /// <summary>当前应用是否为安装版（信息属性，不用于流程阻断）</summary>
         bool IsInstalled { get; }
+
+        /// <summary>当前应用是否为便携版运行（解压自 Portable.zip）</summary>
+        bool IsPortable { get; }
 
         /// <summary>当前更新源类型（"GitHub" 或 "HTTP"），用于诊断和测试</summary>
         string UpdateSourceType { get; }

@@ -24,6 +24,7 @@ namespace DocuFiller.Services
         private string _channel;
         private string _sourceType;
         private readonly bool _isInstalled;
+        private readonly bool _isPortable;
 
         /// <summary>
         /// appsettings.json 文件路径，用于测试时替换为临时文件路径
@@ -79,20 +80,22 @@ namespace DocuFiller.Services
                 _sourceType = "GitHub";
             }
 
-            // 检测 IsInstalled 状态（便携版/开发环境返回 false）
+            // 检测 IsInstalled 和 IsPortable 状态（便携版/开发环境返回 false）
             try
             {
                 var tempManager = CreateUpdateManager();
                 _isInstalled = tempManager.IsInstalled;
+                _isPortable = tempManager.IsPortable;
             }
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "检测安装状态失败，默认为未安装");
                 _isInstalled = false;
+                _isPortable = false;
             }
 
-            _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}，持久化配置: {ConfigPath}",
-                _sourceType, _channel, _updateUrl, _isInstalled,
+            _logger.LogInformation("更新服务初始化，源类型: {SourceType}，通道: {Channel}，更新源: {UpdateUrl}，IsInstalled: {IsInstalled}，IsPortable: {IsPortable}，持久化配置: {ConfigPath}",
+                _sourceType, _channel, _updateUrl, _isInstalled, _isPortable,
                 PersistentConfigPath);
 
             // 启动时同步持久化配置：如果 Velopack 安装目录存在但 update-config.json 不存在，
@@ -180,6 +183,9 @@ namespace DocuFiller.Services
 
         /// <inheritdoc />
         public bool IsInstalled => _isInstalled;
+
+        /// <inheritdoc />
+        public bool IsPortable => _isPortable;
 
         /// <inheritdoc />
         public string UpdateSourceType => _sourceType;

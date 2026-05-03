@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-03T05:44:14Z | Files: 163 | Described: 0/163
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-03T05:44:14Z","fingerprint":"bc367dcbfbc47425994b01d2908d9a6167799267","fileCount":163,"truncated":false} -->
+Generated: 2026-05-03T09:30:17Z | Files: 165 | Described: 0/165
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-03T09:30:17Z","fingerprint":"376ebb9335f5d3a29ce5042963bbe8a099a39eaa","fileCount":165,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
@@ -207,6 +207,8 @@ Generated: 2026-05-03T05:44:14Z | Files: 163 | Described: 0/163
 - `scripts/build.bat`
 - `scripts/cleanup-gsd-stash.bat`
 - `scripts/e2e-dual-channel-test.sh`
+- `scripts/e2e-portable-go-update-test.sh`
+- `scripts/e2e-portable-update-test.bat`
 - `scripts/e2e-serve.py`
 - `scripts/e2e-update-test.bat`
 - `scripts/install-ssh.bat`

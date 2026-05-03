@@ -254,6 +254,7 @@ public class CliRunnerTests
     {
         public UpdateInfo? UpdateInfoToReturn { get; init; }
         public bool IsInstalled => true;
+        public bool IsPortable => false;
         public bool IsUpdateUrlConfigured => true;
         public string Channel => "stable";
         public string UpdateSourceType => "GitHub";

@@ -27,6 +27,7 @@ public class UpdateCommandTests
         public bool IsUpdateUrlConfigured => true;
         public string Channel => "stable";
         public bool IsInstalled => IsInstalledValue;
+        public bool IsPortable => false;
         public string UpdateSourceType => "GitHub";
         public string EffectiveUpdateUrl => "";
 
@@ -186,7 +187,7 @@ public class UpdateCommandTests
     // === UpdateCommand --yes: portable error and no-update cases ===
 
     [Fact]
-    public async Task Update_WithYes_Portable_OutputsError()
+    public async Task Update_WithYes_Portable_ProceedsNormally()
     {
         var updateService = new StubUpdateService
         {
@@ -196,11 +197,12 @@ public class UpdateCommandTests
         var (runner, _) = CreateRunnerWithUpdate(updateService);
         var (exitCode, output) = await RunAndCapture(runner, new[] { "update", "--yes" });
 
-        Assert.Equal(1, exitCode);
-        var errorLine = ParseLine(output);
-        Assert.Equal("error", errorLine.RootElement.GetProperty("type").GetString());
-        var data = errorLine.RootElement.GetProperty("data");
-        Assert.Equal("PORTABLE_NOT_SUPPORTED", data.GetProperty("code").GetString());
+        // Portable mode now proceeds with normal update flow (same as installed)
+        Assert.Equal(0, exitCode);
+        // Verify output is a valid update JSONL line (download progress or success)
+        Assert.Contains("update", output);
+        // The old PORTABLE_NOT_SUPPORTED error should NOT appear
+        Assert.DoesNotContain("PORTABLE_NOT_SUPPORTED", output);
     }
 
     [Fact]

@@ -250,6 +250,112 @@ After the upgrade to v1.1.0 completes:
 
 ---
 
+## Automated Portable Update Tests
+
+The following automated scripts validate the portable app self-update flow end-to-end. Unlike the manual scenarios above, these scripts build both versions, configure the update source, trigger the update, and verify the version upgrade automatically.
+
+### Prerequisites for Portable Testing
+
+| Requirement | Details |
+|-------------|---------|
+| Portable extraction | The scripts extract `DocuFiller-Portable.zip` automatically — no manual extraction needed |
+| update-config.json | Created automatically by the scripts at `%USERPROFILE%\.docx_replacer\update-config.json` (existing file is backed up and restored on cleanup) |
+| Port availability | Local HTTP test uses port 8081; Go server test uses port 19081 — ensure neither is in use |
+| Additional tools (Go test only) | `go` (to build the update server binary), `curl` (to upload releases to the server) |
+
+### Portable Update via Local HTTP
+
+**Script:** `scripts/e2e-portable-update-test.bat`
+
+**Purpose:** Verify the complete portable self-update chain against a local Python HTTP server (same model as the manual Scenario 3, but fully automated).
+
+**What it does:**
+1. Checks prerequisites (vpk, python, dotnet)
+2. Builds v1.0.0 and v1.1.0 from source, packs both with Velopack
+3. Extracts the v1.0.0 Portable.zip to a clean directory
+4. Creates `update-config.json` pointing to `http://localhost:8081/`
+5. Starts `e2e-serve.py` serving v1.1.0 artifacts on port 8081
+6. Runs `DocuFiller.exe update --yes` with a 30s timeout
+7. Verifies the version upgrade succeeded (exe file version check)
+8. Cleans up: stops HTTP server, restores config, restores csproj version
+
+**Usage:**
+```bat
+cd scripts
+e2e-portable-update-test.bat
+```
+
+**Dry-run mode** (syntax validation only, no builds):
+```bat
+e2e-portable-update-test.bat --dry-run
+```
+
+**Output tags:** All output lines are tagged `[E2E-PORTABLE]` for easy filtering. The final summary shows PASS/PARTIAL PASS/FAIL per check.
+
+**Key design notes:**
+- Uses port **8081** (not 8080) to avoid conflict with the existing `e2e-update-test.bat`
+- Handles `ApplyUpdatesAndRestart` by running the update process in background with `start /b` and polling for process exit
+- No Chinese characters in the script per project BAT convention
+
+**Pass/Fail Criteria:**
+
+| Check | Pass Condition |
+|-------|---------------|
+| Build & pack v1.0.0 | Velopack packaging completes without errors |
+| Build & pack v1.1.0 | Velopack packaging completes without errors |
+| Portable extraction | DocuFiller.exe and Update.exe present after extraction |
+| HTTP server started | `curl http://localhost:8081/releases.win.json` returns valid feed |
+| Update applied | DocuFiller.exe file version upgraded to 1.1.0, or JSONL log shows download+apply indicators |
+| Cleanup | HTTP server stopped, update-config.json restored, csproj version restored |
+
+---
+
+### Portable Update via Go Server
+
+**Script:** `scripts/e2e-portable-go-update-test.sh` (requires bash — use Git Bash on Windows)
+
+**Purpose:** Verify the complete portable self-update chain against the internal Go update server, proving the full API round-trip: upload release → server stores → client checks → client downloads → client applies.
+
+**What it does:**
+1. Builds the Go update server binary from `update-server/` source
+2. Starts the server on port 19081 with a test token and temp data directory
+3. Builds v1.0.0 and v1.1.0 from C# source, packs with Velopack
+4. Uploads v1.1.0 artifacts (.nupkg + releases.win.json) to the server's `stable` channel via authenticated curl POST
+5. Verifies `GET /stable/releases.win.json` contains version 1.1.0
+6. Extracts v1.0.0 Portable.zip to a clean directory
+7. Creates `update-config.json` pointing to `http://localhost:19081/` with channel `stable`
+8. Runs `DocuFiller.exe update --yes` with a 60s timeout
+9. Parses output for update-found / download / apply indicators
+10. Cleans up via `trap EXIT`: kills server, restores config, restores csproj version, removes temp dirs
+
+**Usage:**
+```bash
+bash scripts/e2e-portable-go-update-test.sh
+```
+
+**Output tags:** All output lines are tagged `[E2E-GO]`. The final summary shows PASS/FAIL counts and tails the server log for diagnostics.
+
+**Key design notes:**
+- Uses port **19081** to avoid conflict with `e2e-dual-channel-test.sh` (19080) and the local HTTP test (8081)
+- Reuses the `upload_version` helper pattern from `e2e-dual-channel-test.sh` with proper `releases.win.json` multipart filename
+- Handles `ApplyUpdatesAndRestart` via background process with `kill -0` polling (git-bash compatible)
+- Uses `sed -i` for csproj version manipulation, with PowerShell fallback for zip extraction if `unzip` is unavailable
+
+**Pass/Fail Criteria:**
+
+| Check | Pass Condition |
+|-------|---------------|
+| Go server build | `go build` completes without errors |
+| Go server started | Health check returns 200 within retry limit |
+| Build & pack v1.0.0 + v1.1.0 | Velopack packaging completes without errors |
+| Release upload | curl POST to `/api/channels/stable/releases` returns 200 |
+| Feed verification | `GET /stable/releases.win.json` contains version 1.1.0 |
+| Portable extraction | DocuFiller.exe and Update.exe present |
+| Update applied | JSONL log shows download+apply, or exe file version upgraded to 1.1.0 |
+| Cleanup | Server killed, config restored, csproj version restored |
+
+---
+
 ## Cleanup
 
 After testing:
@@ -272,6 +378,12 @@ After testing:
 | Update download fails | Server not running or wrong directory | Restart e2e-serve.py, verify it serves v1.1.0 directory |
 | App does not restart after update | Velopack hooks not registered | Ensure Setup.exe was used for initial install (not Portable) |
 | Config lost after update | Installed via Portable.zip | Portable mode does not use Velopack install hooks; use Setup.exe |
+| Portable update script "port in use" | Another test using the same port | Kill stale processes or change the port constant in the script |
+| e2e-portable-go-update-test.sh fails "go not found" | Go toolchain not installed | Install Go 1.21+ from https://go.dev/dl/ |
+| Go server upload returns 401 | Test token mismatch | Verify the token constant in the script matches the server's --token flag |
+| Portable update exits immediately | ApplyUpdatesAndRestart killed the process | Expected behavior — the script handles this via background process + timeout + multi-strategy verification |
+| update-config.json not found by app | Wrong config directory path | Ensure `%USERPROFILE%\.docx_replacer\update-config.json` exists; scripts create it automatically |
+| unzip fails in bash script | unzip not available in Git Bash | Script falls back to PowerShell extraction automatically |
 
 ## Artifact Locations
 
@@ -282,3 +394,5 @@ After testing:
 | v1.1.0 artifacts | `e2e-test\v1.1.0\` (served via HTTP) |
 | Update feed | `e2e-test\v1.1.0\releases.win.json` |
 | Update package | `e2e-test\v1.1.0\DocuFiller-1.1.0-full.nupkg` |
+| Portable HTTP test dir | `e2e-portable-test\` (created by e2e-portable-update-test.bat) |
+| Portable Go test dir | `e2e-portable-go-test\` (created by e2e-portable-go-update-test.sh) |

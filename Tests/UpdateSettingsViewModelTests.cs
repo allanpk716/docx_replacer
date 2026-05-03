@@ -42,6 +42,20 @@ namespace DocuFiller.Tests
                 .Build();
         }
 
+        /// <summary>
+        /// 创建 ViewModel 实例，传入空的持久化配置委托以绕过真实文件系统
+        /// </summary>
+        private UpdateSettingsViewModel CreateViewModel(
+            IConfiguration? config = null,
+            Func<(string?, string?)>? readPersistentConfig = null)
+        {
+            return new UpdateSettingsViewModel(
+                _mockUpdateService.Object,
+                _logger,
+                config ?? BuildConfiguration(),
+                readPersistentConfig ?? (() => (null, null)));
+        }
+
         [Fact]
         public void Constructor_HttpUrl_ReturnsRawUrlFromConfig()
         {
@@ -49,7 +63,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "http://<INTERNAL_SERVER_IP>:30001", channel: "stable");
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("http://<INTERNAL_SERVER_IP>:30001", vm.UpdateUrl);
@@ -63,7 +77,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "", channel: null);
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal(string.Empty, vm.UpdateUrl);
@@ -77,7 +91,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: null, channel: null);
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal(string.Empty, vm.UpdateUrl);
@@ -90,7 +104,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "http://example.com", channel: "beta");
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("beta", vm.Channel);
@@ -104,7 +118,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "http://example.com", channel: "");
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("stable", vm.Channel);
@@ -118,7 +132,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "http://example.com", channel: null);
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("stable", vm.Channel);
@@ -132,7 +146,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "http://example.com", channel: "stable");
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("HTTP", vm.SourceTypeDisplay);
@@ -146,7 +160,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "", channel: null);
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("GitHub", vm.SourceTypeDisplay);
@@ -159,7 +173,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "  http://example.com  ", channel: "  beta  ");
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal("http://example.com", vm.UpdateUrl);
@@ -173,7 +187,7 @@ namespace DocuFiller.Tests
             var config = BuildConfiguration(updateUrl: "http://example.com", channel: "stable");
 
             // Act
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, config);
+            var vm = CreateViewModel(config);
 
             // Assert
             Assert.Equal(2, vm.Channels.Count);
@@ -185,7 +199,7 @@ namespace DocuFiller.Tests
         public void Constructor_NullConfiguration_DoesNotThrow()
         {
             // Act & Assert — null IConfiguration should not throw, just use defaults
-            var vm = new UpdateSettingsViewModel(_mockUpdateService.Object, _logger, null!);
+            var vm = CreateViewModel(config: null!);
 
             Assert.Equal(string.Empty, vm.UpdateUrl);
             Assert.Equal("stable", vm.Channel); // falls back to service channel

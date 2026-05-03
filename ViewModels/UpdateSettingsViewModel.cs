@@ -31,20 +31,30 @@ namespace DocuFiller.ViewModels
         /// </summary>
         internal Action<bool?>? CloseCallback { get; set; }
 
+        /// <summary>
+        /// 可选的持久化配置读取委托，用于测试时绕过真实文件系统。
+        /// 返回 (UpdateUrl, Channel) 元组，null 值表示未配置。
+        /// </summary>
+        private readonly Func<(string? updateUrl, string? channel)>? _readPersistentConfig;
+
         public UpdateSettingsViewModel(
             IUpdateService updateService,
             ILogger<UpdateSettingsViewModel> logger,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            Func<(string? updateUrl, string? channel)>? readPersistentConfig = null)
         {
             _updateService = updateService ?? throw new ArgumentNullException(nameof(updateService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _readPersistentConfig = readPersistentConfig;
 
             _sourceTypeDisplay = _updateService.UpdateSourceType;
 
             // 优先从持久化配置文件（update-config.json）读取，fallback 到 IConfiguration。
             // Velopack 更新会覆盖安装目录下的 appsettings.json（URL 重置为空），
             // 但安装目录上一级的 update-config.json 不受影响。
-            var (persistedUrl, persistedChannel) = ReadPersistentConfig();
+            var (persistedUrl, persistedChannel) = _readPersistentConfig != null
+                ? _readPersistentConfig()
+                : ReadPersistentConfig();
             var rawUrl = !string.IsNullOrWhiteSpace(persistedUrl)
                 ? persistedUrl
                 : (configuration?["Update:UpdateUrl"] ?? "");

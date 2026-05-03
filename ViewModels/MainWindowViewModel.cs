@@ -26,8 +26,6 @@ namespace DocuFiller.ViewModels
     {
         /// <summary>初始状态，尚未检查</summary>
         None,
-        /// <summary>便携版运行，不支持自动更新</summary>
-        PortableVersion,
         /// <summary>有新版本可用</summary>
         UpdateAvailable,
         /// <summary>当前已是最新版本</summary>
@@ -407,7 +405,6 @@ namespace DocuFiller.ViewModels
             {
                 var baseMessage = _updateStatus switch
                 {
-                    UpdateStatus.PortableVersion => "便携版不支持自动更新",
                     UpdateStatus.UpdateAvailable => "有新版本可用，点击更新",
                     UpdateStatus.UpToDate => "当前已是最新版本",
                     UpdateStatus.Checking => "正在检查更新...",
@@ -443,7 +440,6 @@ namespace DocuFiller.ViewModels
         {
             get => _updateStatus switch
             {
-                UpdateStatus.PortableVersion => Brushes.Gray,
                 UpdateStatus.UpdateAvailable => Brushes.Orange,
                 UpdateStatus.UpToDate => Brushes.Green,
                 UpdateStatus.Checking => Brushes.Gray,
@@ -1389,14 +1385,6 @@ namespace DocuFiller.ViewModels
             {
                 CurrentUpdateStatus = UpdateStatus.Checking;
 
-                // 便携版检测
-                if (!_updateService.IsInstalled)
-                {
-                    _logger.LogInformation("检测到便携版运行，更新状态: PortableVersion");
-                    CurrentUpdateStatus = UpdateStatus.PortableVersion;
-                    return;
-                }
-
                 // 更新源未配置
                 if (!_updateService.IsUpdateUrlConfigured)
                 {
@@ -1437,13 +1425,6 @@ namespace DocuFiller.ViewModels
                 case UpdateStatus.UpdateAvailable:
                     // 有新版本，直接走 CheckUpdateAsync 弹窗流程
                     await CheckUpdateAsync();
-                    break;
-                case UpdateStatus.PortableVersion:
-                    MessageBox.Show(
-                        "当前为便携版运行，不支持自动更新。\n如需自动更新功能，请安装正式版本。",
-                        "便携版提示",
-                        MessageBoxButton.OK,
-                        MessageBoxImage.Information);
                     break;
                 case UpdateStatus.Error:
                     // 检查失败时重试

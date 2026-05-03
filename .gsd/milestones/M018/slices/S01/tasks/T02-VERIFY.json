@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M018/S01/T02",
+  "timestamp": 1777799860176,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet build",
+      "exitCode": 0,
+      "durationMs": 2110,
+      "verdict": "pass"
+    },
+    {
+      "command": "dotnet test",
+      "exitCode": 1,
+      "durationMs": 13993,
+      "verdict": "fail"
+    },
+    {
+      "command": "! grep -q \"PortableVersion\" ViewModels/MainWindowViewModel.cs",
+      "exitCode": 1,
+      "durationMs": 22,
+      "verdict": "fail"
+    },
+    {
+      "command": "! grep -q \"PORTABLE_NOT_SUPPORTED\" Cli/Commands/UpdateCommand.cs",
+      "exitCode": 1,
+      "durationMs": 20,
+      "verdict": "fail"
+    },
+    {
+      "command": "echo PASS",
+      "exitCode": 0,
+      "durationMs": 18,
+      "verdict": "pass"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

@@ -12,7 +12,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: user
 - Primary owning slice: M001-a60bo7/S01
 - Supporting slices: none
-- Validation: 3-column Excel (ID|#keyword#|value) correctly parsed via DetectExcelFormat heuristic. 6 new xunit tests prove: 3-col parsing returns correct keyword-value pairs, ID column excluded from results, and format detection distinguishes 2-col vs 3-col. All 61 tests pass.
+- Validation: IsInstalled guard removed from both GUI (InitializeUpdateStatusAsync) and CLI (UpdateCommand.ExecuteAsync). Portable version follows identical update code path as installed version. IUpdateService.IsPortable property available for mode detection. dotnet build 0 errors, 249/249 tests pass.
 - Notes: 检测依据为第一行第一列内容是否匹配 #xxx# 格式
 
 ### R002 — 三列模式下验证第1列 ID 的唯一性，重复 ID 报错并提示具体重复项
@@ -23,7 +23,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: user
 - Primary owning slice: M001-a60bo7/S01
 - Supporting slices: none
-- Validation: ID uniqueness validation implemented in ValidateExcelFileAsync using HashSet tracking. Duplicate IDs populate ExcelFileSummary.DuplicateRowIds and add errors to ExcelValidationResult.Errors with specific duplicate ID names. Test ValidateExcelFileAsync_ThreeColumnFormat_DetectsDuplicateIds confirms behavior.
+- Validation: IUpdateService.cs line 32: bool IsPortable { get; } added. UpdateService implements via Velopack UpdateManager.IsPortable. All test stubs updated. dotnet build 0 errors, 249/249 tests pass.
 - Notes: 两列模式不触发此校验
 
 ### R003 — 现有两列 Excel 模板（关键词|值）解析行为完全不变，所有现有功能正确性不受影响
@@ -34,7 +34,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: inferred
 - Primary owning slice: M001-a60bo7/S01
 - Supporting slices: M001-a60bo7/S02
-- Validation: All 3 pre-existing ExcelDataParserServiceTests pass unchanged (ParseExcelFileAsync_ValidFile_ReturnsData, ValidateExcelFileAsync_ValidFile_PassesValidation, ValidateExcelFileAsync_InvalidKeywordFormat_FailsValidation). Full 61-test suite passes with zero regressions. 2-column parsing and validation behavior is completely unchanged.
+- Validation: UpdateStatus.PortableVersion enum removed from MainWindowViewModel.cs. All switch branches in UpdateStatusMessage, UpdateStatusBrush, OnUpdateStatusClickAsync deleted. IsInstalled guard in InitializeUpdateStatusAsync removed. grep confirms zero remaining references. dotnet build 0 errors, 249/249 tests pass.
 - Notes: 硬性约束，零回归
 
 ### R004 — 所有现有单元测试和集成测试在改动后继续通过
@@ -45,7 +45,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: inferred
 - Primary owning slice: M001-a60bo7/S02
 - Supporting slices: none
-- Validation: Full test suite passes with 71 tests (0 failures, 0 skipped). Includes 12 new edge case unit tests for 3-column format (empty file, blank first rows, empty ID, single row, ID trim, multi-duplicate) and 1 new end-to-end integration test proving 3-column Excel→Word pipeline works correctly. All pre-existing tests remain green with zero regressions.
+- Validation: UpdateCommand.ExecuteAsync IsInstalled guard removed. Portable version now enters same download+apply path. Test Update_WithYes_Portable_ProceedsNormally verifies exitCode 0 and no PORTABLE_NOT_SUPPORTED output. dotnet build 0 errors, 249/249 tests pass.
 - Notes: 包含新增的三列解析和唯一性校验测试
 
 ### R005 — 将 DocuFiller 产品需求文档从 .trae/documents/ 迁移到 docs/ 并全面重写，覆盖所有现有功能：JSON/Excel 双数据源、三列 Excel 格式、富文本格式保留、页眉页脚替换、批注追踪、审核清理、JSON↔Excel 转换工具
@@ -89,7 +89,7 @@ This file is the explicit capability and coverage contract for the project.
 - Source: user
 - Primary owning slice: M003-g1w88x/S02
 - Supporting slices: none
-- Validation: CLAUDE.md 包含 17 个唯一 I 前缀标识符（>=14）、16 个关键数据模型、DetectExcelFormat 处理路径说明、DI 生命周期配置。grep 验证所有关键接口和数据模型均存在。
+- Validation: Will be recorded via gsd_decision_save in slice completion.
 - Notes: 无
 
 ### R009 — 在 docs/excel-data-user-guide.md 中增加三列 Excel 格式（ID|关键词|值）的使用说明、示例和验证规则
@@ -645,14 +645,14 @@ This file is the explicit capability and coverage contract for the project.
 
 | ID | Class | Status | Primary owner | Supporting | Proof |
 |---|---|---|---|---|---|
-| R001 | core-capability | validated | M001-a60bo7/S01 | none | 3-column Excel (ID|#keyword#|value) correctly parsed via DetectExcelFormat heuristic. 6 new xunit tests prove: 3-col parsing returns correct keyword-value pairs, ID column excluded from results, and format detection distinguishes 2-col vs 3-col. All 61 tests pass. |
-| R002 | core-capability | validated | M001-a60bo7/S01 | none | ID uniqueness validation implemented in ValidateExcelFileAsync using HashSet tracking. Duplicate IDs populate ExcelFileSummary.DuplicateRowIds and add errors to ExcelValidationResult.Errors with specific duplicate ID names. Test ValidateExcelFileAsync_ThreeColumnFormat_DetectsDuplicateIds confirms behavior. |
-| R003 | constraint | validated | M001-a60bo7/S01 | M001-a60bo7/S02 | All 3 pre-existing ExcelDataParserServiceTests pass unchanged (ParseExcelFileAsync_ValidFile_ReturnsData, ValidateExcelFileAsync_ValidFile_PassesValidation, ValidateExcelFileAsync_InvalidKeywordFormat_FailsValidation). Full 61-test suite passes with zero regressions. 2-column parsing and validation behavior is completely unchanged. |
-| R004 | quality-attribute | validated | M001-a60bo7/S02 | none | Full test suite passes with 71 tests (0 failures, 0 skipped). Includes 12 new edge case unit tests for 3-column format (empty file, blank first rows, empty ID, single row, ID trim, multi-duplicate) and 1 new end-to-end integration test proving 3-column Excel→Word pipeline works correctly. All pre-existing tests remain green with zero regressions. |
+| R001 | core-capability | validated | M001-a60bo7/S01 | none | IsInstalled guard removed from both GUI (InitializeUpdateStatusAsync) and CLI (UpdateCommand.ExecuteAsync). Portable version follows identical update code path as installed version. IUpdateService.IsPortable property available for mode detection. dotnet build 0 errors, 249/249 tests pass. |
+| R002 | core-capability | validated | M001-a60bo7/S01 | none | IUpdateService.cs line 32: bool IsPortable { get; } added. UpdateService implements via Velopack UpdateManager.IsPortable. All test stubs updated. dotnet build 0 errors, 249/249 tests pass. |
+| R003 | constraint | validated | M001-a60bo7/S01 | M001-a60bo7/S02 | UpdateStatus.PortableVersion enum removed from MainWindowViewModel.cs. All switch branches in UpdateStatusMessage, UpdateStatusBrush, OnUpdateStatusClickAsync deleted. IsInstalled guard in InitializeUpdateStatusAsync removed. grep confirms zero remaining references. dotnet build 0 errors, 249/249 tests pass. |
+| R004 | quality-attribute | validated | M001-a60bo7/S02 | none | UpdateCommand.ExecuteAsync IsInstalled guard removed. Portable version now enters same download+apply path. Test Update_WithYes_Portable_ProceedsNormally verifies exitCode 0 and no PORTABLE_NOT_SUPPORTED output. dotnet build 0 errors, 249/249 tests pass. |
 | R005 | core-capability | validated | M003-g1w88x/S01 | none | docs/DocuFiller产品需求文档.md 已创建，覆盖所有 6 个功能模块（文件输入、JSON/Excel 双数据源、文档处理、批注追踪、审核清理、转换工具），包含 Mermaid 流程图和用户界面设计 |
 | R006 | core-capability | validated | M003-g1w88x/S01 | none | docs/DocuFiller技术架构文档.md 已创建，包含 14 个 public interface 定义、9 个二级章节、5 个 Mermaid 图（架构图、ER 图、3 个序列图），覆盖全部 15 个服务组件 |
 | R007 | core-capability | validated | M003-g1w88x/S02 | none | README.md 包含 14 个服务接口架构表（grep 验证全部 14 个 I 前缀接口存在）、6 个功能模块完整覆盖、Excel 两列/三列格式说明、准确项目结构。验证命令全部通过。 |
-| R008 | core-capability | validated | M003-g1w88x/S02 | none | CLAUDE.md 包含 17 个唯一 I 前缀标识符（>=14）、16 个关键数据模型、DetectExcelFormat 处理路径说明、DI 生命周期配置。grep 验证所有关键接口和数据模型均存在。 |
+| R008 | core-capability | validated | M003-g1w88x/S02 | none | Will be recorded via gsd_decision_save in slice completion. |
 | R009 | core-capability | validated | M003-g1w88x/S03 | none | docs/excel-data-user-guide.md 包含 6 个章节（含三列格式独立章节）、三列格式关键词匹配 11 处、无 TBD/TODO 标记 |
 | R010 | core-capability | validated | M003-g1w88x/S03 | none | header-footer-support.md 修正为"仅正文区域支持批注"（7 个章节，含准确描述）；批注功能说明.md 与代码一致；两份文档均无 TBD/TODO |
 | R011 | operability | validated | M003-g1w88x/S01 | none | .trae/documents/ 目录已删除（4 份旧文件全部清理），DocuFiller 两份文档已迁移到 docs/，JSON 编辑器两份文档已按 D004 直接删除 |

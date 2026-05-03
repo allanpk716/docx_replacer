@@ -63,11 +63,6 @@ public class UpdateCommand : ICliCommand
             }
 
             // --yes 模式：执行下载和重启
-            if (!_updateService.IsInstalled)
-            {
-                JsonlOutput.WriteError("便携版不支持自动更新，请使用安装版", "PORTABLE_NOT_SUPPORTED");
-                return 1;
-            }
 
             if (updateInfo == null)
             {

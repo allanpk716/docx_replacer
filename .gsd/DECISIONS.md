@@ -48,3 +48,6 @@
 | D040 |  | scope | 旧路径 update-config.json 不做自动迁移 | 不迁移旧路径配置，用户重新配置 | 用户明确表示不需要迁移，重新配置即可。迁移逻辑增加复杂度且只需执行一次。 | No | human |
 | D041 |  | architecture | 标题栏自定义按钮实现方式 | 使用 WindowChrome 将标题栏扩展到客户区，在 DockPanel 顶部放自定义标题栏含图钉按钮 | 标准 WPF 标题栏无法添加自定义按钮。WindowChrome 是最轻量方案，保留系统窗口行为（拖动、缩放、Aero Snap），不需要完全自绘窗口 | Yes | collaborative |
 | D042 |  | pattern | TextBox 拖放事件路由策略 | 将 Drop/DragOver/DragEnter/DragLeave 改为 PreviewDrop/PreviewDragOver/PreviewDragEnter/PreviewDragLeave 隧道事件 | WPF TextBox 内置拖放处理在冒泡阶段拦截外部文件拖放。隧道事件先于内置处理触发，e.Handled=true 阻止拦截。Border（清理区域）无内置处理，保持冒泡事件不变。 | No | agent |
+| D043 | M018 | scope | 便携版自动更新支持策略 | 移除所有便携版更新阻断，便携版和安装版走完全相同的更新代码路径，推翻 D029 | Velopack 设计上支持便携版自更新（IsPortable 属性、Portable.zip 包含 Update.exe），当前的阻断是应用层面不必要的守卫。用户明确要求便携版享有同等更新能力。 | No | collaborative |
+| D044 | M018 | scope | 推翻 D029（只支持安装版自动更新） | 推翻 D029，便携版与安装版享有完全相同的自动更新能力 | 用户确认便携版也应该支持自动更新。Velopack 技术上支持，无需限制。 | No | collaborative |
+| D045 |  | architecture | 推翻 D029（"只提供安装版的自动更新支持"） | 便携版享有与安装版完全一致的自动更新能力（检查→下载→应用→重启），不再有任何基于 IsInstalled 的流程阻断 | Velopack SDK 原生支持便携版自更新（IsPortable 属性、Portable.zip 包含 Update.exe）。D029 的原始假设（便携版不支持自动更新）已被证实不成立。移除所有阻断逻辑后，便携版走相同的更新代码路径，无需额外维护。 | Yes | agent |
