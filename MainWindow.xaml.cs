@@ -110,7 +110,7 @@ namespace DocuFiller
         /// <summary>
         /// 数据文件拖拽进入事件
         /// </summary>
-        private void DataPathTextBox_DragEnter(object sender, DragEventArgs e)
+        private void DataPathTextBox_PreviewDragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -143,7 +143,7 @@ namespace DocuFiller
         /// <summary>
         /// 数据文件拖拽离开事件
         /// </summary>
-        private void DataPathTextBox_DragLeave(object sender, DragEventArgs e)
+        private void DataPathTextBox_PreviewDragLeave(object sender, DragEventArgs e)
         {
             if (sender is System.Windows.Controls.TextBox textBox)
             {
@@ -156,7 +156,7 @@ namespace DocuFiller
         /// <summary>
         /// 数据文件拖拽悬停事件
         /// </summary>
-        private void DataPathTextBox_DragOver(object sender, DragEventArgs e)
+        private void DataPathTextBox_PreviewDragOver(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -180,7 +180,7 @@ namespace DocuFiller
         /// <summary>
         /// 数据文件拖拽放置事件
         /// </summary>
-        private void DataPathTextBox_Drop(object sender, DragEventArgs e)
+        private void DataPathTextBox_PreviewDrop(object sender, DragEventArgs e)
         {
             try
             {
@@ -251,7 +251,7 @@ namespace DocuFiller
         /// <summary>
         /// 模板文件拖拽进入事件
         /// </summary>
-        private void TemplatePathTextBox_DragEnter(object sender, DragEventArgs e)
+        private void TemplatePathTextBox_PreviewDragEnter(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -292,7 +292,7 @@ namespace DocuFiller
         /// <summary>
         /// 模板文件拖拽离开事件
         /// </summary>
-        private void TemplatePathTextBox_DragLeave(object sender, DragEventArgs e)
+        private void TemplatePathTextBox_PreviewDragLeave(object sender, DragEventArgs e)
         {
             if (sender is System.Windows.Controls.TextBox textBox)
             {
@@ -305,7 +305,7 @@ namespace DocuFiller
         /// <summary>
         /// 模板文件拖拽悬停事件
         /// </summary>
-        private void TemplatePathTextBox_DragOver(object sender, DragEventArgs e)
+        private void TemplatePathTextBox_PreviewDragOver(object sender, DragEventArgs e)
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
@@ -333,7 +333,7 @@ namespace DocuFiller
         /// <summary>
         /// 模板文件拖拽放置事件
         /// </summary>
-        private async void TemplatePathTextBox_Drop(object sender, DragEventArgs e)
+        private async void TemplatePathTextBox_PreviewDrop(object sender, DragEventArgs e)
         {
             try
             {

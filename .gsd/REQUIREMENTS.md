@@ -2,16 +2,6 @@
 
 This file is the explicit capability and coverage contract for the project.
 
-## Active
-
-### R058 — 关键词替换 tab 的模板文件和数据文件 TextBox 下方显示拖放提示文字（如"支持拖放文件到此"），引导用户发现拖放功能
-- Class: core-capability
-- Status: active
-- Description: 关键词替换 tab 的模板文件和数据文件 TextBox 下方显示拖放提示文字（如"支持拖放文件到此"），引导用户发现拖放功能
-- Why it matters: UI 紧凑化后去掉了独立的拖放 Border 区域，用户不知道路径 TextBox 支持拖放，误以为拖放功能丢失
-- Source: user
-- Primary owning slice: M016/S01
-
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -607,6 +597,24 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M016/S01
 - Validation: S01 added pin button (📌/📍) in custom WindowChrome title bar. ToggleTopmostCommand flips IsTopmost, code-behind syncs to Window.Topmost. Active state: pin icon at full opacity with "取消置顶" tooltip; inactive: lighter icon with "置顶窗口" tooltip. dotnet build passes.
 
+### R058 — 关键词替换 tab 的模板文件和数据文件 TextBox 下方显示拖放提示文字（如"支持拖放文件到此"），引导用户发现拖放功能
+- Class: core-capability
+- Status: validated
+- Description: 关键词替换 tab 的模板文件和数据文件 TextBox 下方显示拖放提示文字（如"支持拖放文件到此"），引导用户发现拖放功能
+- Why it matters: UI 紧凑化后去掉了独立的拖放 Border 区域，用户不知道路径 TextBox 支持拖放，误以为拖放功能丢失
+- Source: user
+- Primary owning slice: M016/S01
+- Validation: S01 added TextBlock hints (11px, #AAAAAA) below template TextBox ("提示：可将 .docx 文件或文件夹拖放到上方文本框") and data TextBox ("提示：可将 Excel 文件拖放到上方文本框") in keyword replacement tab. dotnet build passes.
+
+### R059 — 模板文件 TextBox 和数据文件 TextBox 必须能正确接收从资源管理器拖入的文件/文件夹。当前使用冒泡事件（Drop/DragOver）被 TextBox 内置拖放处理拦截，导致鼠标显示"禁止"图标。改为 Preview 隧道事件绕过内置处理。
+- Class: core-capability
+- Status: validated
+- Description: 模板文件 TextBox 和数据文件 TextBox 必须能正确接收从资源管理器拖入的文件/文件夹。当前使用冒泡事件（Drop/DragOver）被 TextBox 内置拖放处理拦截，导致鼠标显示"禁止"图标。改为 Preview 隧道事件绕过内置处理。
+- Why it matters: 拖放是路径输入的主要便捷方式，提示文字已引导用户使用此功能，但实际无法工作会严重影响体验可信度
+- Source: user
+- Primary owning slice: M017/S01
+- Validation: TemplatePathTextBox 和 DataPathTextBox 的 8 个冒泡拖放事件已改为 Preview 隧道版本（PreviewDrop/PreviewDragOver/PreviewDragEnter/PreviewDragLeave），清理区域保留冒泡事件不变。dotnet build 0 错误 0 警告。需人工 UAT 确认拖放视觉反馈和路径填入功能正常。
+
 ## Deferred
 
 ### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
@@ -694,11 +702,12 @@ This file is the explicit capability and coverage contract for the project.
 | R055 | core-capability | validated | M012-li0ip5/S01 | none | Tab 2 uses same DockPanel structure, same font sizes (12-14px), same label width (65px) and button sizes as Tab 1. Output settings GroupBox removed, replaced with inline layout. CleanupDropZoneBorder compressed (Padding 30→12). |
 | R056 | core-capability | validated | M013-ueix00/S01 | none | UpdateService.GetPersistentConfigPath() and UpdateSettingsViewModel.ReadPersistentConfig() both use %USERPROFILE%\.docx_replacer\update-config.json. Directory auto-created on first write. dotnet build 0 errors, dotnet test 244 pass. No dependency on Update.exe or Velopack install directory. |
 | R057 | primary-user-loop | validated | M016/S01 | none | S01 added pin button (📌/📍) in custom WindowChrome title bar. ToggleTopmostCommand flips IsTopmost, code-behind syncs to Window.Topmost. Active state: pin icon at full opacity with "取消置顶" tooltip; inactive: lighter icon with "置顶窗口" tooltip. dotnet build passes. |
-| R058 | core-capability | active | M016/S01 | none | unmapped |
+| R058 | core-capability | validated | M016/S01 | none | S01 added TextBlock hints (11px, #AAAAAA) below template TextBox ("提示：可将 .docx 文件或文件夹拖放到上方文本框") and data TextBox ("提示：可将 Excel 文件拖放到上方文本框") in keyword replacement tab. dotnet build passes. |
+| R059 | core-capability | validated | M017/S01 | none | TemplatePathTextBox 和 DataPathTextBox 的 8 个冒泡拖放事件已改为 Preview 隧道版本（PreviewDrop/PreviewDragOver/PreviewDragEnter/PreviewDragLeave），清理区域保留冒泡事件不变。dotnet build 0 错误 0 警告。需人工 UAT 确认拖放视觉反馈和路径填入功能正常。 |
 
 ## Coverage Summary
 
-- Active requirements: 1
-- Mapped to slices: 1
-- Validated: 55 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057)
+- Active requirements: 0
+- Mapped to slices: 0
+- Validated: 57 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059)
 - Unmapped active requirements: 0

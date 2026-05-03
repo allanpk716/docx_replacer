@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M016",
-      "label": "M016: 窗口置顶开关 + 拖放提示",
+      "id": "milestone:M017",
+      "label": "M017: 修复 TextBox 拖放被拦截",
       "type": "milestone",
-      "description": "Active milestone: M016",
+      "description": "Active milestone: M017",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -819,6 +819,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M016",
+      "label": "M016: 窗口置顶开关 + 拖放提示",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-ROADMAP.md"
+    },
+    {
       "id": "slice:M016:S01",
       "label": "S01: 窗口置顶按钮 + 拖放提示",
       "type": "slice",
@@ -828,6 +835,19 @@
     {
       "id": "task:M016:S01:T01",
       "label": "T01: WindowChrome 标题栏 + 图钉按钮 + 拖放提示",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M017:S01",
+      "label": "S01: TextBox 拖放事件改为 Preview 隧道",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M017/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M017:S01:T01",
+      "label": "T01: 将 TextBox 拖放事件改为 Preview 隧道路由",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -902,6 +922,110 @@
       "description": "Source: S01-SUMMARY.md/What Happened",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M015/M015-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:1",
+      "label": "**WindowChrome for custom title bar**: Chose WindowChrome with WindowStyle=None over full chromeless window to add pin button. Preserves system resize, Aero Snap, and window dragging while allowing custom interactive elements. Avoids the heavy cost of reimplementing system window behaviors.",
+      "type": "decision",
+      "description": "Source: M016-CONTEXT.md/Architectural Decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:2",
+      "label": "**Emoji icons instead of resource files**: Used emoji (📌/📍) with opacity toggle for pin button states rather than icon resource files. Zero-dependency, no build complexity, sufficient visual distinction for an internal desktop tool.",
+      "type": "decision",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:3",
+      "label": "**Code-behind PropertyChanged bridge for Window.Topmost**: Bound IsTopmost via ViewModel property + code-behind PropertyChanged subscription rather than attempting direct XAML binding. Window.Topmost is not a dependency property and cannot be XAML-bound.",
+      "type": "decision",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:4",
+      "label": "**Window.Topmost is not a dependency property**: Cannot be directly bound in XAML. The standard workaround is a code-behind PropertyChanged handler that subscribes to the ViewModel property and sets Window.Topmost programmatically.",
+      "type": "decision",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:5",
+      "label": "**WindowChrome preserves system window behaviors**: Unlike fully chromeless windows (WindowStyle=None + AllowsTransparency=True), WindowChrome retains resize handles, Aero Snap, and title-bar dragging. The only caveat is that custom title bar elements need IsHitTestVisibleInChrome=True to be interactive.",
+      "type": "decision",
+      "description": "Source: M016-CONTEXT.md/Architectural Decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:6",
+      "label": "**WindowChrome custom title bar pattern**: WindowStyle=None + WindowChrome GlassFrameThickness=-1 with custom DockPanel containing app title and buttons. Interactive elements must set `WindowChrome.IsHitTestVisibleInChrome=\"True\"`. Resize and Aero Snap are preserved without custom code.",
+      "type": "decision",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M016:7",
+      "label": "**Code-behind bridging for non-bindable Window properties**: When a Window property is not a dependency property (e.g., Topmost, WindowState), expose a bindable property on the ViewModel and sync it via code-behind `PropertyChanged` subscription in the Window's Loaded/Initialized event.",
+      "type": "decision",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M016:1",
+      "label": "**Window.Topmost is not a dependency property**: Cannot be directly bound in XAML. The standard workaround is a code-behind PropertyChanged handler that subscribes to the ViewModel property and sets Window.Topmost programmatically.",
+      "type": "lesson",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M016:2",
+      "label": "**WindowChrome preserves system window behaviors**: Unlike fully chromeless windows (WindowStyle=None + AllowsTransparency=True), WindowChrome retains resize handles, Aero Snap, and title-bar dragging. The only caveat is that custom title bar elements need IsHitTestVisibleInChrome=True to be interactive.",
+      "type": "lesson",
+      "description": "Source: M016-CONTEXT.md/Architectural Decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M016:3",
+      "label": "**WindowChrome custom title bar pattern**: WindowStyle=None + WindowChrome GlassFrameThickness=-1 with custom DockPanel containing app title and buttons. Interactive elements must set `WindowChrome.IsHitTestVisibleInChrome=\"True\"`. Resize and Aero Snap are preserved without custom code.",
+      "type": "lesson",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M016:4",
+      "label": "**Code-behind bridging for non-bindable Window properties**: When a Window property is not a dependency property (e.g., Topmost, WindowState), expose a bindable property on the ViewModel and sync it via code-behind `PropertyChanged` subscription in the Window's Loaded/Initialized event.",
+      "type": "lesson",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M016:1",
+      "label": "**WindowChrome custom title bar pattern**: WindowStyle=None + WindowChrome GlassFrameThickness=-1 with custom DockPanel containing app title and buttons. Interactive elements must set `WindowChrome.IsHitTestVisibleInChrome=\"True\"`. Resize and Aero Snap are preserved without custom code.",
+      "type": "pattern",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M016:2",
+      "label": "**Code-behind bridging for non-bindable Window properties**: When a Window property is not a dependency property (e.g., Topmost, WindowState), expose a bindable property on the ViewModel and sync it via code-behind `PropertyChanged` subscription in the Window's Loaded/Initialized event.",
+      "type": "pattern",
+      "description": "Source: M016/slices/S01/S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M016/M016-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -1608,6 +1732,18 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M017",
+      "to": "slice:M017:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M017:S01",
+      "to": "task:M017:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -1660,7 +1796,85 @@
       "to": "pattern:M015:1",
       "type": "relates_to",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "decision:M016:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "lesson:M016:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "lesson:M016:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "lesson:M016:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "lesson:M016:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "pattern:M016:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M016",
+      "to": "pattern:M016:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-03T02:27:28.497Z"
+  "builtAt": "2026-05-03T04:20:08.173Z"
 }

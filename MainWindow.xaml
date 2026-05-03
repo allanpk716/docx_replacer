@@ -235,10 +235,10 @@
                                  Text="{Binding TemplatePath, UpdateSourceTrigger=PropertyChanged}"
                                  IsReadOnly="True" FontSize="12" Margin="0,0,5,0"
                                  AllowDrop="True"
-                                 Drop="TemplatePathTextBox_Drop"
-                                 DragEnter="TemplatePathTextBox_DragEnter"
-                                 DragLeave="TemplatePathTextBox_DragLeave"
-                                 DragOver="TemplatePathTextBox_DragOver"/>
+                                 PreviewDrop="TemplatePathTextBox_PreviewDrop"
+                                 PreviewDragEnter="TemplatePathTextBox_PreviewDragEnter"
+                                 PreviewDragLeave="TemplatePathTextBox_PreviewDragLeave"
+                                 PreviewDragOver="TemplatePathTextBox_PreviewDragOver"/>
                         <Button Grid.Column="2" Content="浏览" ToolTip="选择模板文件"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding BrowseTemplateCommand}"
@@ -284,10 +284,10 @@
                                  Text="{Binding DataPath, UpdateSourceTrigger=PropertyChanged}"
                                  IsReadOnly="True" FontSize="12" Margin="0,0,5,0"
                                  AllowDrop="True"
-                                 Drop="DataPathTextBox_Drop"
-                                 DragEnter="DataPathTextBox_DragEnter"
-                                 DragLeave="DataPathTextBox_DragLeave"
-                                 DragOver="DataPathTextBox_DragOver"/>
+                                 PreviewDrop="DataPathTextBox_PreviewDrop"
+                                 PreviewDragEnter="DataPathTextBox_PreviewDragEnter"
+                                 PreviewDragLeave="DataPathTextBox_PreviewDragLeave"
+                                 PreviewDragOver="DataPathTextBox_PreviewDragOver"/>
                         <Button Grid.Column="2" Content="浏览"
                                 Style="{StaticResource PrimaryButton}"
                                 Command="{Binding BrowseDataCommand}"
