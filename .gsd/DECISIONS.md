@@ -51,3 +51,5 @@
 | D043 | M018 | scope | 便携版自动更新支持策略 | 移除所有便携版更新阻断，便携版和安装版走完全相同的更新代码路径，推翻 D029 | Velopack 设计上支持便携版自更新（IsPortable 属性、Portable.zip 包含 Update.exe），当前的阻断是应用层面不必要的守卫。用户明确要求便携版享有同等更新能力。 | No | collaborative |
 | D044 | M018 | scope | 推翻 D029（只支持安装版自动更新） | 推翻 D029，便携版与安装版享有完全相同的自动更新能力 | 用户确认便携版也应该支持自动更新。Velopack 技术上支持，无需限制。 | No | collaborative |
 | D045 |  | architecture | 推翻 D029（"只提供安装版的自动更新支持"） | 便携版享有与安装版完全一致的自动更新能力（检查→下载→应用→重启），不再有任何基于 IsInstalled 的流程阻断 | Velopack SDK 原生支持便携版自更新（IsPortable 属性、Portable.zip 包含 Update.exe）。D029 的原始假设（便携版不支持自动更新）已被证实不成立。移除所有阻断逻辑后，便携版走相同的更新代码路径，无需额外维护。 | Yes | agent |
+| D046 |  | pattern | ProgressBar 模板修复方式 | 在 ModernProgressBarStyle 模板中添加 PART_Indicator（WPF 标准命名），保持圆角视觉风格 | WPF ProgressBar 通过 PART_Indicator 显示填充进度。当前模板只有 PART_Track 导致填充不可见。标准修复方式，无需自定义动画。 | No | collaborative |
+| D047 |  | pattern | 图标生成方式 | Python + Pillow 程序化绘制（文档页面 + 填充箭头意象），导出多尺寸 .ico | 不依赖外部设计工具或在线服务，可重复生成。DocuFiller 定位（文档填充）有明确视觉隐喻。 | No | collaborative |

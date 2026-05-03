@@ -8,6 +8,7 @@
         SizeToContent="Height"
         Width="450"
         WindowStartupLocation="CenterOwner"
+        Icon="pack://application:,,,/Resources/app.ico"
         ResizeMode="NoResize">
     <Grid Margin="20">
         <Grid.RowDefinitions>

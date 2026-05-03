@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-03T10:58:17Z | Files: 165 | Described: 0/165
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-03T10:58:17Z","fingerprint":"376ebb9335f5d3a29ce5042963bbe8a099a39eaa","fileCount":165,"truncated":false} -->
+Generated: 2026-05-03T11:49:29Z | Files: 166 | Described: 0/166
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-03T11:49:29Z","fingerprint":"db252df153cf49a7df08f7484f175cb63fdef2e3","fileCount":166,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
@@ -16,6 +16,7 @@ Generated: 2026-05-03T10:58:17Z | Files: 165 | Described: 0/165
 - `Directory.Build.props`
 - `DocuFiller.csproj`
 - `DocuFiller.sln`
+- `generate_icon.py`
 - `MainWindow.xaml`
 - `MainWindow.xaml.cs`
 - `Program.cs`

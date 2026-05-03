@@ -2,32 +2,26 @@
 
 ## What This Is
 
-DocuFiller 是一个基于 .NET 8 + WPF 的桌面应用程序，提供 Word 文档批量填充（Excel 数据源→内容控件替换）、富文本格式替换（上标/下标）、批注追踪、审核清理四大功能。支持 GUI（WPF）和 CLI（JSONL 输出）双模式。通过 Velopack 实现自动更新，支持内网 Go 服务器和 GitHub Releases 双更新源。
+DocuFiller 是一个 .NET 8 + WPF 桌面应用，提供 Word 文档批量填充、富文本替换、批注追踪和审核清理功能。支持 GUI（WPF）和 CLI 双模式运行。
 
 ## Core Value
 
-让用户用 Excel 数据批量填充 Word 模板中的内容控件，生成格式正确的文档，全程可见、可控、可回溯。
+根据 Excel 数据自动填充 Word 模板中的内容控件，保留格式和表格结构。
 
 ## Current State
 
-- GUI + CLI 双模式完整可用
-- Excel 两列/三列格式自动检测
-- 正文/页眉/页脚内容控件替换 + 批注追踪
-- 文档清理（去批注、解包内容控件）
-- Velopack 自动更新（安装版 + 便携版：内网 Go + GitHub Releases 双更新源）
-- 内网 Go 更新服务器（update-server/）
-- E2E 更新测试脚本（安装版 + 便携版：本地 HTTP + Go 服务器）
+已发布至 v1.8.0，包含完整的文档填充、清理、CLI 和自动更新（Velopack + 内网 Go 服务器 + GitHub Releases）功能。
 
 ## Architecture / Key Patterns
 
-- MVVM + 依赖注入（Microsoft.Extensions.DependencyInjection）
-- Singleton 服务为主，清理服务/窗口为 Transient
-- OpenXML SDK 操作 Word 文档
-- EPPlus 操作 Excel
-- Velopack 管理安装/更新/便携版打包
-- CLI 通过 AttachConsole(-1) P/Invoke 输出到父控制台
-- JSONL 统一输出格式
-- 持久化配置：`%USERPROFILE%\.docx_replacer\update-config.json` 独立于安装目录
+- **框架**：.NET 8 + WPF，MVVM 模式 + DI（Microsoft.Extensions.DependencyInjection）
+- **文档处理**：DocumentFormat.OpenXml SDK 操作 Word 文档
+- **数据源**：EPPlus 解析 Excel（两列/三列自动检测）
+- **CLI**：Program.cs 双模式入口，JSONL 输出
+- **自动更新**：Velopack SDK，双源（内网 Go 服务器 + GitHub Releases）
+- **窗口样式**：WindowChrome 自定义标题栏，无系统边框
+- **进度条**：ModernProgressBarStyle 模板包含 PART_Track + PART_Indicator 双命名元素，符合 WPF 标准
+- **应用图标**：所有窗口和 exe 使用统一的 DocuFiller 专属图标（pack URI 引用），csproj ApplicationIcon 嵌入 exe 资源
 
 ## Capability Contract
 
@@ -35,4 +29,4 @@ See `.gsd/REQUIREMENTS.md` for the explicit capability contract, requirement sta
 
 ## Milestone Sequence
 
-- [x] M001-M018: 历史里程碑（核心功能、CLI、更新系统、UI 优化、便携版更新支持等）
+- [x] M001–M019: 已完成的历史里程碑
