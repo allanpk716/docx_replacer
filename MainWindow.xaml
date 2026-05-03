@@ -21,8 +21,7 @@
     
     <DockPanel>
         <!-- 自定义标题栏 -->
-        <Border DockPanel.Dock="Top" Background="#F0F0F0" Height="32"
-                WindowChrome.IsHitTestVisibleInChrome="True">
+        <Border DockPanel.Dock="Top" Background="#F0F0F0" Height="32">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
