@@ -123,3 +123,4 @@ tmp/
 nuget.config
 build_output.txt
 .gsd/debug/
+/.gsd/release-last-run.md
