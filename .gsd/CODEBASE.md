@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-04T12:09:06Z","fingerprint":"e381d606f04a0d91915d2dbd522bb9c9a5bd6fc9","fileCount":171,"truncated":false} -->
+Generated: 2026-05-04T12:12:34Z | Files: 175 | Described: 0/175
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-04T12:12:34Z","fingerprint":"07faff804aee567d89c86c2e0c6111ee0c47b6e1","fileCount":175,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
@@ -13,7 +13,6 @@ Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
 - `appsettings.Development.json`
 - `appsettings.json`
 - `CHANGELOG.md`
-- `CLAUDE.md`
 - `Directory.Build.props`
 - `DocuFiller.csproj`
 - `DocuFiller.sln`
@@ -37,6 +36,9 @@ Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
 
 ### .trae/rules/
 - `.trae/rules/project_rules.md`
+
+### Behaviors/
+- `Behaviors/FileDragDrop.cs`
 
 ### Cli/
 - `Cli/CliRunner.cs`
@@ -141,6 +143,7 @@ Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
 
 ### Tests/DocuFiller.Tests/
 - `Tests/DocuFiller.Tests/HeaderFooterIntegrationTests.cs`
+- `Tests/DocuFiller.Tests/UpdateStatusViewModelTests.cs`
 
 ### Tests/DocuFiller.Tests/Cli/
 - `Tests/DocuFiller.Tests/Cli/CliRunnerTests.cs`
@@ -156,6 +159,9 @@ Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
 - `Tests/DocuFiller.Tests/Services/SafeFormattedContentReplacerTests.cs`
 - `Tests/DocuFiller.Tests/Services/SafeTextReplacerTests.cs`
 - `Tests/DocuFiller.Tests/Services/TemplateCacheServiceTests.cs`
+
+### Tests/DocuFiller.Tests/Stubs/
+- `Tests/DocuFiller.Tests/Stubs/WindowStubs.cs`
 
 ### Tests/DocuFiller.Tests/Utils/
 - `Tests/DocuFiller.Tests/Utils/OpenXmlTableCellHelperTests.cs`
@@ -186,10 +192,12 @@ Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
 
 ### ViewModels/
 - `ViewModels/DownloadProgressViewModel.cs`
+- `ViewModels/FillViewModel.cs`
 - `ViewModels/MainWindowViewModel.cs`
 - `ViewModels/ObservableObject.cs`
 - `ViewModels/RelayCommand.cs`
 - `ViewModels/UpdateSettingsViewModel.cs`
+- `ViewModels/UpdateStatusViewModel.cs`
 
 ### docs/
 - `docs/excel-data-user-guide.md`

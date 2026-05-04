@@ -120,3 +120,6 @@ coverage/
 tmp/
 /
 tmp/
+nuget.config
+build_output.txt
+.gsd/debug/
