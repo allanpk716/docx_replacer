@@ -1252,6 +1252,37 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "slice:M022:S03",
+      "label": "S03: 纯文献调研（Avalonia/Blazor/Web/MAUI）",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M022:S03:T01",
+      "label": "T01: 撰写 Avalonia 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S03:T02",
+      "label": "T02: 撰写 Blazor Hybrid 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S03:T03",
+      "label": "T03: 撰写纯 Web 应用方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S03:T04",
+      "label": "T04: 撰写 .NET MAUI 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
       "id": "decision:M015:1",
       "label": "使用 SimpleWebSource + CDN URL 替代 GithubSource，消除 API rate limit。GitHub 模式下 `new GithubSource(\"allanpk716/docx_replacer\")` 替换为 `new SimpleWebSource(\"https://github.com/allanpk716/docx_replacer/releases/latest/download/\")`，保持 UpdateSourceType 枚举不变确保上层透明。",
       "type": "decision",
@@ -3264,6 +3295,36 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M022",
+      "to": "slice:M022:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -3984,5 +4045,5 @@
       "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-04T16:19:36.398Z"
+  "builtAt": "2026-05-04T16:50:13.405Z"
 }
