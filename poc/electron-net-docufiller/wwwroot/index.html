@@ -4,140 +4,59 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DocuFiller Electron.NET PoC</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-            color: #e0e0e0;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-        }
-        .container {
-            max-width: 600px;
-            width: 100%;
-            text-align: center;
-        }
-        h1 {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(90deg, #e94560, #533483);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .subtitle {
-            font-size: 1rem;
-            color: #8899aa;
-            margin-bottom: 2rem;
-        }
-        .card {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            backdrop-filter: blur(10px);
-        }
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 2rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s;
-            color: white;
-            background: linear-gradient(90deg, #e94560, #533483);
-        }
-        .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(233,69,96,0.3); }
-        .btn:active { transform: translateY(0); }
-        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-        #status { margin-top: 1rem; font-size: 0.9rem; color: #8899aa; min-height: 1.5em; }
-        .progress-bar {
-            width: 100%;
-            height: 8px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 4px;
-            margin-top: 1rem;
-            overflow: hidden;
-            display: none;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #e94560, #533483);
-            border-radius: 4px;
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-        .tech-info {
-            font-size: 0.8rem;
-            color: #556677;
-            margin-top: 2rem;
-        }
-    </style>
+    <link rel="stylesheet" href="/css/app.css" />
 </head>
 <body>
     <div class="container">
         <h1>DocuFiller PoC</h1>
         <p class="subtitle">Electron.NET + ASP.NET Core 技术验证</p>
 
+        <!-- File Selection Card -->
         <div class="card">
-            <button class="btn" id="selectBtn" onclick="selectFile()">选择文档</button>
-            <div id="status">就绪</div>
-            <div class="progress-bar" id="progressBar">
-                <div class="progress-fill" id="progressFill"></div>
+            <div class="card-title">📄 文件选择 (原生对话框)</div>
+            <div class="btn-group">
+                <button class="btn" id="selectBtn">📂 选择文档</button>
+                <button class="btn btn-secondary" id="processBtn" disabled>🚀 开始处理</button>
+                <button class="btn btn-secondary" id="cancelBtn" disabled>⏹ 取消</button>
+            </div>
+            <div id="fileInfo" class="file-info">
+                <span class="file-name" id="fileName"></span><br/>
+                <span id="filePath"></span>
+            </div>
+            <div id="status" class="status-text">就绪 — 请选择一个文档文件</div>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="card">
+            <div class="card-title">📊 处理进度 (SSE 实时更新)</div>
+            <div id="progressSection" class="progress-section">
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressStep">准备中...</span>
+                    <span class="progress-percent" id="progressPercent">0%</span>
+                </div>
             </div>
         </div>
 
+        <!-- Log Card -->
+        <div class="card">
+            <div class="card-title">📋 处理日志</div>
+            <div class="log-area" id="logArea"></div>
+        </div>
+
+        <!-- IPC Status Bar -->
+        <div class="ipc-status">
+            <span class="ipc-dot" id="ipcDot"></span>
+            <span id="ipcLabel">Electron IPC: 检测中...</span>
+        </div>
+
         <div class="tech-info">
-            Electron.NET PoC | ASP.NET Core 8 | IPC Bridge Test
+            Electron.NET PoC | ASP.NET Core 8 | SSE Progress | IPC Bridge
         </div>
     </div>
 
-    <script>
-        const statusEl = document.getElementById('status');
-        const progressBar = document.getElementById('progressBar');
-        const progressFill = document.getElementById('progressFill');
-        const selectBtn = document.getElementById('selectBtn');
-
-        async function selectFile() {
-            selectBtn.disabled = true;
-            statusEl.textContent = '正在打开文件对话框...';
-            try {
-                const resp = await fetch('/api/select-file');
-                const data = await resp.json();
-                if (data.path) {
-                    statusEl.textContent = '已选择: ' + data.path;
-                    simulateProcessing(data.path);
-                } else {
-                    statusEl.textContent = data.message || '未选择文件';
-                    selectBtn.disabled = false;
-                }
-            } catch (err) {
-                statusEl.textContent = '错误: ' + err.message;
-                selectBtn.disabled = false;
-            }
-        }
-
-        function simulateProcessing(filename) {
-            progressBar.style.display = 'block';
-            statusEl.textContent = '正在处理: ' + filename;
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += Math.random() * 15;
-                if (progress >= 100) {
-                    progress = 100;
-                    clearInterval(interval);
-                    statusEl.textContent = '处理完成! (模拟)';
-                    selectBtn.disabled = false;
-                }
-                progressFill.style.width = progress + '%';
-            }, 200);
-        }
-    </script>
+    <script src="/js/app.js"></script>
 </body>
 </html>
