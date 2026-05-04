@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M021/S05/T02",
+  "timestamp": 1777895085875,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "dotnet build DocuFiller.csproj --no-restore",
+      "exitCode": 0,
+      "durationMs": 1519,
+      "verdict": "pass"
+    },
+    {
+      "command": "dotnet test Tests/DocuFiller.Tests/DocuFiller.Tests.csproj --no-restore --verbosity minimal",
+      "exitCode": 1,
+      "durationMs": 195,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

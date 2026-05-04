@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "M021",
+  "sliceId": "S01",
+  "timestamp": 1777889005329,
+  "status": "fail",
+  "durationMs": 4,
+  "checks": [
+    {
+      "category": "file",
+      "target": "ViewModels/DownloadProgressViewModel.cs",
+      "passed": false,
+      "message": "Task T01 references 'ViewModels/DownloadProgressViewModel.cs' which doesn't exist and isn't created by prior or same-task outputs",
+      "blocking": true
+    }
+  ]
+}

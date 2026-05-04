@@ -153,6 +153,8 @@ namespace DocuFiller
             services.AddSingleton<ITemplateCacheService, TemplateCacheService>();
 
             // 注册ViewModels
+            services.AddTransient<FillViewModel>();
+            services.AddTransient<UpdateStatusViewModel>();
             services.AddTransient<MainWindowViewModel>();
 
             // 注册主窗口

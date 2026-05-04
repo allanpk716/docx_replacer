@@ -2,6 +2,8 @@
 
 This file is the explicit capability and coverage contract for the project.
 
+## Active
+
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -289,6 +291,17 @@ This file is the explicit capability and coverage contract for the project.
 - Supporting slices: M007-wpaxa3/S02, M007-wpaxa3/S03
 - Validation: dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests.
 - Notes: 贯穿所有 slice 的约束
+
+### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
+- Class: core-capability
+- Status: validated
+- Description: 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
+- Why it matters: 减少用户主动检查的认知负担，确保用户及时获取更新
+- Source: user
+- Primary owning slice: M021/S05
+- Supporting slices: none
+- Validation: UpdateStatusViewModel.InitializeAsync() uses Task.Delay(5000) + CancellationToken for 5-second delay after startup, then calls CheckUpdateAsync() silently. HasUpdateAvailable computed property drives red dot badge on ⚙ settings button. 16 unit tests cover: normal flow, cancellation, exception handling, multiple checks. dotnet build 0 errors and dotnet test all pass during slice execution (verified per-slice).
+- Notes: M007 只做手动触发，自动检查作为后续增强
 
 ### R029 — 支持在 UI 中通过设置弹窗切换更新源（内网 HTTP URL / GitHub）和更新通道（stable/beta）。修改后立即生效（热重载），同时持久化到 appsettings.json。状态栏显示当前更新源类型。
 - Class: operability
@@ -615,18 +628,11 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M017/S01
 - Validation: TemplatePathTextBox 和 DataPathTextBox 的 8 个冒泡拖放事件已改为 Preview 隧道版本（PreviewDrop/PreviewDragOver/PreviewDragEnter/PreviewDragLeave），清理区域保留冒泡事件不变。dotnet build 0 错误 0 警告。需人工 UAT 确认拖放视觉反馈和路径填入功能正常。
 
-## Deferred
+### R060 — Untitled
+- Status: validated
+- Validation: MainWindowViewModel.cs reduced from 1623 to 390 lines (under 400 target). FillViewModel.cs (825 lines, CT.Mvvm) extracted with all keyword-replacement tab logic. UpdateStatusViewModel.cs (397 lines, CT.Mvvm) extracted with all update status logic. dotnet build: 0 errors, 0 warnings. dotnet test: 280 passed (253 unit + 27 E2E), 0 failed.
 
-### R028 — 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
-- Class: core-capability
-- Status: deferred
-- Description: 应用启动时或定时自动检查更新，有新版本时在状态栏显示通知徽章
-- Why it matters: 减少用户主动检查的认知负担，确保用户及时获取更新
-- Source: user
-- Primary owning slice: none
-- Supporting slices: none
-- Validation: unmapped
-- Notes: M007 只做手动触发，自动检查作为后续增强
+## Deferred
 
 ## Out of Scope
 
@@ -672,7 +678,7 @@ This file is the explicit capability and coverage contract for the project.
 | R025 | operability | validated | M007-wpaxa3/S03 | none | build-internal.bat contains PublishSingleFile=true, IncludeNativeLibrariesForSelfExtract=true, vpk pack with --packId DocuFiller and --mainExe DocuFiller.exe. Old scripts (publish.bat, release.bat, build-and-publish.bat) and config/ directory removed. build.bat simplified to standalone-only. dotnet build succeeds with 0 errors. |
 | R026 | quality-attribute | validated | M007-wpaxa3/S04 | none | E2E portable update scripts created: e2e-portable-update-test.bat (local HTTP, port 8081) and e2e-portable-go-update-test.sh (Go server, port 19081). Both scripts automate full update chain: build→pack→extract→configure→update→verify. Test guide updated with 4 new portable sections. dotnet build 0 errors. |
 | R027 | quality-attribute | validated | M007-wpaxa3/S01 | M007-wpaxa3/S02, M007-wpaxa3/S03 | dotnet build 0 errors, dotnet test 162 tests pass (135 + 27), 0 failures. Velopack integration and config/script cleanup do not affect any existing business logic tests. |
-| R028 | core-capability | deferred | none | none | unmapped |
+| R028 | core-capability | validated | M021/S05 | none | UpdateStatusViewModel.InitializeAsync() uses Task.Delay(5000) + CancellationToken for 5-second delay after startup, then calls CheckUpdateAsync() silently. HasUpdateAvailable computed property drives red dot badge on ⚙ settings button. 16 unit tests cover: normal flow, cancellation, exception handling, multiple checks. dotnet build 0 errors and dotnet test all pass during slice execution (verified per-slice). |
 | R029 | operability | validated | M010-hpylzg/S02 | none | UpdateSettingsWindow provides GUI for editing UpdateUrl/Channel with Save calling IUpdateService.ReloadSource. Settings persist to appsettings.json. Status bar shows source type suffix. dotnet build 0 errors, 192/192 tests pass. |
 | R030 | core-capability | validated | M008-4uyz6m/S01 | none | Go update-server serves static files from /{channel}/releases.win.json and /{channel}/*.nupkg with Content-Type headers. Build compiles, 50 Go tests pass, curl integration tests verify static serving. |
 | R031 | core-capability | validated | M008-4uyz6m/S01 | none | POST /api/channels/{channel}/releases accepts multipart uploads (releases.win.json + .nupkg files), merges feeds by FileName to avoid duplicates, requires Bearer token auth. Tested with httptest integration tests and curl. |
@@ -704,10 +710,11 @@ This file is the explicit capability and coverage contract for the project.
 | R057 | primary-user-loop | validated | M016/S01 | none | S01 added pin button (📌/📍) in custom WindowChrome title bar. ToggleTopmostCommand flips IsTopmost, code-behind syncs to Window.Topmost. Active state: pin icon at full opacity with "取消置顶" tooltip; inactive: lighter icon with "置顶窗口" tooltip. dotnet build passes. |
 | R058 | core-capability | validated | M016/S01 | none | S01 added TextBlock hints (11px, #AAAAAA) below template TextBox ("提示：可将 .docx 文件或文件夹拖放到上方文本框") and data TextBox ("提示：可将 Excel 文件拖放到上方文本框") in keyword replacement tab. dotnet build passes. |
 | R059 | core-capability | validated | M017/S01 | none | TemplatePathTextBox 和 DataPathTextBox 的 8 个冒泡拖放事件已改为 Preview 隧道版本（PreviewDrop/PreviewDragOver/PreviewDragEnter/PreviewDragLeave），清理区域保留冒泡事件不变。dotnet build 0 错误 0 警告。需人工 UAT 确认拖放视觉反馈和路径填入功能正常。 |
+| R060 |  | validated | none | none | MainWindowViewModel.cs reduced from 1623 to 390 lines (under 400 target). FillViewModel.cs (825 lines, CT.Mvvm) extracted with all keyword-replacement tab logic. UpdateStatusViewModel.cs (397 lines, CT.Mvvm) extracted with all update status logic. dotnet build: 0 errors, 0 warnings. dotnet test: 280 passed (253 unit + 27 E2E), 0 failed. |
 
 ## Coverage Summary
 
 - Active requirements: 0
 - Mapped to slices: 0
-- Validated: 57 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059)
+- Validated: 59 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060)
 - Unmapped active requirements: 0

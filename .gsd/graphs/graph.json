@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M020",
-      "label": "M020: 代码质量与技术债清理",
+      "id": "milestone:M021",
+      "label": "M021: 第二轮重构 — ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步",
       "type": "milestone",
-      "description": "Active milestone: M020",
+      "description": "Active milestone: M021",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -961,6 +961,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M020",
+      "label": "M020: 代码质量与技术债清理",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-ROADMAP.md"
+    },
+    {
       "id": "slice:M020:S01",
       "label": "S01: 关键可靠性修复：FileService 异常处理 + 取消功能",
       "type": "slice",
@@ -1064,6 +1071,126 @@
     {
       "id": "task:M020:S05:T03",
       "label": "T03: 添加 FileService 快乐路径单元测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M021:S01",
+      "label": "S01: FillViewModel + UpdateStatusViewModel 拆分",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M021:S01:T01",
+      "label": "T01: Create UpdateStatusViewModel with CT.Mvvm",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S01:T02",
+      "label": "T02: Create FillViewModel with CT.Mvvm",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S01:T03",
+      "label": "T03: Refactor MainWindowVM to coordinator + wire XAML bindings",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M021:S02",
+      "label": "S02: CleanupViewModel 统一 + CT.Mvvm 迁移",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M021:S02:T01",
+      "label": "T01: Rewrite CleanupViewModel with CT.Mvvm + output directory support",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S02:T02",
+      "label": "T02: Wire cleanup Tab to CleanupVM + remove cleanup code from MainWindowVM",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M021:S03",
+      "label": "S03: DragDropBehavior 提取",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M021:S03:T01",
+      "label": "T01: Create FileDragDrop Behavior + ViewModel DropCommands",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S03:T02",
+      "label": "T02: Wire XAML to FileDragDrop Behavior, delete code-behind handlers",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M021:S04",
+      "label": "S04: 服务接口补全 + CleanupService 日志补充",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M021:S04:T01",
+      "label": "T01: Audit IDocumentProcessor completeness and fix gaps",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S04:T02",
+      "label": "T02: Audit DocumentCleanupService catch blocks and verify logging",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M021:S05",
+      "label": "S05: R028 启动自动检查更新 + 通知徽章",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/slices/S05/S05-PLAN.md"
+    },
+    {
+      "id": "task:M021:S05:T01",
+      "label": "T01: UpdateStatusViewModel 添加 5 秒延迟自动检查 + 单元测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S05:T02",
+      "label": "T02: 状态栏⚙设置按钮添加通知徽章（红色圆点）",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M021:S06",
+      "label": "S06: CLAUDE.md 删除 + 产品需求文档同步",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/slices/S06/S06-PLAN.md"
+    },
+    {
+      "id": "task:M021:S06:T01",
+      "label": "T01: Delete CLAUDE.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M021:S06:T02",
+      "label": "T02: Sync product requirements doc UI descriptions with actual code",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -1546,6 +1673,222 @@
       "description": "Source: S02-SUMMARY.md/T02",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:1",
+      "label": "**OpenXmlHelper 作为静态工具类而非 DI 服务** — 将 DocumentProcessorService 和 ContentControlProcessor 之间的 6 个重复方法提取到 `Utils/OpenXmlHelper.cs` 静态类，CommentManager 和 ILogger 通过方法参数传入而非字段注入。选择静态类因为方法无状态，避免不必要的 DI 注册。",
+      "type": "decision",
+      "description": "Source: S03-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:2",
+      "label": "**CT.Mvvm 使用完全限定基类名避免命名冲突** — DownloadProgressViewModel 和 UpdateSettingsViewModel 迁移到 CommunityToolkit.Mvvm 时，使用完全限定名 `CommunityToolkit.Mvvm.ComponentModel.ObservableObject` 避免与项目自定义 `ObservableObject.cs` 冲突。",
+      "type": "decision",
+      "description": "Source: S04-SUMMARY.md/What Was Done",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:3",
+      "label": "**幽灵配置类直接删除而非标注** — 4 个从未被代码引用的配置类（AppSettings、LoggingSettings、FileProcessingSettings、UISettings）直接从 AppSettings.cs 中删除，appsettings.json 精简为仅 2 个 section。标注保留会增加维护混乱。",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/执行概要",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:4",
+      "label": "**CancellationToken 使用 CreateLinkedTokenSource 链接** — DocumentProcessorService 接收外部 CancellationToken 后，通过 CreateLinkedTokenSource 创建内部 CTS 链接两个 token，支持外部取消和内部取消的统一管理。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/修复内容",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:5",
+      "label": "**内部 catch(Exception) 会吞噬 OperationCanceledException** — DocumentProcessorService 的 foreach catch(Exception) 会捕获取消异常，导致取消功能表现为处理失败而非异常传播。测试需调整为验证失败标记而非异常。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/已知限制",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:6",
+      "label": "**E2ERegression.csproj 需要与主项目同步链接共享文件** — S03 提取 OpenXmlHelper.cs 时发现 E2ERegression.csproj 预存构建问题（缺少链接文件），需要同步更新测试项目的编译链接。",
+      "type": "decision",
+      "description": "Source: S03-SUMMARY.md/偏差",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:7",
+      "label": "**TemplateCacheService 动态时间评估限制单元测试** — IsExpired 使用 IOptionsMonitor.CurrentValue 动态评估，无法在测试中注入时钟选择性过期。测试只能验证过期项被移除，无法同时验证新鲜项保留。",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/已知限制",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:8",
+      "label": "**FormattedCellValue.PlainText 是只读计算属性** — 集成测试重构时发现不能通过对象初始化器设置，必须使用 FormattedCellValue.FromPlainText() 工厂方法构造测试数据。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/关键发现",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:9",
+      "label": "**DI 容器的开放泛型注册可被直接利用** — FileService 添加 ILogger<FileService> 时，App.xaml.cs 中已有 `AddSingleton(typeof(ILogger<>), typeof(Logger<>))` 开放泛型注册，无需额外配置即可自动注入。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/修复内容",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:10",
+      "label": "**静态工具类模式（Utils/）** — 无状态的共享操作放在 `Utils/` 目录下的静态类中，通过方法参数传入依赖（如 CommentManager、ILogger），无需 DI 注册。OpenXmlHelper 是此模式的参考实现。",
+      "type": "decision",
+      "description": "Source: S03-SUMMARY.md/关键设计决策",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:11",
+      "label": "**CT.Mvvm 迁移模式** — `[ObservableProperty]` 配合下划线前缀字段名、`[RelayCommand]` 标注方法、`partial void OnPropertyNameChanged()` 处理副作用。完全限定基类名解决命名冲突。可减少约 40% ViewModel 样板代码。",
+      "type": "decision",
+      "description": "Source: S04-SUMMARY.md/What Was Done",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:12",
+      "label": "**渐进式测试补充模式** — 先在 S01 建立错误路径测试（4 个），S05 再补充快乐路径测试（13 个）。分阶段添加避免单次大规模测试编写，且确保每个阶段都有验证。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/修复内容, S05-SUMMARY.md/执行概要",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M020:13",
+      "label": "**NuGet path1 null 错误** — M020 完成验证时遇到 `dotnet build` 和 `dotnet nuget list source` 都报 `Value cannot be null. (Parameter 'path1')` 错误，但这是系统级 NuGet 环境问题（global-packages 缓存或 NuGet.Config 配置损坏），在主仓库和 worktree 中都复现，非代码缺陷。所有 slice 执行期间构建和测试均通过。",
+      "type": "decision",
+      "description": "Source: complete-milestone verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:1",
+      "label": "**内部 catch(Exception) 会吞噬 OperationCanceledException** — DocumentProcessorService 的 foreach catch(Exception) 会捕获取消异常，导致取消功能表现为处理失败而非异常传播。测试需调整为验证失败标记而非异常。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/已知限制",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:2",
+      "label": "**E2ERegression.csproj 需要与主项目同步链接共享文件** — S03 提取 OpenXmlHelper.cs 时发现 E2ERegression.csproj 预存构建问题（缺少链接文件），需要同步更新测试项目的编译链接。",
+      "type": "lesson",
+      "description": "Source: S03-SUMMARY.md/偏差",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:3",
+      "label": "**TemplateCacheService 动态时间评估限制单元测试** — IsExpired 使用 IOptionsMonitor.CurrentValue 动态评估，无法在测试中注入时钟选择性过期。测试只能验证过期项被移除，无法同时验证新鲜项保留。",
+      "type": "lesson",
+      "description": "Source: S05-SUMMARY.md/已知限制",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:4",
+      "label": "**FormattedCellValue.PlainText 是只读计算属性** — 集成测试重构时发现不能通过对象初始化器设置，必须使用 FormattedCellValue.FromPlainText() 工厂方法构造测试数据。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/关键发现",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:5",
+      "label": "**DI 容器的开放泛型注册可被直接利用** — FileService 添加 ILogger<FileService> 时，App.xaml.cs 中已有 `AddSingleton(typeof(ILogger<>), typeof(Logger<>))` 开放泛型注册，无需额外配置即可自动注入。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/修复内容",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:6",
+      "label": "**静态工具类模式（Utils/）** — 无状态的共享操作放在 `Utils/` 目录下的静态类中，通过方法参数传入依赖（如 CommentManager、ILogger），无需 DI 注册。OpenXmlHelper 是此模式的参考实现。",
+      "type": "lesson",
+      "description": "Source: S03-SUMMARY.md/关键设计决策",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:7",
+      "label": "**CT.Mvvm 迁移模式** — `[ObservableProperty]` 配合下划线前缀字段名、`[RelayCommand]` 标注方法、`partial void OnPropertyNameChanged()` 处理副作用。完全限定基类名解决命名冲突。可减少约 40% ViewModel 样板代码。",
+      "type": "lesson",
+      "description": "Source: S04-SUMMARY.md/What Was Done",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:8",
+      "label": "**渐进式测试补充模式** — 先在 S01 建立错误路径测试（4 个），S05 再补充快乐路径测试（13 个）。分阶段添加避免单次大规模测试编写，且确保每个阶段都有验证。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/修复内容, S05-SUMMARY.md/执行概要",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M020:9",
+      "label": "**NuGet path1 null 错误** — M020 完成验证时遇到 `dotnet build` 和 `dotnet nuget list source` 都报 `Value cannot be null. (Parameter 'path1')` 错误，但这是系统级 NuGet 环境问题（global-packages 缓存或 NuGet.Config 配置损坏），在主仓库和 worktree 中都复现，非代码缺陷。所有 slice 执行期间构建和测试均通过。",
+      "type": "lesson",
+      "description": "Source: complete-milestone verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M020:1",
+      "label": "**静态工具类模式（Utils/）** — 无状态的共享操作放在 `Utils/` 目录下的静态类中，通过方法参数传入依赖（如 CommentManager、ILogger），无需 DI 注册。OpenXmlHelper 是此模式的参考实现。",
+      "type": "pattern",
+      "description": "Source: S03-SUMMARY.md/关键设计决策",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M020:2",
+      "label": "**CT.Mvvm 迁移模式** — `[ObservableProperty]` 配合下划线前缀字段名、`[RelayCommand]` 标注方法、`partial void OnPropertyNameChanged()` 处理副作用。完全限定基类名解决命名冲突。可减少约 40% ViewModel 样板代码。",
+      "type": "pattern",
+      "description": "Source: S04-SUMMARY.md/What Was Done",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M020:3",
+      "label": "**渐进式测试补充模式** — 先在 S01 建立错误路径测试（4 个），S05 再补充快乐路径测试（13 个）。分阶段添加避免单次大规模测试编写，且确保每个阶段都有验证。",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/修复内容, S05-SUMMARY.md/执行概要",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M020:4",
+      "label": "**NuGet path1 null 错误** — M020 完成验证时遇到 `dotnet build` 和 `dotnet nuget list source` 都报 `Value cannot be null. (Parameter 'path1')` 错误，但这是系统级 NuGet 环境问题（global-packages 缓存或 NuGet.Config 配置损坏），在主仓库和 worktree 中都复现，非代码缺陷。所有 slice 执行期间构建和测试均通过。",
+      "type": "pattern",
+      "description": "Source: complete-milestone verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M020:1",
+      "label": "**NuGet path1 null 错误** — M020 完成验证时遇到 `dotnet build` 和 `dotnet nuget list source` 都报 `Value cannot be null. (Parameter 'path1')` 错误，但这是系统级 NuGet 环境问题（global-packages 缓存或 NuGet.Config 配置损坏），在主仓库和 worktree 中都复现，非代码缺陷。所有 slice 执行期间构建和测试均通过。",
+      "type": "lesson",
+      "description": "Source: complete-milestone verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/M020-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -2438,6 +2781,120 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M021",
+      "to": "slice:M021:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S01",
+      "to": "task:M021:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S01",
+      "to": "task:M021:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S01",
+      "to": "task:M021:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "slice:M021:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S02",
+      "to": "task:M021:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S02",
+      "to": "task:M021:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "slice:M021:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S03",
+      "to": "task:M021:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S03",
+      "to": "task:M021:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "slice:M021:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S04",
+      "to": "task:M021:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S04",
+      "to": "task:M021:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "slice:M021:S05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S05",
+      "to": "task:M021:S05:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S05",
+      "to": "task:M021:S05:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "slice:M021:S06",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S06",
+      "to": "task:M021:S06:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M021:S06",
+      "to": "task:M021:S06:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -2796,7 +3253,169 @@
       "to": "surprise:M019:1",
       "type": "relates_to",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:10",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:11",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:12",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "decision:M020:13",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "lesson:M020:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "pattern:M020:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "pattern:M020:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "pattern:M020:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "pattern:M020:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "surprise:M020:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-04T02:31:07.684Z"
+  "builtAt": "2026-05-04T11:54:07.119Z"
 }

@@ -1,11 +1,12 @@
 # Codebase Map
 
-Generated: 2026-05-04T01:24:10Z | Files: 166 | Described: 0/166
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-04T01:24:10Z","fingerprint":"db252df153cf49a7df08f7484f175cb63fdef2e3","fileCount":166,"truncated":false} -->
+Generated: 2026-05-04T12:09:06Z | Files: 171 | Described: 0/171
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-04T12:09:06Z","fingerprint":"e381d606f04a0d91915d2dbd522bb9c9a5bd6fc9","fileCount":171,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
 - `.gitignore`
+- `5`
 - `App.config`
 - `App.xaml`
 - `App.xaml.cs`
@@ -148,10 +149,13 @@ Generated: 2026-05-04T01:24:10Z | Files: 166 | Described: 0/166
 - `Tests/DocuFiller.Tests/Cli/UpdateCommandTests.cs`
 
 ### Tests/DocuFiller.Tests/Services/
+- `Tests/DocuFiller.Tests/Services/CancellationTests.cs`
 - `Tests/DocuFiller.Tests/Services/ContentControlProcessorIntegrationTests.cs`
 - `Tests/DocuFiller.Tests/Services/DocumentProcessorServiceIntegrationTests.cs`
+- `Tests/DocuFiller.Tests/Services/FileServiceTests.cs`
 - `Tests/DocuFiller.Tests/Services/SafeFormattedContentReplacerTests.cs`
 - `Tests/DocuFiller.Tests/Services/SafeTextReplacerTests.cs`
+- `Tests/DocuFiller.Tests/Services/TemplateCacheServiceTests.cs`
 
 ### Tests/DocuFiller.Tests/Utils/
 - `Tests/DocuFiller.Tests/Utils/OpenXmlTableCellHelperTests.cs`
@@ -176,6 +180,7 @@ Generated: 2026-05-04T01:24:10Z | Files: 166 | Described: 0/166
 ### Utils/
 - `Utils/GlobalExceptionHandler.cs`
 - `Utils/LoggerConfiguration.cs`
+- `Utils/OpenXmlHelper.cs`
 - `Utils/ValidationHelper.cs`
 - `Utils/VersionHelper.cs`
 

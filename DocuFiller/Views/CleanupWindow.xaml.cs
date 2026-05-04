@@ -19,6 +19,7 @@ namespace DocuFiller.Views
             InitializeComponent();
             _logger = logger;
             _viewModel = App.Current.ServiceProvider.GetRequiredService<CleanupViewModel>();
+            _viewModel.OutputDirectory = string.Empty;
             DataContext = _viewModel;
         }
 
