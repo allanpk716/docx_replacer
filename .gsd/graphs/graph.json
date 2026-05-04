@@ -9,8 +9,8 @@
       "sourceFile": "STATE.md"
     },
     {
-      "id": "concept:phase:planning",
-      "label": "Phase: planning",
+      "id": "concept:phase:validating-milestone",
+      "label": "Phase: validating-milestone",
       "type": "concept",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
@@ -1279,6 +1279,50 @@
     {
       "id": "task:M022:S03:T04",
       "label": "T04: 撰写 .NET MAUI 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S04",
+      "label": "S04: 通用课题调研（Velopack/核心库/平台差异/打包分发）",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M022:S04:T01",
+      "label": "T01: 调研 Velopack 跨平台能力并撰写 velopack-cross-platform.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S04:T02",
+      "label": "T02: 调研核心依赖库跨平台兼容性并撰写 core-dependencies-compatibility.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S04:T03",
+      "label": "T03: 调研平台差异处理并撰写 platform-differences.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S04:T04",
+      "label": "T04: 调研打包分发方案并撰写 packaging-distribution.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S05",
+      "label": "S05: 总结与对比评估",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S05/S05-PLAN.md"
+    },
+    {
+      "id": "task:M022:S05:T01",
+      "label": "T01: 撰写全方案横向对比评估文档 comparison-and-recommendation.md",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -3325,6 +3369,48 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M022",
+      "to": "slice:M022:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "slice:M022:S05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S05",
+      "to": "task:M022:S05:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -4045,5 +4131,5 @@
       "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-04T16:50:13.405Z"
+  "builtAt": "2026-05-04T17:48:22.878Z"
 }
