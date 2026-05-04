@@ -16,6 +16,13 @@
       "branch": "milestone/M020/S05",
       "lastSyncedAt": "2026-05-04T02:21:23.975Z",
       "state": "open"
+    },
+    "M022/S01": {
+      "issueNumber": 0,
+      "prNumber": 0,
+      "branch": "milestone/M022/S01",
+      "lastSyncedAt": "2026-05-04T15:13:20.487Z",
+      "state": "open"
     }
   },
   "tasks": {
@@ -47,6 +54,21 @@
     "M020/S05/T03": {
       "issueNumber": 9,
       "lastSyncedAt": "2026-05-04T02:30:07.668Z",
+      "state": "open"
+    },
+    "M022/S01/T01": {
+      "issueNumber": 10,
+      "lastSyncedAt": "2026-05-04T15:13:17.245Z",
+      "state": "open"
+    },
+    "M022/S01/T02": {
+      "issueNumber": 11,
+      "lastSyncedAt": "2026-05-04T15:13:18.861Z",
+      "state": "open"
+    },
+    "M022/S01/T03": {
+      "issueNumber": 12,
+      "lastSyncedAt": "2026-05-04T15:13:20.487Z",
       "state": "open"
     }
   }
