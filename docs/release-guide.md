@@ -80,8 +80,14 @@ gh release download v<版本号> --repo allanpk716/docx_replacer --clobber
 
 ### 上传到 stable 通道
 
+> `build-internal.bat` 已内置 .env 自动加载功能，无需手动 source。
+> 如果环境变量缺失且项目根目录存在 `.env` 文件，脚本会自动读取。
+
 ```bash
-# 从 .env 加载环境变量（bash）
+# 方式一：使用构建脚本（推荐，自动加载 .env）
+scripts\build.bat --standalone stable
+
+# 方式二：手动上传（需要先加载环境变量）
 set -a; source .env; set +a
 
 # 上传 .nupkg（更新包）

@@ -170,6 +170,9 @@ REM ========================================
 echo.
 echo [UPLOAD] Starting upload to channel: !CHANNEL!
 
+REM Auto-load .env if environment variables are missing
+call :LOAD_ENV
+
 REM Check required environment variables
 if "!UPDATE_SERVER_HOST!"=="" (
     echo [UPLOAD] FAILED: UPDATE_SERVER_HOST environment variable is not set
@@ -232,4 +235,31 @@ if !UPLOAD_COUNT! equ 0 (
 echo [UPLOAD] SUCCESS: !UPLOAD_COUNT! package(s^) uploaded to !CHANNEL! channel
 exit /b 0
 
+REM ========================================
+REM Function: LOAD_ENV
+REM Loads .env from project root if environment variables are missing
+REM Only sets variables that are not already defined in the environment
+REM ========================================
+:LOAD_ENV
+set "ENV_FILE=!PROJECT_ROOT!\.env"
+if not exist "!ENV_FILE!" exit /b 0
+
+REM Only load if at least one required variable is missing
+if defined UPDATE_SERVER_HOST if defined UPDATE_SERVER_PORT if defined UPDATE_SERVER_API_TOKEN exit /b 0
+
+echo [LOAD_ENV] Loading !ENV_FILE!
+for /f "usebackq tokens=1,* delims==" %%a in ("!ENV_FILE!") do (
+    set "LINE=%%a"
+    REM Skip comments and blank lines
+    if not "!LINE:~0,1!"=="#" if not "%%a"=="" (
+        if not "%%b"=="" (
+            REM Only set if not already defined
+            if not defined %%a (
+                set "%%a=%%b"
+            )
+        )
+    )
+)
+echo [LOAD_ENV] SUCCESS
+exit /b 0
 

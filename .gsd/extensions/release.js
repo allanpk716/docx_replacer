@@ -11,17 +11,20 @@
  *   4. Compute next version (user confirms / edits)
  *   5. Send agent prompt to execute
  *
+ * Logging:
+ *   Each execution writes a detailed log to .gsd/release-last-run.md
+ *   Only the last run is kept (overwrites previous).
+ *
  * Version logic:
  *   - beta→beta:   only increment N in -betaN, never touch x.x.x
  *   - stable→beta: bump x.x.x + "-beta1"
  *   - beta→stable: strip -betaN suffix, keep same x.x.x
  *   - stable→stable: bump minor (feat) or patch (fix)
  */
-import { readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
 
-// Server host/port read from env vars (UPDATE_SERVER_HOST, UPDATE_SERVER_PORT)
-// or fall back to sensible defaults for the internal network.
+const LOG_FILE = "release-last-run.md";
 
 export default function releaseCommand(pi) {
   pi.registerCommand("release", {
@@ -29,21 +32,77 @@ export default function releaseCommand(pi) {
       "Evaluate recent changes and publish a release to internal server and/or GitHub",
 
     async handler(args, ctx) {
+      // ── Logging setup ──────────────────────────────────────────────────
+      const logLines = [];
+      const startTime = new Date();
+
+      const log = (msg) => {
+        const ts = new Date().toISOString().slice(11, 19);
+        logLines.push(`[${ts}] ${msg}`);
+      };
+
+      const persistLog = (status, errorMsg) => {
+        const endTime = new Date();
+        const durationMs = endTime - startTime;
+        const rootDir = logLines._rootDir || ".";
+        const gsdDir = join(rootDir, ".gsd");
+
+        const content = [
+          `# Release Run Log`,
+          ``,
+          `- **Started:** ${startTime.toISOString()}`,
+          `- **Ended:** ${endTime.toISOString()}`,
+          `- **Duration:** ${durationMs}ms`,
+          `- **Status:** ${status}`,
+          errorMsg ? `- **Error:** ${errorMsg}` : null,
+          ``,
+          `## Execution Log`,
+          ``,
+          ...logLines.map(l => l),
+          ``,
+        ].filter(l => l !== null).join("\n");
+
+        try {
+          if (!existsSync(gsdDir)) mkdirSync(gsdDir, { recursive: true });
+          writeFileSync(join(gsdDir, LOG_FILE), content, "utf-8");
+        } catch (e) {
+          // Best-effort log persistence; don't crash the command
+          ctx.ui.notify("⚠ 日志写入失败: " + e.message, "warn");
+        }
+      };
+
       // ── Helpers ──────────────────────────────────────────────────────────
       const run = async (cmd, cmdArgs) => {
+        log(`RUN: ${cmd} ${cmdArgs.join(" ")}`);
         const r = await pi.exec(cmd, cmdArgs);
-        return { ...r, stdout: (r.stdout || "").trim() };
+        const result = { ...r, stdout: (r.stdout || "").trim() };
+        if (r.code !== 0) {
+          log(`  EXIT CODE: ${r.code}`);
+          if (r.stderr) log(`  STDERR: ${(r.stderr || "").trim().slice(0, 500)}`);
+        } else {
+          log(`  OK (${result.stdout.split("\n").length} lines output)`);
+        }
+        return result;
       };
-      const fail = (msg) => ctx.ui.notify(msg, "error");
+      const fail = (msg) => {
+        log(`FAIL: ${msg}`);
+        persistLog("FAILED", msg);
+        ctx.ui.notify(msg, "error");
+      };
+
+      log("=== Release command started ===");
 
       // Read internal server config from environment
       const serverHost = process.env.UPDATE_SERVER_HOST || "";
       const serverPort = process.env.UPDATE_SERVER_PORT || "";
+      log(`Server config: host=${serverHost || "(unset)"}, port=${serverPort || "(unset)"}`);
 
       // ── Step 1: Detect project root ──────────────────────────────────────
       const rootResult = await run("git", ["rev-parse", "--show-toplevel"]);
       const rootDir = rootResult.stdout;
       if (!rootDir) { fail("Not inside a git repository."); return; }
+      logLines._rootDir = rootDir;
+      log(`Project root: ${rootDir}`);
 
       // ── Step 2: Get current version from csproj ──────────────────────────
       let currentVersion = "";
@@ -54,14 +113,16 @@ export default function releaseCommand(pi) {
           const content = readFileSync(join(rootDir, csprojFile), "utf-8");
           const m = content.match(/<Version>([^<]+)<\/Version>/);
           if (m) currentVersion = m[1];
+          log(`Detected csproj: ${csprojFile}, version: ${currentVersion}`);
         }
-      } catch { /* fall through */ }
+      } catch (e) { log(`WARN: csproj read error: ${e.message}`); /* fall through */ }
 
       if (!currentVersion) { fail("Could not detect current version from .csproj <Version>."); return; }
 
       // ── Step 3: Get last tag and commits since ───────────────────────────
       const tagResult = await run("git", ["-C", rootDir, "describe", "--tags", "--abbrev=0"]);
       const lastTag = tagResult.stdout;
+      log(`Last tag: ${lastTag || "(none)"}`);
 
       let logOutput = "";
       if (lastTag) {
@@ -73,11 +134,14 @@ export default function releaseCommand(pi) {
       }
 
       if (!logOutput || logOutput.split("\n").filter(Boolean).length === 0) {
+        log("No new commits since last tag.");
+        persistLog("NOOP", "No new commits since last tag");
         ctx.ui.notify("No new commits since last tag. Nothing to release.", "info");
         return;
       }
 
       const commits = logOutput.split("\n").filter(Boolean).map((l) => l.trim());
+      log(`Commits since last tag: ${commits.length}`);
 
       // ── Step 4: Analyse changes and recommend ────────────────────────────
       const logLower = logOutput.toLowerCase();
@@ -86,6 +150,7 @@ export default function releaseCommand(pi) {
       const hasBreaking = /\bbreaking\b|\bremove\b|\u5220\u9664|\u79fb\u9664|\u6e05\u7406/.test(logLower);
 
       const featCommits = commits.filter((c) => /^[\da-f]+\s+feat/i.test(c));
+      log(`Analysis: hasFeature=${hasFeature}, hasFix=${hasFix}, hasBreaking=${hasBreaking}, featCommits=${featCommits.length}`);
 
       let recommendation = "beta";
       let rationale = "";
@@ -103,6 +168,8 @@ export default function releaseCommand(pi) {
         recommendation = "beta";
         rationale = "\u6df7\u5408\u53d8\u66f4 \u2014 \u5efa\u8bae\u5148\u53d1 beta\u3002";
       }
+
+      log(`Recommendation: ${recommendation} — ${rationale}`);
 
       // ── Step 5: Show analysis ────────────────────────────────────────────
       const commitSummary = commits.slice(0, 10).join("\n  ");
@@ -138,10 +205,13 @@ export default function releaseCommand(pi) {
         Object.values(channelLabels),
       );
       if (!channel || channel === channelLabels.cancel) {
+        log("User cancelled at channel selection.");
+        persistLog("CANCELLED", "User cancelled at channel selection");
         ctx.ui.notify("\u53d1\u5e03\u5df2\u53d6\u6d88\u3002", "info");
         return;
       }
       const isBeta = channel === channelLabels.beta;
+      log(`Channel selected: ${isBeta ? "beta" : "stable"}`);
 
       // ── Step 7: Ask target ───────────────────────────────────────────────
       const targetLabels = {
@@ -155,11 +225,14 @@ export default function releaseCommand(pi) {
         Object.values(targetLabels),
       );
       if (!target || target === targetLabels.cancel) {
+        log("User cancelled at target selection.");
+        persistLog("CANCELLED", "User cancelled at target selection");
         ctx.ui.notify("\u53d1\u5e03\u5df2\u53d6\u6d88\u3002", "info");
         return;
       }
       const doInternal = target === targetLabels.internal || target === targetLabels.both;
       const doGithub = target === targetLabels.github || target === targetLabels.both;
+      log(`Target: internal=${doInternal}, github=${doGithub}`);
 
       // ── Step 8: Compute next version ──────────────────────────────────────
       const baseMatch = currentVersion.match(/^(\d+)\.(\d+)\.(\d+)/);
@@ -200,16 +273,21 @@ export default function releaseCommand(pi) {
         }
       }
 
+      log(`Computed next version: ${currentVersion} → ${nextVersion}`);
+
       // ── Step 9: Confirm version ──────────────────────────────────────────
       const confirmVersion = await ctx.ui.input(
         "\u4e0b\u4e00\u4e2a\u7248\u672c\u53f7: " + nextVersion + "\uff08\u53ef\u7f16\u8f91\uff0c\u6216\u76f4\u63a5\u56de\u8f66\u786e\u8ba4\uff09",
         nextVersion,
       );
       if (!confirmVersion || !confirmVersion.trim()) {
+        log("User cancelled at version confirmation.");
+        persistLog("CANCELLED", "User cancelled at version confirmation");
         ctx.ui.notify("\u53d1\u5e03\u5df2\u53d6\u6d88\u3002", "info");
         return;
       }
       nextVersion = confirmVersion.trim();
+      log(`Final version confirmed: ${nextVersion}`);
 
       // ── Step 10: Build the agent prompt ───────────────────────────────────
       const channelName = isBeta ? "beta" : "stable";
@@ -223,7 +301,7 @@ export default function releaseCommand(pi) {
       let stepNum = 4;
 
       if (doInternal) {
-        steps.push("### " + stepNum + ". \u6784\u5EFA\u5E76\u4E0A\u4F20\u5230\u5185\u7F51\u670D\u52A1\u5668 (" + channelName + " \u901A\u9053)\n```bash\nscripts\\\\build.bat --standalone " + channelName + "\n```\n\u8FD9\u4E2A\u811A\u672C\u4F1A\u81EA\u52A8\uFF1A\n- \u8BFB\u53D6 csproj \u4E2D\u7684\u7248\u672C\u53F7\n- dotnet publish + vpk pack \u751F\u6210 Velopack \u5305\uFF08.nupkg, Setup.exe, Portable.zip\uFF09\n- \u4E0A\u4F20\u5230\u5185\u7F51 " + serverHost + ":" + serverPort + " \u7684 " + channelName + " \u901A\u9053\n\n\u4E0A\u4F20\u524D\u52A0\u8F7D token\uFF1A`source .env; export UPDATE_SERVER_API_TOKEN`\n\u786E\u8BA4\u811A\u672C\u8F93\u51FA\u5305\u542B SUCCESS\u3002");
+        steps.push("### " + stepNum + ". \u6784\u5EFA\u5E76\u4E0A\u4F20\u5230\u5185\u7F51\u670D\u52A1\u5668 (" + channelName + " \u901A\u9053)\n```bash\nscripts\\\\build.bat --standalone " + channelName + "\n```\n\u8FD9\u4E2A\u811A\u672C\u4F1A\u81EA\u52A8\uFF1A\n- \u8BFB\u53D6 csproj \u4E2D\u7684\u7248\u672C\u53F7\n- dotnet publish + vpk pack \u751F\u6210 Velopack \u5305\uFF08.nupkg, Setup.exe, Portable.zip\uFF09\n- \u81EA\u52A8\u4ECE .env \u52A0\u8F7D\u73AF\u5883\u53D8\u91CF\u5E76\u4E0A\u4F20\u5230\u5185\u7F51\u670D\u52A1\u5668\n\n\u786E\u8BA4\u811A\u672C\u8F93\u51FA\u5305\u542B SUCCESS\u3002");
         stepNum++;
       }
 
@@ -247,15 +325,24 @@ export default function releaseCommand(pi) {
         "",
         "## \u6ce8\u610f\u4e8b\u9879",
         "- \u5982\u679c tag \u5df2\u5b58\u5728\uff08\u51b2\u7a81\uff09\uff0c\u63d0\u793a\u7528\u6237\u5e76\u505c\u6b62",
+        "- \u6784\u5efa\u524d\u5148\u8fd0\u884c `git tag -l v" + nextVersion + "` \u68c0\u67e5 tag \u662f\u5426\u5df2\u5b58\u5728\uff0c\u5982\u679c\u5b58\u5728\u5219\u505c\u6b62",
         "- \u5982\u679c\u6784\u5efa\u5931\u8d25\uff0c\u4e0d\u8981\u7ee7\u7eed\u4e0a\u4f20\u6216\u63a8\u9001",
         "- \u5982\u679c\u4e0a\u4f20\u5931\u8d25\uff0c\u62a5\u544a\u9519\u8bef\u4fe1\u606f",
+        "- build-internal.bat \u5df2\u5185\u7f6e .env \u81ea\u52a8\u52a0\u8f7d\uff0c\u65e0\u9700\u624b\u52a8 source .env",
         "- \u4f7f\u7528\u4e2d\u6587\u56de\u590d",
+        "",
+        "## \u65e5\u5fd7\u8bb0\u5f55",
+        "\u53d1\u5e03\u547d\u4ee4\u7684\u5185\u90e8\u65e5\u5fd7\u5df2\u5199\u5165 `.gsd/" + LOG_FILE + "`\uff0c\u6bcf\u6b21\u6267\u884c\u53ea\u4fdd\u7559\u6700\u540e\u4e00\u6b21\u3002",
       ].join("\n");
+
+      log(`Dispatching agent prompt. channel=${channelName}, version=${nextVersion}, target=${targetDesc}`);
+      persistLog("DISPATCHED", null);
 
       ctx.ui.notify(
         "\u27A1 \u5f00\u59cb\u53d1\u5e03: v" + nextVersion +
         " | " + channelName +
-        " | " + targetDesc,
+        " | " + targetDesc +
+        "\n\ud83d\udcdd \u65e5\u5fd7: .gsd/" + LOG_FILE,
         "info",
       );
       pi.sendUserMessage(prompt);
