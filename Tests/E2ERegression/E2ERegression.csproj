@@ -50,6 +50,7 @@
 
     <!-- Utils -->
     <Compile Include="..\..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
+    <Compile Include="..\..\Utils\OpenXmlHelper.cs" Link="Utils\OpenXmlHelper.cs" />
     <Compile Include="..\..\DocuFiller\Utils\OpenXmlTableCellHelper.cs" Link="Utils\OpenXmlTableCellHelper.cs" />
 
     <!-- Exceptions -->

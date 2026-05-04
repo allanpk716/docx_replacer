@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M019",
-      "label": "M019: 进度条可见增长修复 + 应用图标",
+      "id": "milestone:M020",
+      "label": "M020: 代码质量与技术债清理",
       "type": "milestone",
-      "description": "Active milestone: M019",
+      "description": "Active milestone: M020",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -19,7 +19,8 @@
       "id": "milestone:M003",
       "label": "M003",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M003/M003-g1w88x-ROADMAP.md"
     },
     {
       "id": "slice:M003:S01",
@@ -88,7 +89,8 @@
       "id": "milestone:M004",
       "label": "M004",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M004/M004-l08k3s-ROADMAP.md"
     },
     {
       "id": "slice:M004:S01",
@@ -169,7 +171,8 @@
       "id": "milestone:M005",
       "label": "M005",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M005/M005-3te7t8-ROADMAP.md"
     },
     {
       "id": "slice:M005:S01",
@@ -250,7 +253,8 @@
       "id": "milestone:M006",
       "label": "M006",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/M006-rj9bue-ROADMAP.md"
     },
     {
       "id": "slice:M006:S01",
@@ -343,7 +347,8 @@
       "id": "milestone:M007",
       "label": "M007",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/M007-wpaxa3-ROADMAP.md"
     },
     {
       "id": "slice:M007:S01",
@@ -425,7 +430,8 @@
       "id": "milestone:M008",
       "label": "M008",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M008/M008-4uyz6m-ROADMAP.md"
     },
     {
       "id": "slice:M008:S01",
@@ -513,7 +519,8 @@
       "id": "milestone:M009",
       "label": "M009",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M009/M009-q7p4iu-ROADMAP.md"
     },
     {
       "id": "slice:M009:S01",
@@ -601,7 +608,8 @@
       "id": "milestone:M010",
       "label": "M010",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M010/M010-hpylzg-ROADMAP.md"
     },
     {
       "id": "slice:M010:S01",
@@ -645,7 +653,8 @@
       "id": "milestone:M011",
       "label": "M011",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M011/M011-ns0oo0-ROADMAP.md"
     },
     {
       "id": "slice:M011:S01",
@@ -689,7 +698,8 @@
       "id": "milestone:M012",
       "label": "M012",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M012/M012-li0ip5-ROADMAP.md"
     },
     {
       "id": "slice:M012:S01",
@@ -733,7 +743,8 @@
       "id": "milestone:M013",
       "label": "M013",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M013/M013-ueix00-ROADMAP.md"
     },
     {
       "id": "slice:M013:S01",
@@ -777,7 +788,8 @@
       "id": "milestone:M014",
       "label": "M014",
       "type": "milestone",
-      "confidence": "EXTRACTED"
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M014/M014-jkpyu6-ROADMAP.md"
     },
     {
       "id": "slice:M014:S01",
@@ -910,6 +922,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M019",
+      "label": "M019: 进度条可见增长修复 + 应用图标",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-ROADMAP.md"
+    },
+    {
       "id": "slice:M019:S01",
       "label": "S01: 修复进度条可见增长",
       "type": "slice",
@@ -938,6 +957,113 @@
     {
       "id": "task:M019:S02:T02",
       "label": "T02: Set Icon on all windows and replace emoji with Image in MainWindow title bar",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M020:S01",
+      "label": "S01: 关键可靠性修复：FileService 异常处理 + 取消功能",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M020:S01:T01",
+      "label": "T01: FileService 添加 ILogger 并修复裸 catch 异常吞没",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S01:T02",
+      "label": "T02: DocumentProcessorService 取消功能修复——CancellationToken 穿透",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S01:T03",
+      "label": "T03: FileService 异常路径和取消功能单元测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M020:S02",
+      "label": "S02: 死代码清理",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M020:S02:T01",
+      "label": "T01: 删除 ContentControlProcessor 中 6 个死方法",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S02:T02",
+      "label": "T02: 删除 ProcessSingleDocumentAsync 和 GenerateOutputFileNameWithTimestamp，更新接口和测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M020:S03",
+      "label": "S03: 消除 DocumentProcessorService 和 ContentControlProcessor 重复代码",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M020:S03:T01",
+      "label": "T01: 创建 OpenXmlHelper 共享工具类并迁移 DocumentProcessorService",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S03:T02",
+      "label": "T02: 迁移 ContentControlProcessor 到共享工具类并最终验证",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M020:S04",
+      "label": "S04: CLAUDE.md 和文档准确性更新",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M020:S04:T01",
+      "label": "T01: Update CLAUDE.md service layer, CLI section, and DI table",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S04:T02",
+      "label": "T02: Update CLAUDE.md file structure and OpenXML references",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M020:S05",
+      "label": "S05: 配置清理和测试补充",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M020/slices/S05/S05-PLAN.md"
+    },
+    {
+      "id": "task:M020:S05:T01",
+      "label": "T01: 清理幽灵配置值和废弃的配置类",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S05:T02",
+      "label": "T02: 添加 TemplateCacheService 单元测试",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M020:S05:T03",
+      "label": "T03: 添加 FileService 快乐路径单元测试",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -1252,6 +1378,174 @@
       "description": "Source: S01-SUMMARY.md/Key decisions",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M018/M018-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:1",
+      "label": "**D046 — ProgressBar 模板修复方式**: 在 ModernProgressBarStyle 模板中添加 PART_Indicator（WPF 标准命名），保持圆角视觉风格。选择标准 WPF TemplatePart 约定而非自定义动画。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:2",
+      "label": "**D047 — 图标生成方式**: 使用 Python + Pillow 程序化绘制图标（蓝色 Word 文档 + 绿色对勾），手动构建 ICO 二进制以包含多分辨率帧（Pillow ICO 保存器只写第一帧）。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:3",
+      "label": "**WPF ProgressBar 缺少 PART_Indicator 不会报错但永远不增长**: WPF ProgressBar 通过 TemplatePart 名称约定查找 PART_Indicator 并自动管理其宽度。模板只有 PART_Track 时，Value 变化无可见效果，也不抛异常，属于静默失败。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:4",
+      "label": "**Pillow ICO 保存器只写入第一帧**: 使用 Pillow 生成多分辨率 ICO 时，Image.save('file.ico') 只保留第一帧。需要按 ICO 规范手动构建二进制文件（ICONDIR + ICONDIRENTRY + PNG 帧）。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/T01",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:5",
+      "label": "**csproj ApplicationIcon 和 WPF Resource 可共存**: 同一个 .ico 文件可通过 `<ApplicationIcon>` 嵌入 exe 资源，同时通过已有的 `<Resource Include>` 作为 WPF pack URI 引用，无需重复文件。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/T01",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:6",
+      "label": "**WPF ProgressBar ControlTemplate 标准结构**: Border（轨道背景色 + CornerRadius）→ Grid → PART_Track（Fill=Transparent）+ PART_Indicator（Fill={TemplateBinding Foreground}, HorizontalAlignment=Left）。两个 Rectangle 保持相同圆角。",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:7",
+      "label": "**WPF 窗口图标统一引用方式**: 所有窗口通过 pack URI `pack://application:,,,/Resources/app.ico` 引用图标，自定义标题栏使用 Image 控件 + RenderOptions.BitmapScalingMode=\"HighQuality\"。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:8",
+      "label": "**程序化图标生成工作流**: Python/Pillow 绘制 → 多尺寸 PNG 导出 → 手动构建 ICO 二进制 → 保留生成脚本在项目根目录供未来重建。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M019:9",
+      "label": "**MainWindow.xaml 存在 XML 结构损坏**: 为 MainWindow 添加图标时发现重复的闭合标签导致 MC3000 构建错误。这是之前编辑遗留的问题，与本次改动无关但在添加 Icon 属性时暴露。",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:1",
+      "label": "**WPF ProgressBar 缺少 PART_Indicator 不会报错但永远不增长**: WPF ProgressBar 通过 TemplatePart 名称约定查找 PART_Indicator 并自动管理其宽度。模板只有 PART_Track 时，Value 变化无可见效果，也不抛异常，属于静默失败。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:2",
+      "label": "**Pillow ICO 保存器只写入第一帧**: 使用 Pillow 生成多分辨率 ICO 时，Image.save('file.ico') 只保留第一帧。需要按 ICO 规范手动构建二进制文件（ICONDIR + ICONDIRENTRY + PNG 帧）。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/T01",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:3",
+      "label": "**csproj ApplicationIcon 和 WPF Resource 可共存**: 同一个 .ico 文件可通过 `<ApplicationIcon>` 嵌入 exe 资源，同时通过已有的 `<Resource Include>` 作为 WPF pack URI 引用，无需重复文件。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/T01",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:4",
+      "label": "**WPF ProgressBar ControlTemplate 标准结构**: Border（轨道背景色 + CornerRadius）→ Grid → PART_Track（Fill=Transparent）+ PART_Indicator（Fill={TemplateBinding Foreground}, HorizontalAlignment=Left）。两个 Rectangle 保持相同圆角。",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:5",
+      "label": "**WPF 窗口图标统一引用方式**: 所有窗口通过 pack URI `pack://application:,,,/Resources/app.ico` 引用图标，自定义标题栏使用 Image 控件 + RenderOptions.BitmapScalingMode=\"HighQuality\"。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:6",
+      "label": "**程序化图标生成工作流**: Python/Pillow 绘制 → 多尺寸 PNG 导出 → 手动构建 ICO 二进制 → 保留生成脚本在项目根目录供未来重建。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M019:7",
+      "label": "**MainWindow.xaml 存在 XML 结构损坏**: 为 MainWindow 添加图标时发现重复的闭合标签导致 MC3000 构建错误。这是之前编辑遗留的问题，与本次改动无关但在添加 Icon 属性时暴露。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M019:1",
+      "label": "**WPF ProgressBar ControlTemplate 标准结构**: Border（轨道背景色 + CornerRadius）→ Grid → PART_Track（Fill=Transparent）+ PART_Indicator（Fill={TemplateBinding Foreground}, HorizontalAlignment=Left）。两个 Rectangle 保持相同圆角。",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M019:2",
+      "label": "**WPF 窗口图标统一引用方式**: 所有窗口通过 pack URI `pack://application:,,,/Resources/app.ico` 引用图标，自定义标题栏使用 Image 控件 + RenderOptions.BitmapScalingMode=\"HighQuality\"。",
+      "type": "pattern",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M019:3",
+      "label": "**程序化图标生成工作流**: Python/Pillow 绘制 → 多尺寸 PNG 导出 → 手动构建 ICO 二进制 → 保留生成脚本在项目根目录供未来重建。",
+      "type": "pattern",
+      "description": "Source: S02-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M019:4",
+      "label": "**MainWindow.xaml 存在 XML 结构损坏**: 为 MainWindow 添加图标时发现重复的闭合标签导致 MC3000 构建错误。这是之前编辑遗留的问题，与本次改动无关但在添加 Icon 属性时暴露。",
+      "type": "pattern",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M019:1",
+      "label": "**MainWindow.xaml 存在 XML 结构损坏**: 为 MainWindow 添加图标时发现重复的闭合标签导致 MC3000 构建错误。这是之前编辑遗留的问题，与本次改动无关但在添加 Icon 属性时暴露。",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/T02",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M019/M019-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -2042,6 +2336,108 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M020",
+      "to": "slice:M020:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S01",
+      "to": "task:M020:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S01",
+      "to": "task:M020:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S01",
+      "to": "task:M020:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "slice:M020:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S02",
+      "to": "task:M020:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S02",
+      "to": "task:M020:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "slice:M020:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S03",
+      "to": "task:M020:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S03",
+      "to": "task:M020:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "slice:M020:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S04",
+      "to": "task:M020:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S04",
+      "to": "task:M020:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M020",
+      "to": "slice:M020:S05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S05",
+      "to": "task:M020:S05:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S05",
+      "to": "task:M020:S05:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M020:S05",
+      "to": "task:M020:S05:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -2274,7 +2670,133 @@
       "to": "surprise:M018:1",
       "type": "relates_to",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "decision:M019:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "lesson:M019:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "pattern:M019:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "pattern:M019:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "pattern:M019:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "pattern:M019:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M019",
+      "to": "surprise:M019:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-03T11:54:07.051Z"
+  "builtAt": "2026-05-04T02:31:07.684Z"
 }

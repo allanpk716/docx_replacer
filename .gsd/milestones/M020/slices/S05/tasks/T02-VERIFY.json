@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M020/S05/T02",
+  "timestamp": 1777861712755,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd C:/WorkSpace/agent/docx_replacer/.gsd/worktrees/M020",
+      "exitCode": 0,
+      "durationMs": 15,
+      "verdict": "pass"
+    }
+  ]
+}

@@ -50,7 +50,7 @@ namespace DocuFiller.Tests.Services
             var logger = new NullLogger<DocumentProcessorService>();
             var progressLogger = new NullLogger<ProgressReporterService>();
             var excelDataParser = new MockExcelDataParser();
-            var fileService = new FileService();
+            var fileService = new FileService(new NullLogger<FileService>());
             var progressReporter = new ProgressReporterService(progressLogger);
             var safeFormattedContentReplacer = new SafeFormattedContentReplacer(
                 new NullLogger<SafeFormattedContentReplacer>());

@@ -5,11 +5,18 @@ using System.Threading.Tasks;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Models;
 using DocuFiller.Utils;
+using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.Services
 {
     public class FileService : IFileService
     {
+        private readonly ILogger<FileService> _logger;
+
+        public FileService(ILogger<FileService> logger)
+        {
+            _logger = logger;
+        }
         public bool FileExists(string filePath)
         {
             return File.Exists(filePath);
@@ -25,8 +32,9 @@ namespace DocuFiller.Services
                 }
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "创建目录失败: {DirectoryPath}", directoryPath);
                 return false;
             }
         }
@@ -49,8 +57,9 @@ namespace DocuFiller.Services
                 await Task.Run(() => File.Copy(sourcePath, destinationPath, overwrite));
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "复制文件失败: {SourcePath} -> {DestinationPath}", sourcePath, destinationPath);
                 return false;
             }
         }
@@ -62,8 +71,9 @@ namespace DocuFiller.Services
                 File.Delete(filePath);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "删除文件失败: {FilePath}", filePath);
                 return false;
             }
         }
@@ -80,8 +90,9 @@ namespace DocuFiller.Services
                 await File.WriteAllTextAsync(filePath, content);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "写入文件失败: {FilePath}", filePath);
                 return false;
             }
         }

@@ -19,20 +19,9 @@ namespace DocuFiller.Services.Interfaces
         /// 批量处理文档
         /// </summary>
         /// <param name="request">处理请求</param>
-        /// <returns>处理结果</returns>
-        Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request);
-
-        /// <summary>
-        /// 处理单个文档
-        /// </summary>
-        /// <param name="templatePath">模板文件路径</param>
-        /// <param name="outputPath">输出文件路径</param>
-        /// <param name="data">填充数据</param>
         /// <param name="cancellationToken">取消令牌</param>
-        /// <returns>是否成功</returns>
-        Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath,
-            System.Collections.Generic.Dictionary<string, object> data,
-            System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>处理结果</returns>
+        Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 验证模板文件
@@ -54,11 +43,13 @@ namespace DocuFiller.Services.Interfaces
         /// <param name="templateFilePath">模板文件路径</param>
         /// <param name="formattedData">格式化数据字典</param>
         /// <param name="outputFilePath">输出文件路径</param>
+        /// <param name="cancellationToken">取消令牌</param>
         /// <returns>处理结果</returns>
         Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
             string templateFilePath,
             System.Collections.Generic.Dictionary<string, FormattedCellValue> formattedData,
-            string outputFilePath);
+            string outputFilePath,
+            System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// 批量处理文件夹中的模板文件

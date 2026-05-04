@@ -1,4 +1,6 @@
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -102,7 +104,7 @@ public class FillCommand : ICliCommand
                 templatePath, dataPath, outputDir);
 
             // 执行文档填充
-            var result = await _documentProcessor.ProcessDocumentsAsync(request);
+            var result = await _documentProcessor.ProcessDocumentsAsync(request, CancellationToken.None);
 
             // 输出每个生成文件的结果
             foreach (var filePath in result.GeneratedFiles)

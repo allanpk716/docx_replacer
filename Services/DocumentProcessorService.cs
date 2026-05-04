@@ -55,7 +55,7 @@ namespace DocuFiller.Services
             _progressReporter.ProgressUpdated += OnProgressUpdated;
         }
 
-        public async Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request)
+        public async Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request, CancellationToken cancellationToken = default)
         {
             ThrowIfDisposed();
 
@@ -67,6 +67,10 @@ namespace DocuFiller.Services
             try
             {
                 _logger.LogInformation("开始批量处理文档");
+
+                // 初始化 CancellationTokenSource 并链接外部 token
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
                 // 验证请求参数
                 if (!request.IsValid())
@@ -86,7 +90,14 @@ namespace DocuFiller.Services
                 }
 
                 // 使用 Excel 解析器处理
-                return await ProcessExcelDataAsync(request);
+                return await ProcessExcelDataAsync(request, _cancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("批量处理已被取消");
+                result.AddError("处理已被用户取消");
+                result.Message = "处理已被取消";
+                throw;
             }
             catch (Exception ex)
             {
@@ -106,12 +117,14 @@ namespace DocuFiller.Services
         /// <summary>
         /// 处理 Excel 数据文件
         /// </summary>
-        private async Task<ProcessResult> ProcessExcelDataAsync(ProcessRequest request)
+        private async Task<ProcessResult> ProcessExcelDataAsync(ProcessRequest request, CancellationToken cancellationToken)
         {
             ProcessResult result = new ProcessResult { StartTime = DateTime.Now };
 
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 _logger.LogInformation("使用 Excel 解析器处理数据");
 
                 // 解析 Excel 数据文件
@@ -123,6 +136,8 @@ namespace DocuFiller.Services
                 }
 
                 _logger.LogInformation($"成功解析 Excel 数据，共 {excelData.Count} 个键值对");
+
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // 确保输出目录存在
                 try
@@ -145,7 +160,8 @@ namespace DocuFiller.Services
                 ProcessResult processResult = await ProcessDocumentWithFormattedDataAsync(
                     request.TemplateFilePath,
                     excelData,
-                    outputPath);
+                    outputPath,
+                    cancellationToken);
 
                 if (processResult.IsSuccess)
                 {
@@ -173,43 +189,6 @@ namespace DocuFiller.Services
         }
 
 
-
-        public async Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath,
-            Dictionary<string, object> data, CancellationToken cancellationToken = default)
-        {
-            try
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // 复制模板文件到输出路径
-                _ = await _fileService.CopyFileAsync(templatePath, outputPath, true);
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                // 打开并处理文档
-                using WordprocessingDocument document = WordprocessingDocument.Open(outputPath, true);
-                if (document.MainDocumentPart == null)
-                {
-                    _logger.LogError($"无法打开文档的主要部分: {outputPath}");
-                    return false;
-                }
-
-                // 处理文档中的所有内容控件（包括页眉页脚）
-                _contentControlProcessor.ProcessContentControlsInDocument(document, data, cancellationToken);
-
-                // 修复表格单元格结构（重要：处理完所有内容控件后，确保单元格中只有一个段落）
-                FixTableCellStructure(document);
-
-                // 保存文档
-                document.MainDocumentPart.Document.Save();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"处理单个文档失败: {outputPath}");
-                return false;
-            }
-        }
 
         /// <summary>
         /// 修复表格单元格结构
@@ -484,18 +463,6 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 生成带时间戳的输出文件名
-        /// 格式：原文件名 -- 替换 --年月日时分秒.docx
-        /// </summary>
-        private string GenerateOutputFileNameWithTimestamp(string originalFileName)
-        {
-            string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
-            string outputFileName = $"{originalFileName} -- 替换 --{timestamp}.docx";
-            _logger.LogDebug($"生成时间戳文件名: {outputFileName}");
-            return outputFileName;
-        }
-
-        /// <summary>
         /// 批量处理文件夹中的模板文件
         /// </summary>
         /// <param name="request">文件夹处理请求</param>
@@ -509,6 +476,10 @@ namespace DocuFiller.Services
 
             try
             {
+                // 初始化 CancellationTokenSource 并链接外部 token
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
                 _logger.LogInformation($"开始批量处理文件夹: {request.TemplateFolderPath}");
                 _logger.LogInformation($"数据文件: {request.DataFilePath}");
                 _logger.LogInformation($"输出目录: {request.OutputDirectory}");
@@ -563,12 +534,14 @@ namespace DocuFiller.Services
 
                 int totalOperations = request.TemplateFiles.Count;
                 int currentOperation = 0;
+                var linkedToken = _cancellationTokenSource.Token;
 
                 // Excel模式：为每个模板文件生成一个文档
                 foreach (Models.FileInfo templateFile in request.TemplateFiles)
                 {
                     try
                     {
+                        linkedToken.ThrowIfCancellationRequested();
                         currentOperation++;
 
                         _logger.LogInformation($"处理模板文件: {templateFile.Name}");
@@ -606,7 +579,8 @@ namespace DocuFiller.Services
                         ProcessResult processResult = await ProcessDocumentWithFormattedDataAsync(
                             templateFile.FullPath,
                             excelData,
-                            outputPath);
+                            outputPath,
+                            linkedToken);
 
                         if (processResult.IsSuccess)
                         {
@@ -656,6 +630,14 @@ namespace DocuFiller.Services
                 _progressReporter.ReportCompleted(totalOperations,
                     $"批量处理完成，成功: {processedFiles.Count}，失败: {failedFiles.Count}");
             }
+            catch (OperationCanceledException)
+            {
+                _logger.LogInformation("文件夹批量处理已被取消");
+                result.IsSuccess = false;
+                result.AddError("处理已被用户取消");
+                result.ErrorMessage = "处理已被用户取消";
+                throw;
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, $"批量处理文件夹时发生异常: {ex.Message}");
@@ -666,6 +648,8 @@ namespace DocuFiller.Services
             finally
             {
                 result.EndTime = DateTime.Now;
+                _cancellationTokenSource?.Dispose();
+                _cancellationTokenSource = null;
             }
 
             return result;
@@ -685,7 +669,7 @@ namespace DocuFiller.Services
             ContentControlLocation location = ContentControlLocation.Body)
         {
             // 1. 获取控件标签（用于日志）
-            string? tag = GetControlTag(control);
+            string? tag = OpenXmlHelper.GetControlTag(control);
             if (string.IsNullOrWhiteSpace(tag))
             {
                 _logger.LogWarning("内容控件标签为空，跳过处理");
@@ -699,7 +683,7 @@ namespace DocuFiller.Services
             bool containsTableCell = control.Descendants<TableCell>().Any();
 
             // 3. 记录旧值（用于批注）
-            string oldValue = ExtractExistingText(control);
+            string oldValue = OpenXmlHelper.ExtractExistingText(control);
 
             // 4. 根据位置选择填充策略
             if (isInTableCell)
@@ -721,7 +705,7 @@ namespace DocuFiller.Services
             // 5. 添加批注（仅正文区域支持，页眉页脚不支持批注）
             if (location == ContentControlLocation.Body)
             {
-                AddProcessingComment(document, control, tag, formattedValue.PlainText, oldValue, location);
+                OpenXmlHelper.AddProcessingComment(document, control, tag, formattedValue.PlainText, oldValue, location, _commentManager, _logger);
             }
             else
             {
@@ -737,7 +721,7 @@ namespace DocuFiller.Services
         private void FillFormattedContentStandard(SdtElement control, FormattedCellValue formattedValue)
         {
             // 查找内容容器
-            var contentContainer = FindContentContainer(control);
+            var contentContainer = OpenXmlHelper.FindContentContainer(control);
             if (contentContainer == null)
             {
                 _logger.LogWarning($"未找到内容容器");
@@ -851,106 +835,6 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 查找内容控件的内容容器
-        /// </summary>
-        private OpenXmlElement? FindContentContainer(SdtElement control)
-        {
-            var runContent = control.Descendants<SdtContentRun>().FirstOrDefault();
-            if (runContent != null) return runContent;
-
-            var blockContent = control.Descendants<SdtContentBlock>().FirstOrDefault();
-            if (blockContent != null) return blockContent;
-
-            var cellContent = control.Descendants<SdtContentCell>().FirstOrDefault();
-            return cellContent;
-        }
-
-        /// <summary>
-        /// 获取内容控件标签
-        /// </summary>
-        private string? GetControlTag(SdtElement control)
-        {
-            return control.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value;
-        }
-
-        /// <summary>
-        /// 提取现有文本内容（用于批注）
-        /// </summary>
-        private string ExtractExistingText(SdtElement control)
-        {
-            List<Text> existingTextElements = control.Descendants<Text>().ToList();
-            return existingTextElements.Any() ? string.Join("", existingTextElements.Select(static t => t.Text)) : string.Empty;
-        }
-
-        /// <summary>
-        /// 添加处理批注
-        /// </summary>
-        private void AddProcessingComment(WordprocessingDocument document, SdtElement control, string tag, string newValue, string oldValue, ContentControlLocation location)
-        {
-            // 查找所有相关的Run元素
-            List<Run> targetRuns = FindAllTargetRuns(control);
-
-            if (targetRuns.Count == 0)
-            {
-                _logger.LogWarning($"未找到目标Run元素，跳过批注添加，标签: '{tag}'");
-                return;
-            }
-
-            string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
-            string locationText = location switch
-            {
-                ContentControlLocation.Header => "页眉",
-                ContentControlLocation.Footer => "页脚",
-                _ => "正文"
-            };
-            string commentText = $"此字段（{locationText}）已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
-
-            // 根据Run数量选择批注方式
-            if (targetRuns.Count == 1)
-            {
-                // 单行文本：使用原有方法
-                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag);
-            }
-            else
-            {
-                // 多行文本：使用新的范围批注方法
-                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag);
-            }
-        }
-
-        /// <summary>
-        /// 查找内容控件中所有相关的Run元素
-        /// </summary>
-        private List<Run> FindAllTargetRuns(SdtElement control)
-        {
-            List<Run> runs = new List<Run>();
-
-            // 尝试从内容容器中查找Run
-            OpenXmlElement? content = FindContentContainer(control);
-            if (content != null)
-            {
-                if (content is SdtContentBlock || content is SdtContentCell)
-                {
-                    // 块级控件：获取段落中的所有Run
-                    runs = content.Descendants<Run>().ToList();
-                }
-                else if (content is SdtContentRun)
-                {
-                    // 行内控件：获取所有Run
-                    runs = content.Descendants<Run>().ToList();
-                }
-            }
-            else
-            {
-                // 直接从控件中查找Run
-                runs = control.Descendants<Run>().ToList();
-            }
-
-            _logger.LogDebug($"在内容控件中找到 {runs.Count} 个Run元素");
-            return runs;
-        }
-
-        /// <summary>
         /// 获取文档中所有内容控件（包括页眉页脚）
         /// </summary>
         private List<(SdtElement Element, string Tag, ContentControlLocation Location)> GetAllContentControls(
@@ -964,8 +848,8 @@ namespace DocuFiller.Services
             // 1. 文档主体
             foreach (var control in document.MainDocumentPart.Document.Descendants<SdtElement>())
             {
-                string? tag = GetControlTag(control);
-                if (!string.IsNullOrWhiteSpace(tag) && !HasAncestorWithSameTag(control, tag))
+                string? tag = OpenXmlHelper.GetControlTag(control);
+                if (!string.IsNullOrWhiteSpace(tag) && !OpenXmlHelper.HasAncestorWithSameTag(control, tag))
                 {
                     result.Add((control, tag, ContentControlLocation.Body));
                 }
@@ -977,8 +861,8 @@ namespace DocuFiller.Services
                 foreach (var control in headerPart.Header?.Descendants<SdtElement>()
                     ?? Enumerable.Empty<SdtElement>())
                 {
-                    string? tag = GetControlTag(control);
-                    if (!string.IsNullOrWhiteSpace(tag) && !HasAncestorWithSameTag(control, tag))
+                    string? tag = OpenXmlHelper.GetControlTag(control);
+                    if (!string.IsNullOrWhiteSpace(tag) && !OpenXmlHelper.HasAncestorWithSameTag(control, tag))
                     {
                         result.Add((control, tag, ContentControlLocation.Header));
                     }
@@ -991,8 +875,8 @@ namespace DocuFiller.Services
                 foreach (var control in footerPart.Footer?.Descendants<SdtElement>()
                     ?? Enumerable.Empty<SdtElement>())
                 {
-                    string? tag = GetControlTag(control);
-                    if (!string.IsNullOrWhiteSpace(tag) && !HasAncestorWithSameTag(control, tag))
+                    string? tag = OpenXmlHelper.GetControlTag(control);
+                    if (!string.IsNullOrWhiteSpace(tag) && !OpenXmlHelper.HasAncestorWithSameTag(control, tag))
                     {
                         result.Add((control, tag, ContentControlLocation.Footer));
                     }
@@ -1002,25 +886,19 @@ namespace DocuFiller.Services
             return result;
         }
 
-        private static bool HasAncestorWithSameTag(SdtElement control, string tag)
-        {
-            var normalizedTag = tag.Trim();
-            return control.Ancestors<SdtElement>()
-                .Select(static c => c.SdtProperties?.GetFirstChild<Tag>()?.Val?.Value)
-                .Any(t => !string.IsNullOrWhiteSpace(t) &&
-                          string.Equals(t!.Trim(), normalizedTag, StringComparison.OrdinalIgnoreCase));
-        }
-
         public Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(
             string templateFilePath,
             Dictionary<string, FormattedCellValue> formattedData,
-            string outputFilePath)
+            string outputFilePath,
+            CancellationToken cancellationToken = default)
         {
             var result = new ProcessResult { IsSuccess = false, StartTime = DateTime.Now };
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             try
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 _logger.LogInformation($"开始处理文档（格式化数据）: {templateFilePath}");
 
                 // 1. 验证输入
@@ -1034,6 +912,8 @@ namespace DocuFiller.Services
                 // 2. 复制模板文件
                 File.Copy(templateFilePath, outputFilePath, true);
 
+                cancellationToken.ThrowIfCancellationRequested();
+
                 // 3. 打开文档进行编辑
                 using var document = WordprocessingDocument.Open(outputFilePath, true);
 
@@ -1045,6 +925,8 @@ namespace DocuFiller.Services
                 int filledCount = 0;
                 foreach (var controlInfo in allControls)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if (formattedData.TryGetValue(controlInfo.Tag, out var formattedValue))
                     {
                         FillContentControlWithFormattedValue(

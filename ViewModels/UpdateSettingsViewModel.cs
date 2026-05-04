@@ -1,12 +1,11 @@
 using System;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -17,13 +16,14 @@ namespace DocuFiller.ViewModels
     /// <summary>
     /// 更新源设置 ViewModel，用于编辑 UpdateUrl 和 Channel
     /// </summary>
-    public class UpdateSettingsViewModel : INotifyPropertyChanged
+    public partial class UpdateSettingsViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
     {
         private readonly IUpdateService _updateService;
         private readonly ILogger<UpdateSettingsViewModel> _logger;
 
-        private string _updateUrl = string.Empty;
-        private string _channel = "stable";
+        [ObservableProperty] private string _updateUrl = string.Empty;
+        [ObservableProperty] private string _channel = "stable";
+
         private string _sourceTypeDisplay = string.Empty;
 
         /// <summary>
@@ -66,47 +66,21 @@ namespace DocuFiller.ViewModels
             _channel = string.IsNullOrWhiteSpace(rawChannel)
                 ? _updateService.Channel
                 : rawChannel.Trim();
-
-            Channels = new ObservableCollection<string> { "stable", "beta" };
-            SaveCommand = new RelayCommand(ExecuteSave);
-            CancelCommand = new RelayCommand(ExecuteCancel);
-        }
-
-        /// <summary>用户可编辑的更新源 URL，留空表示使用 GitHub Releases</summary>
-        public string UpdateUrl
-        {
-            get => _updateUrl;
-            set => SetProperty(ref _updateUrl, value);
-        }
-
-        /// <summary>当前选中的更新通道</summary>
-        public string Channel
-        {
-            get => _channel;
-            set => SetProperty(ref _channel, value);
         }
 
         /// <summary>当前源类型（只读显示）</summary>
-        public string SourceTypeDisplay
-        {
-            get => _sourceTypeDisplay;
-        }
+        public string SourceTypeDisplay => _sourceTypeDisplay;
 
         /// <summary>通道选项列表</summary>
-        public ObservableCollection<string> Channels { get; }
+        public ObservableCollection<string> Channels { get; } = new ObservableCollection<string> { "stable", "beta" };
 
-        /// <summary>保存命令</summary>
-        public ICommand SaveCommand { get; }
-
-        /// <summary>取消命令</summary>
-        public ICommand CancelCommand { get; }
-
-        private void ExecuteSave()
+        [RelayCommand]
+        private void Save()
         {
             try
             {
-                _updateService.ReloadSource(_updateUrl, _channel);
-                _logger.LogInformation("更新设置已保存：UpdateUrl={UpdateUrl}, Channel={Channel}", _updateUrl, _channel);
+                _updateService.ReloadSource(UpdateUrl, Channel);
+                _logger.LogInformation("更新设置已保存：UpdateUrl={UpdateUrl}, Channel={Channel}", UpdateUrl, Channel);
                 CloseCallback?.Invoke(true);
             }
             catch (Exception ex)
@@ -116,7 +90,8 @@ namespace DocuFiller.ViewModels
             }
         }
 
-        private void ExecuteCancel()
+        [RelayCommand]
+        private void Cancel()
         {
             CloseCallback?.Invoke(false);
         }
@@ -143,25 +118,5 @@ namespace DocuFiller.ViewModels
                 return (null, null);
             }
         }
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-                return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        #endregion
     }
 }

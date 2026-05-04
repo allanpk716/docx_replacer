@@ -113,11 +113,7 @@ namespace DocuFiller
             services.AddSingleton(_configuration);
 
             // 配置选项模式
-            services.Configure<AppSettings>(_configuration);
-            services.Configure<LoggingSettings>(_configuration.GetSection("Logging"));
-            services.Configure<FileProcessingSettings>(_configuration.GetSection("FileProcessing"));
             services.Configure<PerformanceSettings>(_configuration.GetSection("Performance"));
-            services.Configure<UISettings>(_configuration.GetSection("UI"));
 
             // 配置日志记录：CLI 模式禁用 Console Logger 以避免污染 JSONL 输出
             var loggerFactory = LoggerConfiguration.CreateLoggerFactory(enableConsole: !isCliMode);

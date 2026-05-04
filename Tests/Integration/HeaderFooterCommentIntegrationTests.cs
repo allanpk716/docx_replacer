@@ -4,11 +4,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using DocuFiller.Models;
 using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using WordprocessingDocumentType = DocumentFormat.OpenXml.WordprocessingDocumentType;
 
@@ -49,7 +51,7 @@ namespace DocuFiller.Tests.Integration
 
             CreateTestTemplate(templatePath);
 
-            var fileService = new FileService();
+            var fileService = new FileService(new NullLogger<FileService>());
             var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
@@ -68,19 +70,19 @@ namespace DocuFiller.Tests.Integration
                 new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
             // Act
-            var data = new System.Collections.Generic.Dictionary<string, object>
+            var formattedData = new System.Collections.Generic.Dictionary<string, FormattedCellValue>
             {
-                { "HeaderField", "新页眉" },
-                { "BodyField", "新正文" },
-                { "FooterField", "新页脚" }
+                { "HeaderField", FormattedCellValue.FromPlainText("新页眉") },
+                { "BodyField", FormattedCellValue.FromPlainText("新正文") },
+                { "FooterField", FormattedCellValue.FromPlainText("新页脚") }
             };
-            bool success = await processor.ProcessSingleDocumentAsync(
+            ProcessResult result = await processor.ProcessDocumentWithFormattedDataAsync(
                 templatePath,
-                outputPath,
-                data);
+                formattedData,
+                outputPath);
 
             // Assert
-            Assert.True(success);
+            Assert.True(result.IsSuccess);
             Assert.True(File.Exists(outputPath));
 
             using var document = WordprocessingDocument.Open(outputPath, false);
@@ -110,7 +112,7 @@ namespace DocuFiller.Tests.Integration
 
             CreateNestedHeaderTemplate(templatePath);
 
-            var fileService = new FileService();
+            var fileService = new FileService(new NullLogger<FileService>());
             var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
@@ -128,16 +130,16 @@ namespace DocuFiller.Tests.Integration
                 serviceProvider,
                 new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
-            var data = new System.Collections.Generic.Dictionary<string, object>
+            var formattedData = new System.Collections.Generic.Dictionary<string, FormattedCellValue>
             {
-                { "HeaderField", "新页眉" }
+                { "HeaderField", FormattedCellValue.FromPlainText("新页眉") }
             };
-            bool success = await processor.ProcessSingleDocumentAsync(
+            ProcessResult result = await processor.ProcessDocumentWithFormattedDataAsync(
                 templatePath,
-                outputPath,
-                data);
+                formattedData,
+                outputPath);
 
-            Assert.True(success);
+            Assert.True(result.IsSuccess);
             Assert.True(File.Exists(outputPath));
 
             using var document = WordprocessingDocument.Open(outputPath, false);
@@ -153,7 +155,7 @@ namespace DocuFiller.Tests.Integration
 
             CreateHeaderTemplateWithNestedUntaggedContent(templatePath);
 
-            var fileService = new FileService();
+            var fileService = new FileService(new NullLogger<FileService>());
             var excelDataParser = new ExcelDataParserService(_loggerFactory.CreateLogger<ExcelDataParserService>(), fileService);
             var serviceProvider = new ServiceCollection()
                 .AddSingleton(typeof(ILogger<>), typeof(Logger<>))
@@ -171,16 +173,16 @@ namespace DocuFiller.Tests.Integration
                 serviceProvider,
                 new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
 
-            var data = new System.Collections.Generic.Dictionary<string, object>
+            var formattedData = new System.Collections.Generic.Dictionary<string, FormattedCellValue>
             {
-                { "HeaderField", "456" }
+                { "HeaderField", FormattedCellValue.FromPlainText("456") }
             };
-            bool success = await processor.ProcessSingleDocumentAsync(
+            ProcessResult result = await processor.ProcessDocumentWithFormattedDataAsync(
                 templatePath,
-                outputPath,
-                data);
+                formattedData,
+                outputPath);
 
-            Assert.True(success);
+            Assert.True(result.IsSuccess);
             using var document = WordprocessingDocument.Open(outputPath, false);
             var headerText = document.MainDocumentPart?.HeaderParts.First().Header?.InnerText;
             Assert.Equal("456", headerText);

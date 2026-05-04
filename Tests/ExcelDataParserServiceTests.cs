@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DocuFiller.Services;
 using DocuFiller.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using OfficeOpenXml;
 
 namespace DocuFiller.Tests
@@ -21,7 +22,7 @@ namespace DocuFiller.Tests
             CreateTestExcelFile(_testFilePath);
 
             var logger = LoggerFactory.Create(builder => { }).CreateLogger<ExcelDataParserService>();
-            var fileService = new FileService();
+            var fileService = new FileService(new NullLogger<FileService>());
             _parser = new ExcelDataParserService(logger, fileService);
         }
 

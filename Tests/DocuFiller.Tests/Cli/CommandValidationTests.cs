@@ -62,11 +62,10 @@ public class CommandValidationTests
     private class StubDocumentProcessor : IDocumentProcessor
     {
         public event EventHandler<ProgressEventArgs>? ProgressUpdated { add { } remove { } }
-        public Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request) => throw new NotImplementedException();
-        public Task<bool> ProcessSingleDocumentAsync(string templatePath, string outputPath, Dictionary<string, object> data, CancellationToken ct = default) => throw new NotImplementedException();
+        public Task<ProcessResult> ProcessDocumentsAsync(ProcessRequest request, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<ValidationResult> ValidateTemplateAsync(string templatePath) => throw new NotImplementedException();
         public Task<List<ContentControlData>> GetContentControlsAsync(string templatePath) => throw new NotImplementedException();
-        public Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(string templateFilePath, Dictionary<string, FormattedCellValue> formattedData, string outputFilePath) => throw new NotImplementedException();
+        public Task<ProcessResult> ProcessDocumentWithFormattedDataAsync(string templateFilePath, Dictionary<string, FormattedCellValue> formattedData, string outputFilePath, CancellationToken cancellationToken = default) => throw new NotImplementedException();
         public Task<ProcessResult> ProcessFolderAsync(FolderProcessRequest request, CancellationToken ct = default) => throw new NotImplementedException();
         public void CancelProcessing() { }
     }

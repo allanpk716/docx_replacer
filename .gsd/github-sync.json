@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "repo": "allanpk716/docx_replacer",
+  "milestones": {},
+  "slices": {
+    "M020/S04": {
+      "issueNumber": 0,
+      "prNumber": 0,
+      "branch": "milestone/M020/S04",
+      "lastSyncedAt": "2026-05-04T02:02:03.747Z",
+      "state": "open"
+    },
+    "M020/S05": {
+      "issueNumber": 0,
+      "prNumber": 0,
+      "branch": "milestone/M020/S05",
+      "lastSyncedAt": "2026-05-04T02:21:23.975Z",
+      "state": "open"
+    }
+  },
+  "tasks": {
+    "M020/S04/T01": {
+      "issueNumber": 4,
+      "lastSyncedAt": "2026-05-04T02:02:00.769Z",
+      "state": "open"
+    },
+    "M020/S04/T02": {
+      "issueNumber": 5,
+      "lastSyncedAt": "2026-05-04T02:02:02.282Z",
+      "state": "open"
+    },
+    "M020/S04/T03": {
+      "issueNumber": 6,
+      "lastSyncedAt": "2026-05-04T02:02:03.747Z",
+      "state": "open"
+    },
+    "M020/S05/T01": {
+      "issueNumber": 7,
+      "lastSyncedAt": "2026-05-04T02:24:36.108Z",
+      "state": "open"
+    },
+    "M020/S05/T02": {
+      "issueNumber": 8,
+      "lastSyncedAt": "2026-05-04T02:28:32.677Z",
+      "state": "open"
+    },
+    "M020/S05/T03": {
+      "issueNumber": 9,
+      "lastSyncedAt": "2026-05-04T02:30:07.668Z",
+      "state": "open"
+    }
+  }
+}

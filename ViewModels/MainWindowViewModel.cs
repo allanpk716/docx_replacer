@@ -219,7 +219,7 @@ namespace DocuFiller.ViewModels
             {
                 if (SetProperty(ref _templateFolderPath, value))
                 {
-                    OnTemplateFolderChanged();
+                    _ = HandleTemplateFolderChangedAsync();
                 }
             }
         }
@@ -496,8 +496,8 @@ namespace DocuFiller.ViewModels
             BrowseTemplateCommand = new RelayCommand(BrowseTemplate);
             BrowseDataCommand = new RelayCommand(BrowseData);
             BrowseOutputCommand = new RelayCommand(BrowseOutput);
-            ValidateTemplateCommand = new RelayCommand(ValidateTemplate, () => !string.IsNullOrEmpty(TemplatePath));
-            PreviewDataCommand = new RelayCommand(PreviewDataAsync, () => !string.IsNullOrEmpty(DataPath));
+            ValidateTemplateCommand = new RelayCommand(async () => await ValidateTemplateAsync(), () => !string.IsNullOrEmpty(TemplatePath));
+            PreviewDataCommand = new RelayCommand(async () => await PreviewDataAsync(), () => !string.IsNullOrEmpty(DataPath));
             StartProcessCommand = new RelayCommand(async () => await StartProcessAsync(), () => CanStartProcess);
             CancelProcessCommand = new RelayCommand(CancelProcess, () => CanCancelProcess);
             ExitCommand = new RelayCommand(ExitApplication);
@@ -598,7 +598,7 @@ namespace DocuFiller.ViewModels
             }
         }
         
-        private async void ValidateTemplate()
+        private async Task ValidateTemplateAsync()
         {
             try
             {
@@ -632,7 +632,7 @@ namespace DocuFiller.ViewModels
             }
         }
         
-        private async void PreviewDataAsync()
+        private async Task PreviewDataAsync()
         {
             try
             {
@@ -702,7 +702,7 @@ namespace DocuFiller.ViewModels
                 // 使用 Task.Run 将处理移到后台线程，避免阻塞 UI
                 var result = await Task.Run(async () =>
                 {
-                    return await _documentProcessor.ProcessDocumentsAsync(request);
+                    return await _documentProcessor.ProcessDocumentsAsync(request, _cancellationTokenSource.Token);
                 }, _cancellationTokenSource.Token);
                 
                 if (result.IsSuccess)
@@ -1005,16 +1005,24 @@ namespace DocuFiller.ViewModels
         }
         
         /// <summary>
-        /// 模板文件夹路径改变时的处理
+        /// 模板文件夹路径改变时的处理（fire-and-forget，异常由 catch 吞掉并记录日志）
         /// </summary>
-        private async void OnTemplateFolderChanged()
+        private async Task HandleTemplateFolderChangedAsync()
         {
-            if (!string.IsNullOrEmpty(TemplateFolderPath))
+            try
             {
-                await HandleFolderDropAsync(TemplateFolderPath);
+                if (!string.IsNullOrEmpty(TemplateFolderPath))
+                {
+                    await HandleFolderDropAsync(TemplateFolderPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "处理模板文件夹变更时发生错误");
+                ProgressMessage = "加载模板文件夹失败";
             }
         }
-        
+
         /// <summary>
         /// 更新模板文件列表
         /// </summary>

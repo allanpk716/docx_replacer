@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows;
-using System.Windows.Input;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 
 namespace DocuFiller.ViewModels
 {
@@ -12,7 +11,7 @@ namespace DocuFiller.ViewModels
     /// 下载进度 ViewModel，追踪 Velopack 更新下载的进度、速度和剩余时间。
     /// 通过注入 timestamp provider 和 dispatcher wrapper 实现单元可测试性。
     /// </summary>
-    public class DownloadProgressViewModel : INotifyPropertyChanged, IDisposable
+    public partial class DownloadProgressViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private readonly long _totalBytes;
         private readonly string _version;
@@ -24,14 +23,14 @@ namespace DocuFiller.ViewModels
         private readonly List<(int percent, TimeSpan timestamp)> _progressHistory = new();
         private double _currentSpeedBytesPerSec;
 
-        // Backing fields for bindable properties
-        private int _progressPercent;
-        private string _downloadSpeed = string.Empty;
-        private string _remainingTime = string.Empty;
-        private string _statusText = "准备下载...";
-        private bool _isDownloading = true;
-        private bool _isCompleted;
-        private string? _errorMessage;
+        // Backing fields for bindable properties — CT.Mvvm [ObservableProperty] generates public properties
+        [ObservableProperty] private int _progressPercent;
+        [ObservableProperty] private string _downloadSpeed = string.Empty;
+        [ObservableProperty] private string _remainingTime = string.Empty;
+        [ObservableProperty] private string _statusText = "准备下载...";
+        [ObservableProperty] private bool _isDownloading = true;
+        [ObservableProperty] private bool _isCompleted;
+        [ObservableProperty] private string? _errorMessage;
 
         /// <summary>
         /// 窗体关闭回调，由 code-behind 注入，参数为 DialogResult。
@@ -69,68 +68,27 @@ namespace DocuFiller.ViewModels
                 else
                     action();
             });
-
-            CancelCommand = new RelayCommand(ExecuteCancel, () => IsDownloading);
         }
 
         /// <summary>下载取消令牌</summary>
         public CancellationToken CancellationToken => _cts.Token;
 
-        /// <summary>当前进度百分比 (0-100)</summary>
-        public int ProgressPercent
+        /// <summary>
+        /// 当 IsDownloading 变化时，通知 CancelCommand 重新评估 CanExecute。
+        /// 替代原来的 CommandManager.InvalidateRequerySuggested() 模式。
+        /// </summary>
+        partial void OnIsDownloadingChanged(bool value)
         {
-            get => _progressPercent;
-            private set => SetProperty(ref _progressPercent, value);
+            CancelCommand.NotifyCanExecuteChanged();
         }
 
-        /// <summary>下载速度显示文本，例如 "2.5 MB/s"</summary>
-        public string DownloadSpeed
+        [RelayCommand(CanExecute = nameof(CanCancel))]
+        private void Cancel()
         {
-            get => _downloadSpeed;
-            private set => SetProperty(ref _downloadSpeed, value);
+            _cts.Cancel();
         }
 
-        /// <summary>预估剩余时间显示文本，例如 "约 2 分钟"</summary>
-        public string RemainingTime
-        {
-            get => _remainingTime;
-            private set => SetProperty(ref _remainingTime, value);
-        }
-
-        /// <summary>状态文本，综合显示进度信息</summary>
-        public string StatusText
-        {
-            get => _statusText;
-            private set => SetProperty(ref _statusText, value);
-        }
-
-        /// <summary>是否正在下载中</summary>
-        public bool IsDownloading
-        {
-            get => _isDownloading;
-            private set
-            {
-                if (SetProperty(ref _isDownloading, value))
-                    CommandManager.InvalidateRequerySuggested();
-            }
-        }
-
-        /// <summary>下载是否已完成</summary>
-        public bool IsCompleted
-        {
-            get => _isCompleted;
-            private set => SetProperty(ref _isCompleted, value);
-        }
-
-        /// <summary>错误信息，下载失败或取消时设置</summary>
-        public string? ErrorMessage
-        {
-            get => _errorMessage;
-            private set => SetProperty(ref _errorMessage, value);
-        }
-
-        /// <summary>取消下载命令</summary>
-        public ICommand CancelCommand { get; }
+        private bool CanCancel() => IsDownloading;
 
         /// <summary>
         /// 由 Velopack 进度回调调用（后台线程），线程安全地更新进度状态。
@@ -201,12 +159,6 @@ namespace DocuFiller.ViewModels
                 ErrorMessage = "下载已取消";
                 StatusText = "下载已取消";
             });
-        }
-
-        private void ExecuteCancel()
-        {
-            if (!IsDownloading) return;
-            _cts.Cancel();
         }
 
         /// <summary>
@@ -280,25 +232,5 @@ namespace DocuFiller.ViewModels
         {
             _cts.Dispose();
         }
-
-        #region INotifyPropertyChanged
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-        {
-            if (EqualityComparer<T>.Default.Equals(field, value))
-                return false;
-            field = value;
-            OnPropertyChanged(propertyName);
-            return true;
-        }
-
-        #endregion
     }
 }

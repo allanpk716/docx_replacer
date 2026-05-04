@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M020/S04/T01",
+  "timestamp": 1777856535336,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "grep -c 'IUpdateService' CLAUDE.md returns >= 3 and grep -c 'UPDATE_CHECK_ERROR' CLAUDE.md returns >= 1 and grep -c 'update' CLAUDE.md returns >= 5 and grep '11 个服务接口' CLAUDE.md succeeds",
+      "exitCode": 1,
+      "durationMs": 19,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

@@ -6,6 +6,7 @@ using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
 using DocuFiller.Models;
 using DocuFiller.Services.Interfaces;
+using DocuFiller.Utils;
 using Microsoft.Extensions.Logging;
 
 namespace DocuFiller.Services
@@ -34,7 +35,7 @@ namespace DocuFiller.Services
             try
             {
                 // 获取控件标签
-                string? tag = GetControlTag(control);
+                string? tag = OpenXmlHelper.GetControlTag(control);
                 if (string.IsNullOrWhiteSpace(tag))
                 {
                     _logger.LogWarning("内容控件标签为空，跳过处理");
@@ -52,7 +53,7 @@ namespace DocuFiller.Services
                 _logger.LogDebug($"找到匹配数据: '{tag}' -> '{value}'");
 
                 // 记录旧值
-                string oldValue = ExtractExistingText(control);
+                string oldValue = OpenXmlHelper.ExtractExistingText(control);
 
                 // 处理内容替换
                 ProcessContentReplacement(control, value);
@@ -60,7 +61,7 @@ namespace DocuFiller.Services
                 // 添加批注(仅正文区域支持,页眉页脚不支持批注)
                 if (location == ContentControlLocation.Body)
                 {
-                    AddProcessingComment(document, control, tag, value, oldValue, location);
+                    OpenXmlHelper.AddProcessingComment(document, control, tag, value, oldValue, location, _commentManager, _logger);
                 }
                 else
                 {
@@ -129,12 +130,12 @@ namespace DocuFiller.Services
         {
             var allControls = partRoot.Descendants<SdtElement>().ToList();
             var taggedControls = allControls
-                .Select(c => new { Control = c, Tag = GetControlTag(c) })
+                .Select(c => new { Control = c, Tag = OpenXmlHelper.GetControlTag(c) })
                 .Where(x => !string.IsNullOrWhiteSpace(x.Tag))
                 .ToList();
 
             var contentControls = taggedControls
-                .Where(x => !HasAncestorWithSameTag(x.Control, x.Tag!))
+                .Where(x => !OpenXmlHelper.HasAncestorWithSameTag(x.Control, x.Tag!))
                 .Select(x => x.Control)
                 .ToList();
 
@@ -145,15 +146,6 @@ namespace DocuFiller.Services
                 cancellationToken.ThrowIfCancellationRequested();
                 ProcessContentControl(control, data, document, location);
             }
-        }
-
-        private bool HasAncestorWithSameTag(SdtElement control, string tag)
-        {
-            var normalizedTag = tag.Trim();
-            return control.Ancestors<SdtElement>()
-                .Select(GetControlTag)
-                .Any(t => !string.IsNullOrWhiteSpace(t) &&
-                          string.Equals(t!.Trim(), normalizedTag, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -205,24 +197,6 @@ namespace DocuFiller.Services
         }
 
         /// <summary>
-        /// 获取内容控件标签
-        /// </summary>
-        private string? GetControlTag(SdtElement control)
-        {
-            SdtProperties? properties = control.SdtProperties;
-            return properties?.GetFirstChild<Tag>()?.Val?.Value;
-        }
-
-        /// <summary>
-        /// 提取现有文本内容
-        /// </summary>
-        private string ExtractExistingText(SdtElement control)
-        {
-            List<Text> existingTextElements = control.Descendants<Text>().ToList();
-            return existingTextElements.Any() ? string.Join("", existingTextElements.Select(static t => t.Text)) : string.Empty;
-        }
-
-        /// <summary>
         /// 处理内容替换
         /// </summary>
         private void ProcessContentReplacement(SdtElement control, string value)
@@ -233,261 +207,5 @@ namespace DocuFiller.Services
             _logger.LogDebug($"使用安全文本替换服务替换内容: '{value}'");
         }
 
-        /// <summary>
-        /// 查找内容容器
-        /// </summary>
-        private OpenXmlElement? FindContentContainer(SdtElement control)
-        {
-            return control.Descendants<SdtContentRun>().FirstOrDefault() ??
-                   control.Descendants<SdtContentBlock>().FirstOrDefault() as OpenXmlElement ??
-                   control.Descendants<SdtContentCell>().FirstOrDefault();
-        }
-
-        /// <summary>
-        /// 在容器中替换内容
-        /// </summary>
-        private void ReplaceContentInContainer(OpenXmlElement content, string value, SdtElement control)
-        {
-            _logger.LogDebug($"找到内容容器，类型: {content.GetType().Name}");
-
-            // 清除现有内容
-            content.RemoveAllChildren();
-
-            // 添加新内容
-            if (control is SdtBlock || content is SdtContentBlock || content is SdtContentCell)
-            {
-                Paragraph paragraph = CreateParagraphWithFormattedText(value);
-                content.AppendChild(paragraph);
-                _logger.LogDebug($"作为块级元素添加内容: '{value}'");
-            }
-            else
-            {
-                List<Run> runs = CreateFormattedRuns(value);
-                foreach (Run run in runs)
-                {
-                    content.AppendChild(run);
-                }
-                _logger.LogDebug($"作为行内元素添加内容: '{value}'");
-            }
-        }
-
-        /// <summary>
-        /// 直接替换文本内容
-        /// </summary>
-        private void ReplaceTextDirectly(SdtElement control, string value)
-        {
-            List<Text> textElements = control.Descendants<Text>().ToList();
-            if (!textElements.Any()) return;
-
-            _logger.LogDebug($"找到 {textElements.Count} 个文本元素，直接替换文本内容");
-
-            // 清除现有文本元素
-            List<Run> parentRuns = textElements.Select(static t => t.Parent).OfType<Run>().Distinct().ToList();
-            foreach (Run? run in parentRuns)
-            {
-                run.RemoveAllChildren();
-            }
-
-            // 添加格式化的新内容
-            if (parentRuns.Any())
-            {
-                Run firstRun = parentRuns.First();
-                List<OpenXmlElement> formattedElements = CreateFormattedTextElements(value);
-                foreach (OpenXmlElement element in formattedElements)
-                {
-                    firstRun.AppendChild(element);
-                }
-
-                // 移除其他多余的Run元素
-                for (int i = 1; i < parentRuns.Count; i++)
-                {
-                    parentRuns[i].Remove();
-                }
-            }
-        }
-
-        /// <summary>
-        /// 添加处理批注
-        /// </summary>
-        private void AddProcessingComment(WordprocessingDocument document, SdtElement control, string tag, string newValue, string oldValue, ContentControlLocation location)
-        {
-            // 查找所有相关的Run元素
-            List<Run> targetRuns = FindAllTargetRuns(control);
-
-            if (targetRuns.Count == 0)
-            {
-                _logger.LogWarning($"未找到目标Run元素，跳过批注添加，标签: '{tag}'");
-                return;
-            }
-
-            string currentTime = DateTime.Now.ToString("yyyy年M月d日 HH:mm:ss");
-            string locationText = location switch
-            {
-                ContentControlLocation.Header => "页眉",
-                ContentControlLocation.Footer => "页脚",
-                _ => "正文"
-            };
-            string commentText = $"此字段（{locationText}）已于 {currentTime} 更新。标签：{tag}，旧值：[{oldValue}]，新值：{newValue}";
-
-            // 根据Run数量选择批注方式
-            if (targetRuns.Count == 1)
-            {
-                // 单行文本：使用原有方法
-                _commentManager.AddCommentToElement(document, targetRuns[0], commentText, "DocuFiller系统", tag);
-            }
-            else
-            {
-                // 多行文本：使用新的范围批注方法
-                _commentManager.AddCommentToRunRange(document, targetRuns, commentText, "DocuFiller系统", tag);
-            }
-        }
-
-        /// <summary>
-        /// 查找目标Run元素用于添加批注
-        /// </summary>
-        private Run? FindTargetRun(SdtElement control)
-        {
-            // 尝试从内容容器中查找Run
-            OpenXmlElement? content = FindContentContainer(control);
-            if (content != null)
-            {
-                if (content is SdtContentBlock || content is SdtContentCell)
-                {
-                    return content.Descendants<Run>().FirstOrDefault();
-                }
-                else if (content is SdtContentRun)
-                {
-                    return content.Descendants<Run>().FirstOrDefault();
-                }
-            }
-
-            // 直接从控件中查找Run
-            return control.Descendants<Run>().FirstOrDefault();
-        }
-
-        /// <summary>
-        /// 查找内容控件中所有相关的Run元素
-        /// </summary>
-        private List<Run> FindAllTargetRuns(SdtElement control)
-        {
-            List<Run> runs = new List<Run>();
-
-            // 尝试从内容容器中查找Run
-            OpenXmlElement? content = FindContentContainer(control);
-            if (content != null)
-            {
-                if (content is SdtContentBlock || content is SdtContentCell)
-                {
-                    // 块级控件：获取段落中的所有Run
-                    runs = content.Descendants<Run>().ToList();
-                }
-                else if (content is SdtContentRun)
-                {
-                    // 行内控件：获取所有Run
-                    runs = content.Descendants<Run>().ToList();
-                }
-            }
-            else
-            {
-                // 直接从控件中查找Run
-                runs = control.Descendants<Run>().ToList();
-            }
-
-            _logger.LogDebug($"在内容控件中找到 {runs.Count} 个Run元素");
-            return runs;
-        }
-
-        /// <summary>
-        /// 创建带格式的段落
-        /// </summary>
-        private Paragraph CreateParagraphWithFormattedText(string text)
-        {
-            Paragraph paragraph = new Paragraph();
-            List<Run> runs = CreateFormattedRuns(text);
-            foreach (Run run in runs)
-            {
-                paragraph.AppendChild(run);
-            }
-            return paragraph;
-        }
-
-        /// <summary>
-        /// 创建格式化的Run元素列表
-        /// </summary>
-        private List<Run> CreateFormattedRuns(string text)
-        {
-            List<Run> runs = new List<Run>();
-
-            if (string.IsNullOrEmpty(text))
-                return runs;
-
-            // 按换行符分割文本
-            string[] lines = text.Split(["\n"], StringSplitOptions.None);
-            _logger.LogDebug($"文本分割为 {lines.Length} 行");
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-
-                // 创建带红色格式的Run
-                Run run = new Run();
-                RunProperties runProperties = new RunProperties();
-                Color color = new Color() { Val = "FF0000" }; // 红色
-                runProperties.AppendChild(color);
-                run.AppendChild(runProperties);
-
-                // 添加文本内容
-                Text text_element = new Text(line);
-                run.AppendChild(text_element);
-                runs.Add(run);
-
-                // 如果不是最后一行，添加换行符
-                if (i < lines.Length - 1)
-                {
-                    Run breakRun = new Run(new Break());
-                    runs.Add(breakRun);
-                }
-            }
-
-            return runs;
-        }
-
-        /// <summary>
-        /// 创建格式化的文本元素列表
-        /// </summary>
-        private List<OpenXmlElement> CreateFormattedTextElements(string text)
-        {
-            List<OpenXmlElement> elements = new List<OpenXmlElement>();
-
-            if (string.IsNullOrEmpty(text))
-                return elements;
-
-            // 按换行符分割文本
-            string[] lines = text.Split(["\n"], StringSplitOptions.None);
-            _logger.LogDebug($"文本分割为 {lines.Length} 行");
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-
-                // 设置文本颜色为红色
-                RunProperties runProperties = new RunProperties();
-                Color color = new Color() { Val = "FF0000" }; // 红色
-                runProperties.AppendChild(color);
-                elements.Add(runProperties);
-
-                // 添加文本内容
-                Text textElement = new Text(line);
-                elements.Add(textElement);
-
-                // 如果不是最后一行，添加换行符
-                if (i < lines.Length - 1)
-                {
-                    elements.Add(new Break());
-                }
-            }
-
-            return elements;
-        }
     }
 }
