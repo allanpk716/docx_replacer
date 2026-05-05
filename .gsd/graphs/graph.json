@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M021",
-      "label": "M021: 第二轮重构 — ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步",
+      "id": "milestone:M022",
+      "label": "M022: 跨平台技术调研",
       "type": "milestone",
-      "description": "Active milestone: M021",
+      "description": "Active milestone: M022",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -1075,6 +1075,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M021",
+      "label": "M021: 第二轮重构 — ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-ROADMAP.md"
+    },
+    {
       "id": "slice:M021:S01",
       "label": "S01: FillViewModel + UpdateStatusViewModel 拆分",
       "type": "slice",
@@ -1191,6 +1198,131 @@
     {
       "id": "task:M021:S06:T02",
       "label": "T02: Sync product requirements doc UI descriptions with actual code",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S01",
+      "label": "S01: Electron.NET PoC + 调研文档",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M022:S01:T01",
+      "label": "T01: Scaffold Electron.NET project and verify toolchain",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S01:T02",
+      "label": "T02: Implement mini DocuFiller PoC with IPC, file dialog, and progress bar",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S01:T03",
+      "label": "T03: Write Electron.NET comprehensive research document",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S02",
+      "label": "S02: Tauri + .NET sidecar PoC + 调研文档",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M022:S02:T01",
+      "label": "T01: Scaffold Tauri v2 + .NET sidecar project and verify toolchain",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S02:T02",
+      "label": "T02: Implement mini DocuFiller PoC with native dialog, sidecar IPC, and progress bar",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S02:T03",
+      "label": "T03: Write Tauri + .NET sidecar comprehensive research document",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S03",
+      "label": "S03: 纯文献调研（Avalonia/Blazor/Web/MAUI）",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M022:S03:T01",
+      "label": "T01: 撰写 Avalonia 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S03:T02",
+      "label": "T02: 撰写 Blazor Hybrid 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S03:T03",
+      "label": "T03: 撰写纯 Web 应用方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S03:T04",
+      "label": "T04: 撰写 .NET MAUI 跨平台方案文献调研文档",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S04",
+      "label": "S04: 通用课题调研（Velopack/核心库/平台差异/打包分发）",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M022:S04:T01",
+      "label": "T01: 调研 Velopack 跨平台能力并撰写 velopack-cross-platform.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S04:T02",
+      "label": "T02: 调研核心依赖库跨平台兼容性并撰写 core-dependencies-compatibility.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S04:T03",
+      "label": "T03: 调研平台差异处理并撰写 platform-differences.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M022:S04:T04",
+      "label": "T04: 调研打包分发方案并撰写 packaging-distribution.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M022:S05",
+      "label": "S05: 总结与对比评估",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/slices/S05/S05-PLAN.md"
+    },
+    {
+      "id": "task:M022:S05:T01",
+      "label": "T01: 撰写全方案横向对比评估文档 comparison-and-recommendation.md",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -1889,6 +2021,270 @@
       "description": "Source: complete-milestone verification",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M020/M020-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:1",
+      "label": "**DockPanel DataContext scoping over binding prefix**: Used `DockPanel DataContext={Binding FillVM}` to scope bindings per tab instead of prefixing every binding with `FillVM.Property`. This leverages WPF's visual tree inheritance and produces cleaner XAML.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:2",
+      "label": "**Proxy properties on coordinator for code-behind access**: Added `IsProcessing` and `CancelProcessCommand` proxy properties on MainWindowViewModel coordinator so MainWindow.xaml.cs OnClosing can access FillVM state without casting to FillViewModel type.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:3",
+      "label": "**IServiceProvider injection in sub-ViewModels for window creation**: Used constructor-injected `IServiceProvider` in UpdateStatusViewModel to create windows instead of `((App)Application.Current).ServiceProvider` cast. Cleaner, testable, and avoids framework coupling.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:4",
+      "label": "**Sub-ViewModels registered as Transient in DI**: FillViewModel and UpdateStatusViewModel both registered as Transient because they hold mutable per-window state. Singleton would cause shared state bugs across multiple windows.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:5",
+      "label": "**Dual-mode cleanup dispatch on OutputDirectory emptiness**: CleanupViewModel handles both single-file cleanup (OutputDirectory empty → use input file directory) and folder cleanup (OutputDirectory set → use specified directory) via the same command.",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:6",
+      "label": "**Grid + Ellipse overlay for notification badge**: Used a Grid with overlapping Ellipse for the red dot badge on the ⚙ settings button instead of a custom ControlTemplate. Minimal markup, keeps existing button template untouched.",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:7",
+      "label": "**MainWindowViewModel can be reduced from 1623 to 156 lines by extracting 3 sub-ViewModels**: The coordinator pattern scales well for WPF apps with multiple Tab areas. Each sub-VM manages its own state independently. The key insight is that the coordinator only needs proxy properties for cross-cutting concerns (like window closing).",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:8",
+      "label": "**AttachedProperty Behaviors eliminate massive code-behind event handlers**: MainWindow.xaml.cs had 13 drag-drop event handlers (~446 lines). FileDragDrop Behavior reduced this to 104 lines total. The `CommandManager.InvalidateRequerySuggested()` workaround is essential for WPF OLE drag-drop CanExecute staleness.",
+      "type": "decision",
+      "description": "Source: S03-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:9",
+      "label": "**WPF TextBox requires Preview tunnel events for drag-drop, Border uses bubbling**: TextBox has built-in drag-drop handling that intercepts at the bubbling stage. Preview (tunnel) events fire first and can set `e.Handled=true` to prevent interception. Non-TextBox elements like Border have no built-in handling, so bubbling events work fine.",
+      "type": "decision",
+      "description": "Source: S03-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:10",
+      "label": "**Machine-level NuGet configuration corruption can masquerade as code build failures**: `dotnet nuget list source` returning `Value cannot be null. (Parameter 'path1')` affects all projects on the machine, including master branch. Always verify whether build failures are environment-wide before flagging code issues.",
+      "type": "decision",
+      "description": "Source: Milestone completion verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:11",
+      "label": "**Coordinator + sub-ViewModel with DockPanel DataContext scoping**: MainWindowVM holds child VM references as properties. Each Tab content area wraps in `DockPanel DataContext={Binding ChildVM}`. All bindings within the DockPanel automatically resolve against the child VM. No prefix clutter in XAML.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:12",
+      "label": "**CT.Mvvm extraction pattern for existing ViewModels**: Convert to `partial class`, change base to `CommunityToolkit.Mvvm.ComponentModel.ObservableObject` (fully qualified to avoid collision with custom ObservableObject), replace manual properties with `[ObservableProperty] private type _field;`, replace commands with `[RelayCommand]`, use `partial void OnXxxChanged()` for side effects.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:13",
+      "label": "**AttachedProperty Behavior for reusable UI event handling**: Static class with `IsEnabled`, `Filter`, and `DropCommand` attached properties. `OnIsEnabledChanged` subscribes to drag-drop events on the target element. Commands decouple behavior from specific ViewModels.",
+      "type": "decision",
+      "description": "Source: S03-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:14",
+      "label": "**Delayed initialization with Task.Delay + CancellationToken**: `public InitializeAsync()` wraps `Task.Delay(5000, _cts.Token)` before calling the actual logic method. `OperationCanceledException` is silently caught for graceful shutdown. Testable via reflection calling the private method directly.",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:15",
+      "label": "**Computed notification property with change chain**: `HasUpdateAvailable` computed from `UpdateStatus == UpdateStatus.UpdateAvailable`. `OnUpdateStatusChanged()` raises `HasUpdateAvailable` notification. XAML binds directly to the computed property without converters.",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M021:16",
+      "label": "**S04 found no code changes needed**: The service interface audit (IDocumentProcessor) and cleanup service logging audit (DocumentCleanupService) both confirmed existing code was already correct. This is a positive surprise — the codebase was in better shape than expected for these areas.",
+      "type": "decision",
+      "description": "Source: S04-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:1",
+      "label": "**MainWindowViewModel can be reduced from 1623 to 156 lines by extracting 3 sub-ViewModels**: The coordinator pattern scales well for WPF apps with multiple Tab areas. Each sub-VM manages its own state independently. The key insight is that the coordinator only needs proxy properties for cross-cutting concerns (like window closing).",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:2",
+      "label": "**AttachedProperty Behaviors eliminate massive code-behind event handlers**: MainWindow.xaml.cs had 13 drag-drop event handlers (~446 lines). FileDragDrop Behavior reduced this to 104 lines total. The `CommandManager.InvalidateRequerySuggested()` workaround is essential for WPF OLE drag-drop CanExecute staleness.",
+      "type": "lesson",
+      "description": "Source: S03-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:3",
+      "label": "**WPF TextBox requires Preview tunnel events for drag-drop, Border uses bubbling**: TextBox has built-in drag-drop handling that intercepts at the bubbling stage. Preview (tunnel) events fire first and can set `e.Handled=true` to prevent interception. Non-TextBox elements like Border have no built-in handling, so bubbling events work fine.",
+      "type": "lesson",
+      "description": "Source: S03-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:4",
+      "label": "**Machine-level NuGet configuration corruption can masquerade as code build failures**: `dotnet nuget list source` returning `Value cannot be null. (Parameter 'path1')` affects all projects on the machine, including master branch. Always verify whether build failures are environment-wide before flagging code issues.",
+      "type": "lesson",
+      "description": "Source: Milestone completion verification",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:5",
+      "label": "**Coordinator + sub-ViewModel with DockPanel DataContext scoping**: MainWindowVM holds child VM references as properties. Each Tab content area wraps in `DockPanel DataContext={Binding ChildVM}`. All bindings within the DockPanel automatically resolve against the child VM. No prefix clutter in XAML.",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:6",
+      "label": "**CT.Mvvm extraction pattern for existing ViewModels**: Convert to `partial class`, change base to `CommunityToolkit.Mvvm.ComponentModel.ObservableObject` (fully qualified to avoid collision with custom ObservableObject), replace manual properties with `[ObservableProperty] private type _field;`, replace commands with `[RelayCommand]`, use `partial void OnXxxChanged()` for side effects.",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:7",
+      "label": "**AttachedProperty Behavior for reusable UI event handling**: Static class with `IsEnabled`, `Filter`, and `DropCommand` attached properties. `OnIsEnabledChanged` subscribes to drag-drop events on the target element. Commands decouple behavior from specific ViewModels.",
+      "type": "lesson",
+      "description": "Source: S03-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:8",
+      "label": "**Delayed initialization with Task.Delay + CancellationToken**: `public InitializeAsync()` wraps `Task.Delay(5000, _cts.Token)` before calling the actual logic method. `OperationCanceledException` is silently caught for graceful shutdown. Testable via reflection calling the private method directly.",
+      "type": "lesson",
+      "description": "Source: S05-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:9",
+      "label": "**Computed notification property with change chain**: `HasUpdateAvailable` computed from `UpdateStatus == UpdateStatus.UpdateAvailable`. `OnUpdateStatusChanged()` raises `HasUpdateAvailable` notification. XAML binds directly to the computed property without converters.",
+      "type": "lesson",
+      "description": "Source: S05-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M021:10",
+      "label": "**S04 found no code changes needed**: The service interface audit (IDocumentProcessor) and cleanup service logging audit (DocumentCleanupService) both confirmed existing code was already correct. This is a positive surprise — the codebase was in better shape than expected for these areas.",
+      "type": "lesson",
+      "description": "Source: S04-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M021:1",
+      "label": "**Coordinator + sub-ViewModel with DockPanel DataContext scoping**: MainWindowVM holds child VM references as properties. Each Tab content area wraps in `DockPanel DataContext={Binding ChildVM}`. All bindings within the DockPanel automatically resolve against the child VM. No prefix clutter in XAML.",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M021:2",
+      "label": "**CT.Mvvm extraction pattern for existing ViewModels**: Convert to `partial class`, change base to `CommunityToolkit.Mvvm.ComponentModel.ObservableObject` (fully qualified to avoid collision with custom ObservableObject), replace manual properties with `[ObservableProperty] private type _field;`, replace commands with `[RelayCommand]`, use `partial void OnXxxChanged()` for side effects.",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M021:3",
+      "label": "**AttachedProperty Behavior for reusable UI event handling**: Static class with `IsEnabled`, `Filter`, and `DropCommand` attached properties. `OnIsEnabledChanged` subscribes to drag-drop events on the target element. Commands decouple behavior from specific ViewModels.",
+      "type": "pattern",
+      "description": "Source: S03-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M021:4",
+      "label": "**Delayed initialization with Task.Delay + CancellationToken**: `public InitializeAsync()` wraps `Task.Delay(5000, _cts.Token)` before calling the actual logic method. `OperationCanceledException` is silently caught for graceful shutdown. Testable via reflection calling the private method directly.",
+      "type": "pattern",
+      "description": "Source: S05-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M021:5",
+      "label": "**Computed notification property with change chain**: `HasUpdateAvailable` computed from `UpdateStatus == UpdateStatus.UpdateAvailable`. `OnUpdateStatusChanged()` raises `HasUpdateAvailable` notification. XAML binds directly to the computed property without converters.",
+      "type": "pattern",
+      "description": "Source: S05-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M021:6",
+      "label": "**S04 found no code changes needed**: The service interface audit (IDocumentProcessor) and cleanup service logging audit (DocumentCleanupService) both confirmed existing code was already correct. This is a positive surprise — the codebase was in better shape than expected for these areas.",
+      "type": "pattern",
+      "description": "Source: S04-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M021:1",
+      "label": "**S04 found no code changes needed**: The service interface audit (IDocumentProcessor) and cleanup service logging audit (DocumentCleanupService) both confirmed existing code was already correct. This is a positive surprise — the codebase was in better shape than expected for these areas.",
+      "type": "lesson",
+      "description": "Source: S04-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M021/M021-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -2895,6 +3291,126 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M022",
+      "to": "slice:M022:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S01",
+      "to": "task:M022:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S01",
+      "to": "task:M022:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S01",
+      "to": "task:M022:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "slice:M022:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S02",
+      "to": "task:M022:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S02",
+      "to": "task:M022:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S02",
+      "to": "task:M022:S02:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "slice:M022:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S03",
+      "to": "task:M022:S03:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "slice:M022:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S04",
+      "to": "task:M022:S04:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "slice:M022:S05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M022:S05",
+      "to": "task:M022:S05:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -3415,7 +3931,205 @@
       "to": "surprise:M020:1",
       "type": "relates_to",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:10",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:11",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:12",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:13",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:14",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:15",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "decision:M021:16",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "lesson:M021:10",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "pattern:M021:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "pattern:M021:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "pattern:M021:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "pattern:M021:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "pattern:M021:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "pattern:M021:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M021",
+      "to": "surprise:M021:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-04T11:54:07.119Z"
+  "builtAt": "2026-05-04T17:48:22.878Z"
 }

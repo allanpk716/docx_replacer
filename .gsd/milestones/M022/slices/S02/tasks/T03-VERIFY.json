@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M022/S02/T03",
+  "timestamp": 1777911478533,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "test -f docs/cross-platform-research/tauri-dotnet-research.md",
+      "exitCode": 1,
+      "durationMs": 20,
+      "verdict": "fail"
+    },
+    {
+      "command": "wc -l docs/cross-platform-research/tauri-dotnet-research.md",
+      "exitCode": 1,
+      "durationMs": 21,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

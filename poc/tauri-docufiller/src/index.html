@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocuFiller PoC</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>DocuFiller PoC</h1>
+        <p class="subtitle">Tauri v2 + .NET Sidecar Integration</p>
+
+        <!-- Sidecar Connection Status -->
+        <div id="sidecar-status" class="status-bar">
+            <span class="status-dot"></span>
+            <span class="status-text">Checking sidecar...</span>
+        </div>
+
+        <!-- File Selection -->
+        <div class="section">
+            <h2>1. Select Document</h2>
+            <button id="select-file-btn">&#128193; Select File (.docx / .xlsx)</button>
+            <div id="file-path" class="file-info">No file selected</div>
+        </div>
+
+        <!-- Processing -->
+        <div class="section">
+            <h2>2. Process Document</h2>
+            <button id="start-btn" disabled>&#128640; Start Processing</button>
+            <div id="progress-container" class="hidden">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div id="progress-text" class="progress-text">0%</div>
+            </div>
+        </div>
+
+        <!-- Event Log -->
+        <div class="section">
+            <h2>Processing Log</h2>
+            <div id="event-log" class="event-log">
+                <div class="log-entry info">Ready. Select a file and start processing.</div>
+            </div>
+        </div>
+
+        <!-- Sidecar Controls (fallback) -->
+        <div class="section">
+            <h2>Sidecar Control</h2>
+            <button id="start-sidecar-btn" class="secondary">&#9654; Start Sidecar</button>
+            <button id="refresh-status-btn" class="secondary" onclick="document.querySelector('.status-bar').click()">&#128260; Refresh Status</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Wire up refresh status button
+        document.getElementById('refresh-status-btn').addEventListener('click', function() {
+            // Re-trigger health check by calling the IIFE's checkSidecarHealth
+            // Since app.js uses an IIFE, we'll re-fetch directly
+            fetch('http://localhost:5000/api/health')
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var el = document.getElementById('sidecar-status');
+                    el.className = 'status-bar connected';
+                    el.querySelector('.status-text').textContent = 'Sidecar connected (v' + d.version + ')';
+                })
+                .catch(function() {
+                    var el = document.getElementById('sidecar-status');
+                    el.className = 'status-bar disconnected';
+                    el.querySelector('.status-text').textContent = 'Sidecar not running';
+                });
+        });
+    </script>
+</body>
+</html>

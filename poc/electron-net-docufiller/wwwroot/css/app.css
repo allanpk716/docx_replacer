@@ -1,0 +1,270 @@
+/* DocuFiller Electron.NET PoC — App Styles */
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-accent: #0f3460;
+    --text-primary: #e0e0e0;
+    --text-secondary: #8899aa;
+    --text-muted: #556677;
+    --gradient-start: #e94560;
+    --gradient-end: #533483;
+    --card-bg: rgba(255,255,255,0.05);
+    --card-border: rgba(255,255,255,0.1);
+    --success: #4caf50;
+    --error: #f44336;
+    --warning: #ff9800;
+    --radius: 12px;
+    --radius-sm: 8px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-accent) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+}
+
+.container {
+    max-width: 640px;
+    width: 100%;
+}
+
+h1 {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    backdrop-filter: blur(10px);
+}
+
+.card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+}
+
+/* Buttons */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.7rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.2s, opacity 0.2s;
+    color: white;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(233,69,96,0.3);
+}
+
+.btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid var(--card-border);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+}
+
+.btn-group {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+/* File info */
+.file-info {
+    display: none;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--gradient-start);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    word-break: break-all;
+}
+
+.file-info.visible {
+    display: block;
+}
+
+.file-info .file-name {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Progress */
+.progress-section {
+    display: none;
+    margin-top: 1rem;
+}
+
+.progress-section.visible {
+    display: block;
+}
+
+.progress-bar-track {
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gradient-start), var(--gradient-end));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.progress-percent {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.progress-step {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Status and log */
+.status-text {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    min-height: 1.5em;
+    margin-top: 0.5rem;
+}
+
+.status-text.success { color: var(--success); }
+.status-text.error { color: var(--error); }
+.status-text.warning { color: var(--warning); }
+
+.log-area {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-muted);
+    max-height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.log-area .log-entry {
+    margin-bottom: 0.25rem;
+}
+
+.log-area .log-time {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
+
+.log-area .log-info { color: var(--text-secondary); }
+.log-area .log-success { color: var(--success); }
+.log-area .log-error { color: var(--error); }
+.log-area .log-warn { color: var(--warning); }
+
+/* IPC status bar */
+.ipc-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.ipc-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-muted);
+}
+
+.ipc-dot.active {
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+}
+
+.ipc-dot.inactive {
+    background: var(--error);
+}
+
+/* Tech info footer */
+.tech-info {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 2rem;
+}
+
+.tech-info span {
+    margin: 0 0.25rem;
+}

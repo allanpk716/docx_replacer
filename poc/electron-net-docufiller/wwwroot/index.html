@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DocuFiller Electron.NET PoC</title>
+    <link rel="stylesheet" href="/css/app.css" />
+</head>
+<body>
+    <div class="container">
+        <h1>DocuFiller PoC</h1>
+        <p class="subtitle">Electron.NET + ASP.NET Core 技术验证</p>
+
+        <!-- File Selection Card -->
+        <div class="card">
+            <div class="card-title">📄 文件选择 (原生对话框)</div>
+            <div class="btn-group">
+                <button class="btn" id="selectBtn">📂 选择文档</button>
+                <button class="btn btn-secondary" id="processBtn" disabled>🚀 开始处理</button>
+                <button class="btn btn-secondary" id="cancelBtn" disabled>⏹ 取消</button>
+            </div>
+            <div id="fileInfo" class="file-info">
+                <span class="file-name" id="fileName"></span><br/>
+                <span id="filePath"></span>
+            </div>
+            <div id="status" class="status-text">就绪 — 请选择一个文档文件</div>
+        </div>
+
+        <!-- Progress Card -->
+        <div class="card">
+            <div class="card-title">📊 处理进度 (SSE 实时更新)</div>
+            <div id="progressSection" class="progress-section">
+                <div class="progress-bar-track">
+                    <div class="progress-bar-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text">
+                    <span id="progressStep">准备中...</span>
+                    <span class="progress-percent" id="progressPercent">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Card -->
+        <div class="card">
+            <div class="card-title">📋 处理日志</div>
+            <div class="log-area" id="logArea"></div>
+        </div>
+
+        <!-- IPC Status Bar -->
+        <div class="ipc-status">
+            <span class="ipc-dot" id="ipcDot"></span>
+            <span id="ipcLabel">Electron IPC: 检测中...</span>
+        </div>
+
+        <div class="tech-info">
+            Electron.NET PoC | ASP.NET Core 8 | SSE Progress | IPC Bridge
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>

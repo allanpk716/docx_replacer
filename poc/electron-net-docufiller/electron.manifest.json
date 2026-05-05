@@ -1,0 +1,17 @@
+{
+  "executable": "electron-net-docufiller",
+  "splashscreen": {
+    "imageFile": ""
+  },
+  "name": "electron-net-docufiller",
+  "author": "DocuFiller Team",
+  "singleInstance": false,
+  "build": {
+    "appId": "com.docufiller.electronnet",
+    "productName": "DocuFiller Electron.NET PoC",
+    "copyright": "Copyright © 2025",
+    "directories": {
+      "output": "../../../bin"
+    }
+  }
+}
