@@ -1,4 +1,4 @@
-# M021: 第二轮重构 — ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步
+# M021: 第二轮重构 - ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步
 
 **Vision:** 将 MainWindowViewModel（1623 行）全面拆分为协调器 + 子 ViewModel 模式，消除清理 Tab 重复代码，提取拖放为可复用 Behavior，实现 R028 自动检查更新，删除 CLAUDE.md，同步产品需求文档。
 

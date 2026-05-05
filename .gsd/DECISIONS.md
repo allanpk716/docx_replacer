@@ -57,3 +57,11 @@
 | D049 | M021 | architecture | 清理 Tab 复用 CleanupViewModel | Tab 2 DataContext 改为绑定 CleanupViewModel，删除 MainWindowVM 清理代码 | MainWindowVM 和 CleanupViewModel 有两套几乎相同的清理逻辑（文件列表、处理、进度），复用消除 ~200 行重复代码。CleanupViewModel 需扩展输出目录属性。 | Yes | collaborative |
 | D050 | M021 | convention | 不再维护 CLAUDE.md | 删除 CLAUDE.md，产品需求文档和 README.md 作为唯一项目文档 | CLAUDE.md 维护成本高且容易与代码脱节，用户决定不再投入。 | No | human |
 | D051 | M021 | architecture | 拖放逻辑实现方式 | DragDropBehavior AttachedProperty 统一处理文件拖放，15 个事件处理器消除 | 4 组 Preview 事件 × 3 目标 = 12 个方法逻辑几乎相同。Behavior 模式是 WPF AttachedProperty 标准做法，可复用于未来窗口。使用 Preview 隧道事件绕过 TextBox 内置拖放拦截（D042）。 | Yes | collaborative |
+| D052 | M023 | architecture | 更新协议选择 | 所有接入的应用统一使用 Velopack 打包和更新协议 | Velopack 已解决 delta 更新、签名验证、安装/便携模式自更新等难题，DocuFiller 已深度集成，Go/Python 可用 vpk pack 打包。避免双协议或自定义协议的巨大工作量。 | No | collaborative |
+| D053 | M023 | architecture | 元数据存储方案 | SQLite 存元数据，文件系统存 artifacts | Web UI 需要结构化查询（应用列表、版本排序、备注搜索）。SQLite 单文件、零运维、Go 标准库自带驱动，Windows Server 不需要额外安装。 | Yes — 如果以后多实例部署需要共享数据库 | collaborative |
+| D054 | M023 | architecture | 前端技术栈和部署方式 | Vue 3 + Vite，编译产物通过 Go embed 内嵌到二进制 | 用户选择 Vue。Go embed 实现单文件部署，符合 Go 单二进制部署哲学。 | No | collaborative |
+| D055 | M023 | architecture | 认证方案 | 启动参数配置管理密码，Web UI 登录发 JWT session cookie，API 同时支持 Bearer token | 内网单用户场景不需要多用户系统。兼容 Bearer token 确保现有 build-internal.bat 不需要改认证方式。 | Yes — 如果以后需要多用户/角色 | collaborative |
+| D056 | M023 | architecture | 多应用 URL 结构 | /{appId}/{channel}/releases.{os}.json | URL 层级清晰，按应用隔离，方便以后加权限控制。用户明确选择此方案。 | No | collaborative |
+| D057 | M023 | scope | DocuFiller 客户端迁移策略 | 直接在 appsettings.json 改 URL 指向新路径，不兼容旧 URL 格式 | 用户明确表示直接改配置即可，不需要旧 URL 兼容过渡期。URL 是从 appsettings.json 读取的，客户端代码不用改。 | No | collaborative |
+| D058 | M023 | pattern | 应用注册方式 | 第一次上传时自动注册，从 releases feed 的 PackageId 提取应用标识 | 降低接入成本，新应用不需要管理操作就能开始使用更新服务器。用户明确选择此方案。 | Yes — 如果以后需要应用审核/审批流程 | collaborative |
+| D059 | M023 | architecture | 通道模型 | 不硬编码 stable/beta，通道名由上传路径动态决定 | 不同应用可能需要不同的通道策略（如 nightly、rc），不应由服务器硬编码限制。 | No | collaborative |

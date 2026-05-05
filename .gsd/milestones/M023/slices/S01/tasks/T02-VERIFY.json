@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M023/S01/T02",
+  "timestamp": 1777961536354,
+  "passed": true,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-hub",
+      "exitCode": 0,
+      "durationMs": 70,
+      "verdict": "pass"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M023/S01/T01",
+  "timestamp": 1777961146480,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-hub",
+      "exitCode": 0,
+      "durationMs": 108,
+      "verdict": "pass"
+    },
+    {
+      "command": "go test ./storage/... -count=1 -v",
+      "exitCode": 1,
+      "durationMs": 2064,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

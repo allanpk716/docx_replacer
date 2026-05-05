@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T04",
+  "unitId": "M023/S01/T04",
+  "timestamp": 1777962364515,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-hub",
+      "exitCode": 0,
+      "durationMs": 70,
+      "verdict": "pass"
+    },
+    {
+      "command": "go test ./... -count=1 -v",
+      "exitCode": 1,
+      "durationMs": 595,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T03",
+  "unitId": "M023/S03/T03",
+  "timestamp": 1777965821699,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-hub/web",
+      "exitCode": 0,
+      "durationMs": 66,
+      "verdict": "pass"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 4294963238,
+      "durationMs": 541,
+      "verdict": "fail"
+    },
+    {
+      "command": "ls dist/index.html",
+      "exitCode": 1,
+      "durationMs": 140,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

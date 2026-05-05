@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M023/S03/T02",
+  "timestamp": 1777965488895,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-hub/web",
+      "exitCode": 0,
+      "durationMs": 67,
+      "verdict": "pass"
+    },
+    {
+      "command": "npm install",
+      "exitCode": 4294963238,
+      "durationMs": 1000,
+      "verdict": "fail"
+    },
+    {
+      "command": "npm run build",
+      "exitCode": 4294963238,
+      "durationMs": 563,
+      "verdict": "fail"
+    },
+    {
+      "command": "ls dist/index.html",
+      "exitCode": 1,
+      "durationMs": 141,
+      "verdict": "fail"
+    },
+    {
+      "command": "ls dist/assets/",
+      "exitCode": 1,
+      "durationMs": 143,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M023/S02/T01",
+  "timestamp": 1777963237095,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "cd update-hub",
+      "exitCode": 0,
+      "durationMs": 77,
+      "verdict": "pass"
+    },
+    {
+      "command": "go test ./database/ -v -count=1",
+      "exitCode": 1,
+      "durationMs": 582,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

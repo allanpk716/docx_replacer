@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "milestoneId": "M023",
+  "sliceId": "S03",
+  "timestamp": 1777964475006,
+  "status": "fail",
+  "durationMs": 3,
+  "checks": [
+    {
+      "category": "file",
+      "target": "update-hub/web/src/composables/useAuth.ts",
+      "passed": false,
+      "message": "Task T03 references 'update-hub/web/src/composables/useAuth.ts' which doesn't exist and isn't created by prior or same-task outputs",
+      "blocking": true
+    }
+  ]
+}

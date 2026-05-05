@@ -4,6 +4,30 @@ This file is the explicit capability and coverage contract for the project.
 
 ## Active
 
+### R075 — Windows Server 2019 上通过 NSSM 注册为 Windows 服务，端口 30001（不变），开机自启，日志轮转。
+- Class: launchability
+- Status: active
+- Description: Windows Server 2019 上通过 NSSM 注册为 Windows 服务，端口 30001（不变），开机自启，日志轮转。
+- Why it matters: 部署约束——现有端口 30001 已做端口映射，变更端口增加不必要的维护成本。
+- Source: user
+- Primary owning slice: M023/S04
+
+### R076 — 从 DocuFiller 项目中删除 update-server/ 目录，更新 build-internal.bat 的 upload URL 路径（加 appId 前缀），更新 appsettings.json 的 UpdateUrl，清理相关测试脚本和文档。客户端代码（UpdateService、ViewModel）完全不改。
+- Class: integration
+- Status: active
+- Description: 从 DocuFiller 项目中删除 update-server/ 目录，更新 build-internal.bat 的 upload URL 路径（加 appId 前缀），更新 appsettings.json 的 UpdateUrl，清理相关测试脚本和文档。客户端代码（UpdateService、ViewModel）完全不改。
+- Why it matters: update-server 外置为独立项目后，DocuFiller 不再需要嵌入的 Go 代码。
+- Source: user
+- Primary owning slice: M024/S01
+
+### R077 — 提供 Go 和 Python 语言的多语言客户端示例代码，展示如何用 Velopack SDK 或通用 HTTP 客户端检查更新和拉取新版本。配套使用文档（README + API 文档）。
+- Class: differentiator
+- Status: active
+- Description: 提供 Go 和 Python 语言的多语言客户端示例代码，展示如何用 Velopack SDK 或通用 HTTP 客户端检查更新和拉取新版本。配套使用文档（README + API 文档）。
+- Why it matters: 用户明确要求独立项目需要有多语言客户端示例和文档，作为可复用基础设施的核心交付物。
+- Source: user
+- Primary owning slice: M024/S02
+
 ## Validated
 
 ### R001 — Excel 解析服务自动检测两列（关键词|值）或三列（ID|关键词|值）格式，三列模式下跳过第1列，读取第2列为关键词、第3列为值
@@ -677,7 +701,96 @@ This file is the explicit capability and coverage contract for the project.
 - Primary owning slice: M022/S05
 - Validation: comparison-and-recommendation.md (36,899 bytes, 12 sections) covers all 6 UI frameworks with multi-dimensional scoring, SWOT matrices, weighted rankings, and migration roadmap. Verified: file exists, 0 TBD/TODO, 58 Avalonia references, 15 key-section references.
 
+### R066 — Go HTTP 服务器支持多个应用的 Velopack feed 分发，URL 结构为 /{appId}/{channel}/releases.{os}.json，兼容 Velopack SimpleWebSource 客户端。
+- Class: core-capability
+- Status: validated
+- Description: Go HTTP 服务器支持多个应用的 Velopack feed 分发，URL 结构为 /{appId}/{channel}/releases.{os}.json，兼容 Velopack SimpleWebSource 客户端。
+- Why it matters: 核心价值——从单应用更新服务器演进为多应用更新平台，服务于所有内网发布的程序。
+- Source: user
+- Primary owning slice: M023/S01
+- Validation: Integration test proves multi-app Velopack feed distribution at /{appId}/{channel}/releases.{os}.json. TestFullMultiAppWorkflow uploads to docufiller/beta and go-tool/stable, verifies static feed serving, .nupkg download, version listing, promote, and delete — all through httptest with real handlers.
+
+### R067 — 支持 releases.win.json、releases.linux.json、releases.darwin.json 等多 OS feed 文件，服务器按请求路径中的 OS 后缀分发对应 feed。
+- Class: core-capability
+- Status: validated
+- Description: 支持 releases.win.json、releases.linux.json、releases.darwin.json 等多 OS feed 文件，服务器按请求路径中的 OS 后缀分发对应 feed。
+- Why it matters: 跨平台应用（Go/Rust）需要在不同操作系统上检查和拉取更新。
+- Source: user
+- Primary owning slice: M023/S01
+- Validation: Feed filename parameterized throughout — IsFeedFilename() regex ^releases\.[a-zA-Z0-9_]+\.json$ detects any OS feed. Integration test uploads releases.win.json and releases.linux.json to different apps, verifies correct serving. Store.ListFeedFiles() discovers all feed variants in a channel.
+
+### R068 — 应用在第一次上传时自动注册，无需预先创建应用记录。服务器从上传的 releases feed 中提取 PackageId 作为应用标识。
+- Class: core-capability
+- Status: validated
+- Description: 应用在第一次上传时自动注册，无需预先创建应用记录。服务器从上传的 releases feed 中提取 PackageId 作为应用标识。
+- Why it matters: 降低接入成本，新应用不需要管理操作就能开始使用更新服务器。
+- Source: user
+- Primary owning slice: M023/S01
+- Validation: Auto-registration tested in upload handler: first upload parses feed JSON, extracts PackageId from first asset, validates case-insensitive match against URL appId. TestAutoRegistrationMismatch proves 400 on mismatch. Directory structure auto-created on first upload.
+
+### R069 — 通道（stable/beta/自定义）不硬编码，由上传路径决定。任何合法的通道名都可用。
+- Class: core-capability
+- Status: validated
+- Description: 通道（stable/beta/自定义）不硬编码，由上传路径决定。任何合法的通道名都可用。
+- Why it matters: 不同应用可能需要不同的通道策略（如 nightly、rc），不应由服务器限制。
+- Source: user
+- Primary owning slice: M023/S01
+- Validation: Channel names validated by regex ^[a-zA-Z0-9-]+$ — any alphanumeric+hyphen name works. Integration test includes dynamic 'nightly' channel. No hardcoded channel set anywhere in the codebase.
+
+### R070 — SQLite 存储应用元数据、release notes 备注、上传历史。Artifacts 文件仍然走文件系统存储。
+- Class: core-capability
+- Status: validated
+- Description: SQLite 存储应用元数据、release notes 备注、上传历史。Artifacts 文件仍然走文件系统存储。
+- Why it matters: Web 管理界面需要展示结构化元数据（应用列表、备注、时间戳），纯文件系统难以高效查询。
+- Source: inferred
+- Primary owning slice: M023/S02
+- Validation: SQLite database package (database/db.go) with WAL mode, apps and versions tables, full CRUD operations. 13 unit tests cover all operations including concurrency. Wired into upload/promote/delete handlers. Verified by go test ./database/ -v -count=1 (13/13 pass).
+
+### R071 — 上传时可附带 release notes 备注文本，备注存储在 SQLite 中，通过 Web UI 和 API 可查看。
+- Class: core-capability
+- Status: validated
+- Description: 上传时可附带 release notes 备注文本，备注存储在 SQLite 中，通过 Web UI 和 API 可查看。
+- Why it matters: 用户明确要求上传时允许额外备注，用于记录版本变更说明。
+- Source: user
+- Primary owning slice: M023/S02
+- Validation: Upload handler accepts optional `notes` multipart field, persisted to SQLite via UpsertVersion. Notes queryable via GET /api/apps/{appId}/channels/{channel}/versions. Promote carries notes to target channel. Integration test TestMetadataFlow proves end-to-end: upload with notes → query → promote → delete. Verified by go test ./... -v -count=1 (65/65 pass).
+
+### R072 — Vue 3 + Vite SPA 前端，Go embed 内嵌到二进制中。功能：登录认证、查看应用/通道/版本、上传发布、promote、删除版本。
+- Class: primary-user-loop
+- Status: validated
+- Description: Vue 3 + Vite SPA 前端，Go embed 内嵌到二进制中。功能：登录认证、查看应用/通道/版本、上传发布、promote、删除版本。
+- Why it matters: 用户明确要求 Web 管理界面优先于 CLI，便于可视化管理多个应用的发布。
+- Source: user
+- Primary owning slice: M023/S03
+- Validation: Vue 3 + Vite SPA builds successfully (npm run build produces dist/ with index.html + 12 assets). Go embed via //go:embed web/dist includes frontend in binary. SPAHandler serves index.html at /, Vite assets at /assets/, and falls back to index.html for client-side routes (/login, /apps/docufiller). Login, app list, version list, upload, promote, and delete pages implemented.
+
+### R073 — Web UI 用 JWT session cookie 认证（登录密码由启动参数配置）。API 上传/promote/delete 同时支持 Bearer token 和 JWT session。版本列表查询和 artifact 下载不需要认证。
+- Class: compliance/security
+- Status: validated
+- Description: Web UI 用 JWT session cookie 认证（登录密码由启动参数配置）。API 上传/promote/delete 同时支持 Bearer token 和 JWT session。版本列表查询和 artifact 下载不需要认证。
+- Why it matters: 管理操作需要保护，但客户端检查更新和下载不需要认证（兼容现有 Velopack 客户端和 curl 上传）。
+- Source: inferred
+- Primary owning slice: M023/S03
+- Validation: POST /api/auth/login validates password, returns JWT in HttpOnly cookie (SameSite=Lax, 24h). BearerAuth middleware accepts both Bearer token header and JWT session cookie — Bearer takes precedence. Login endpoint exempt from auth. Version list and artifact download endpoints do not require auth. All verified via Go httptest (24 tests pass).
+
+### R074 — 首次启动时自动检测旧格式 data/{channel}/ 并迁移到 data/{appId}/{channel}/。迁移过程原子性、可重复运行（幂等）。
+- Class: launchability
+- Status: validated
+- Description: 首次启动时自动检测旧格式 data/{channel}/ 并迁移到 data/{appId}/{channel}/。迁移过程原子性、可重复运行（幂等）。
+- Why it matters: 现有服务器有 DocuFiller 的 stable（16版本 ~1.1GB）和 beta（4版本 ~222MB）数据，迁移失败意味着生产环境中断。
+- Source: user
+- Primary owning slice: M023/S04
+- Validation: S04 migration package: Migrate() detects old-format data/{channel}/ dirs via feed file presence, atomically moves via os.Rename to data/{appId}/{channel}/, skips if target exists (idempotent). 17 tests cover detection, move, idempotency, empty dirs, special-file-only dirs, .nupkg preservation. SyncMetadata() upserts parsed feed metadata into SQLite via INSERT OR REPLACE. Build + full test suite pass.
+
 ## Deferred
+
+### R078 — CLI 管理工具（如 upctl upload/promote/list），用于命令行管理应用发布。
+- Class: operability
+- Status: deferred
+- Description: CLI 管理工具（如 upctl upload/promote/list），用于命令行管理应用发布。
+- Why it matters: 用户明确表示 CLI 管理工具后续再说，当前优先 Web 管理界面。
+- Source: user
+- Primary owning slice: none
 
 ## Out of Scope
 
@@ -761,10 +874,23 @@ This file is the explicit capability and coverage contract for the project.
 | R063 | differentiator | validated | M022/S03 | none | 四份调研文档均通过自动化质量验证（≥8 章节、≥3000 字、无 TBD/TODO），综合评分：Avalonia 4.3/5 > Blazor Hybrid 3.7/5 > Web 3.0/5 > MAUI 2.8/5 |
 | R064 | differentiator | validated | M022/S04 | none | S04 产出四份调研文档：velopack-cross-platform.md（13章节，30KB）、core-dependencies-compatibility.md（13章节，32KB）、platform-differences.md（13章节，30KB）、packaging-distribution.md（14章节，42KB）。覆盖 Velopack 三平台更新能力、16个 NuGet 依赖跨平台兼容性、6大平台差异点、macOS/Linux 打包分发方案。所有文档零 TBD/TODO，格式与 S03 产出一致。 |
 | R065 | differentiator | validated | M022/S05 | none | comparison-and-recommendation.md (36,899 bytes, 12 sections) covers all 6 UI frameworks with multi-dimensional scoring, SWOT matrices, weighted rankings, and migration roadmap. Verified: file exists, 0 TBD/TODO, 58 Avalonia references, 15 key-section references. |
+| R066 | core-capability | validated | M023/S01 | none | Integration test proves multi-app Velopack feed distribution at /{appId}/{channel}/releases.{os}.json. TestFullMultiAppWorkflow uploads to docufiller/beta and go-tool/stable, verifies static feed serving, .nupkg download, version listing, promote, and delete — all through httptest with real handlers. |
+| R067 | core-capability | validated | M023/S01 | none | Feed filename parameterized throughout — IsFeedFilename() regex ^releases\.[a-zA-Z0-9_]+\.json$ detects any OS feed. Integration test uploads releases.win.json and releases.linux.json to different apps, verifies correct serving. Store.ListFeedFiles() discovers all feed variants in a channel. |
+| R068 | core-capability | validated | M023/S01 | none | Auto-registration tested in upload handler: first upload parses feed JSON, extracts PackageId from first asset, validates case-insensitive match against URL appId. TestAutoRegistrationMismatch proves 400 on mismatch. Directory structure auto-created on first upload. |
+| R069 | core-capability | validated | M023/S01 | none | Channel names validated by regex ^[a-zA-Z0-9-]+$ — any alphanumeric+hyphen name works. Integration test includes dynamic 'nightly' channel. No hardcoded channel set anywhere in the codebase. |
+| R070 | core-capability | validated | M023/S02 | none | SQLite database package (database/db.go) with WAL mode, apps and versions tables, full CRUD operations. 13 unit tests cover all operations including concurrency. Wired into upload/promote/delete handlers. Verified by go test ./database/ -v -count=1 (13/13 pass). |
+| R071 | core-capability | validated | M023/S02 | none | Upload handler accepts optional `notes` multipart field, persisted to SQLite via UpsertVersion. Notes queryable via GET /api/apps/{appId}/channels/{channel}/versions. Promote carries notes to target channel. Integration test TestMetadataFlow proves end-to-end: upload with notes → query → promote → delete. Verified by go test ./... -v -count=1 (65/65 pass). |
+| R072 | primary-user-loop | validated | M023/S03 | none | Vue 3 + Vite SPA builds successfully (npm run build produces dist/ with index.html + 12 assets). Go embed via //go:embed web/dist includes frontend in binary. SPAHandler serves index.html at /, Vite assets at /assets/, and falls back to index.html for client-side routes (/login, /apps/docufiller). Login, app list, version list, upload, promote, and delete pages implemented. |
+| R073 | compliance/security | validated | M023/S03 | none | POST /api/auth/login validates password, returns JWT in HttpOnly cookie (SameSite=Lax, 24h). BearerAuth middleware accepts both Bearer token header and JWT session cookie — Bearer takes precedence. Login endpoint exempt from auth. Version list and artifact download endpoints do not require auth. All verified via Go httptest (24 tests pass). |
+| R074 | launchability | validated | M023/S04 | none | S04 migration package: Migrate() detects old-format data/{channel}/ dirs via feed file presence, atomically moves via os.Rename to data/{appId}/{channel}/, skips if target exists (idempotent). 17 tests cover detection, move, idempotency, empty dirs, special-file-only dirs, .nupkg preservation. SyncMetadata() upserts parsed feed metadata into SQLite via INSERT OR REPLACE. Build + full test suite pass. |
+| R075 | launchability | active | M023/S04 | none | unmapped |
+| R076 | integration | active | M024/S01 | none | unmapped |
+| R077 | differentiator | active | M024/S02 | none | unmapped |
+| R078 | operability | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 0
-- Mapped to slices: 0
-- Validated: 64 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065)
+- Active requirements: 3
+- Mapped to slices: 3
+- Validated: 73 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, R066, R067, R068, R069, R070, R071, R072, R073, R074)
 - Unmapped active requirements: 0

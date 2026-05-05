@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T02",
+  "unitId": "M023/S04/T02",
+  "timestamp": 1777966891927,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "GOCACHE=/tmp/go-cache go test ./... -count=1",
+      "exitCode": 1,
+      "durationMs": 100,
+      "verdict": "fail"
+    },
+    {
+      "command": "GOCACHE=/tmp/go-cache go build -o update-hub.exe .",
+      "exitCode": 1,
+      "durationMs": 83,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}

@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "taskId": "T01",
+  "unitId": "M023/S04/T01",
+  "timestamp": 1777966795363,
+  "passed": false,
+  "discoverySource": "task-plan",
+  "checks": [
+    {
+      "command": "GOCACHE=/tmp/go-cache go test ./migration/... -v -count=1",
+      "exitCode": 1,
+      "durationMs": 84,
+      "verdict": "fail"
+    }
+  ],
+  "retryAttempt": 1,
+  "maxRetries": 2
+}
