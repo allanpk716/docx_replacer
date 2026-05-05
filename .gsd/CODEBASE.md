@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-05T08:23:24Z | Files: 221 | Described: 0/221
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-05T08:23:24Z","fingerprint":"f7d169ca1ba461f3d03d344534b93bd41007e932","fileCount":221,"truncated":false} -->
+Generated: 2026-05-05T12:17:09Z | Files: 206 | Described: 0/206
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-05T12:17:09Z","fingerprint":"825301084157f8fbd236460f82828624a83ac081","fileCount":206,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
@@ -19,6 +19,7 @@ Generated: 2026-05-05T08:23:24Z | Files: 221 | Described: 0/221
 - `generate_icon.py`
 - `MainWindow.xaml`
 - `MainWindow.xaml.cs`
+- `package-lock.json`
 - `Program.cs`
 - `README.md`
 
@@ -311,31 +312,3 @@ Generated: 2026-05-05T08:23:24Z | Files: 221 | Described: 0/221
 - `scripts/sync-version.bat`
 - `scripts/test-releases.win.json`
 - `scripts/test-update-server.sh`
-
-### update-server/
-- `update-server/go.mod`
-- `update-server/main.go`
-
-### update-server/handler/
-- `update-server/handler/api.go`
-- `update-server/handler/handler_test.go`
-- `update-server/handler/list.go`
-- `update-server/handler/promote.go`
-- `update-server/handler/static.go`
-- `update-server/handler/upload_test.go`
-- `update-server/handler/upload.go`
-
-### update-server/middleware/
-- `update-server/middleware/auth.go`
-
-### update-server/model/
-- `update-server/model/release.go`
-
-### update-server/storage/
-- `update-server/storage/cleanup_test.go`
-- `update-server/storage/cleanup.go`
-- `update-server/storage/store_test.go`
-- `update-server/storage/store.go`
-
-### update-server/testdata/beta/
-- `update-server/testdata/beta/test-1.0.0-full.nupkg`
