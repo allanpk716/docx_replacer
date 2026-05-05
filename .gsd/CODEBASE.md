@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-05T01:04:04Z | Files: 175 | Described: 0/175
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-05T01:04:04Z","fingerprint":"07faff804aee567d89c86c2e0c6111ee0c47b6e1","fileCount":175,"truncated":false} -->
+Generated: 2026-05-05T01:08:38Z | Files: 221 | Described: 0/221
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-05T01:08:38Z","fingerprint":"f7d169ca1ba461f3d03d344534b93bd41007e932","fileCount":221,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
@@ -205,6 +205,19 @@ Generated: 2026-05-05T01:04:04Z | Files: 175 | Described: 0/175
 - `docs/ssh-offline-install.md`
 - `docs/update-server-deployment.md`
 
+### docs/cross-platform-research/
+- `docs/cross-platform-research/avalonia-research.md`
+- `docs/cross-platform-research/blazor-hybrid-research.md`
+- `docs/cross-platform-research/comparison-and-recommendation.md`
+- `docs/cross-platform-research/core-dependencies-compatibility.md`
+- `docs/cross-platform-research/electron-net-research.md`
+- `docs/cross-platform-research/maui-research.md`
+- `docs/cross-platform-research/packaging-distribution.md`
+- `docs/cross-platform-research/platform-differences.md`
+- `docs/cross-platform-research/tauri-dotnet-research.md`
+- `docs/cross-platform-research/velopack-cross-platform.md`
+- `docs/cross-platform-research/web-app-research.md`
+
 ### docs/features/
 - `docs/features/header-footer-support.md`
 
@@ -215,6 +228,73 @@ Generated: 2026-05-05T01:04:04Z | Files: 175 | Described: 0/175
 - `docs/plans/2025-01-23-mainwindow-layout-refactor-design.md`
 - `docs/plans/2025-01-23-mainwindow-layout-refactor.md`
 - `docs/plans/e2e-update-test-guide.md`
+
+### poc/electron-net-docufiller/
+- `poc/electron-net-docufiller/electron-net-docufiller.csproj`
+- `poc/electron-net-docufiller/electron.manifest.json`
+- `poc/electron-net-docufiller/global.json`
+- `poc/electron-net-docufiller/Program.cs`
+
+### poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/project.assets.json`
+
+### poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/.nupkg.metadata`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/.signature.p7s`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/electronnet.cli.23.6.2.nupkg`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/electronnet.cli.23.6.2.nupkg.sha512`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/ElectronNET.CLI.nupkg`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/ElectronNET.CLI.nuspec`
+
+### poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/tools/net6.0/any/
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/tools/net6.0/any/dotnet-electronize.deps.json`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/tools/net6.0/any/dotnet-electronize.runtimeconfig.json`
+- `poc/electron-net-docufiller/.tools/.store/electronnet.cli/23.6.2/electronnet.cli/23.6.2/tools/net6.0/any/DotnetToolSettings.xml`
+
+### poc/electron-net-docufiller/Controllers/
+- `poc/electron-net-docufiller/Controllers/ProcessingController.cs`
+
+### poc/electron-net-docufiller/Services/
+- `poc/electron-net-docufiller/Services/SimulatedProcessor.cs`
+
+### poc/electron-net-docufiller/wwwroot/
+- `poc/electron-net-docufiller/wwwroot/index.html`
+
+### poc/electron-net-docufiller/wwwroot/css/
+- `poc/electron-net-docufiller/wwwroot/css/app.css`
+
+### poc/electron-net-docufiller/wwwroot/js/
+- `poc/electron-net-docufiller/wwwroot/js/app.js`
+
+### poc/tauri-docufiller/
+- `poc/tauri-docufiller/package.json`
+
+### poc/tauri-docufiller/sidecar-dotnet/
+- `poc/tauri-docufiller/sidecar-dotnet/Program.cs`
+- `poc/tauri-docufiller/sidecar-dotnet/sidecar-dotnet.csproj`
+
+### poc/tauri-docufiller/src/
+- `poc/tauri-docufiller/src/app.js`
+- `poc/tauri-docufiller/src/index.html`
+- `poc/tauri-docufiller/src/styles.css`
+
+### poc/tauri-docufiller/src-tauri/
+- `poc/tauri-docufiller/src-tauri/build.rs`
+- `poc/tauri-docufiller/src-tauri/Cargo.toml`
+- `poc/tauri-docufiller/src-tauri/tauri.conf.json`
+
+### poc/tauri-docufiller/src-tauri/capabilities/
+- `poc/tauri-docufiller/src-tauri/capabilities/default.json`
+
+### poc/tauri-docufiller/src-tauri/gen/schemas/
+- `poc/tauri-docufiller/src-tauri/gen/schemas/acl-manifests.json`
+- `poc/tauri-docufiller/src-tauri/gen/schemas/capabilities.json`
+- `poc/tauri-docufiller/src-tauri/gen/schemas/desktop-schema.json`
+- `poc/tauri-docufiller/src-tauri/gen/schemas/windows-schema.json`
+
+### poc/tauri-docufiller/src-tauri/src/
+- `poc/tauri-docufiller/src-tauri/src/lib.rs`
+- `poc/tauri-docufiller/src-tauri/src/main.rs`
 
 ### scripts/
 - `scripts/build-internal.bat`
