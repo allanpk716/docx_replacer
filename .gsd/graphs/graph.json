@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M022",
-      "label": "M022: 跨平台技术调研",
+      "id": "milestone:M023",
+      "label": "M023: update-hub 独立项目",
       "type": "milestone",
-      "description": "Active milestone: M022",
+      "description": "Active milestone: M023",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -1202,6 +1202,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M022",
+      "label": "M022: 跨平台技术调研",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-ROADMAP.md"
+    },
+    {
       "id": "slice:M022:S01",
       "label": "S01: Electron.NET PoC + 调研文档",
       "type": "slice",
@@ -1323,6 +1330,112 @@
     {
       "id": "task:M022:S05:T01",
       "label": "T01: 撰写全方案横向对比评估文档 comparison-and-recommendation.md",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M023:S01",
+      "label": "S01: Go 服务器核心 API（多应用 Velopack 分发）",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M023:S01:T01",
+      "label": "T01: Create Go module + data model + multi-app storage layer",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S01:T02",
+      "label": "T02: Implement upload handler with auto-registration + Bearer auth middleware",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S01:T03",
+      "label": "T03: Implement static serving + list + promote + delete handlers",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S01:T04",
+      "label": "T04: Wire main.go with Go 1.22 ServeMux routes + write end-to-end integration test",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M023:S02",
+      "label": "S02: SQLite 元数据层 + Release notes",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M023:S02:T01",
+      "label": "T01: Create database package with SQLite schema and CRUD",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S02:T02",
+      "label": "T02: Wire metadata into handlers and add query API endpoints",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M023:S03",
+      "label": "S03: Web 管理界面（Vue 3 SPA + Go embed）",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M023:S03:T01",
+      "label": "T01: Add JWT session auth — login endpoint and middleware update",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S03:T02",
+      "label": "T02: Scaffold Vue 3 + Vite frontend with login page",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S03:T03",
+      "label": "T03: Build app management pages — list, versions, upload, promote, delete",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S03:T04",
+      "label": "T04: Wire Go embed + SPA handler and verify full integration",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M023:S04",
+      "label": "S04: 数据迁移 + Windows Server 部署",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M023:S04:T01",
+      "label": "T01: Implement migration package with old-format detection, file move, and metadata sync",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S04:T02",
+      "label": "T02: Wire migration into main.go startup and verify full build",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M023:S04:T03",
+      "label": "T03: Create NSSM deployment scripts and deployment README",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -2285,6 +2398,142 @@
       "description": "Source: S04-SUMMARY.md/What Happened",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M021/M021-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M022:1",
+      "label": "**Chose SSE over framework-specific IPC for progress reporting in both PoCs** — SSE is HTTP-based, portable across Electron.NET and Tauri, and testable without any desktop runtime. Both PoCs independently converged on this pattern.",
+      "type": "decision",
+      "description": "Source: S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M022:2",
+      "label": "**Chose std::process::Command over tauri-plugin-shell for sidecar launch** — Simpler dependency chain, fewer Tauri plugin version constraints, and sufficient for the use case of launching a single .NET process.",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M022:3",
+      "label": "**Removed reqwest from Rust backend; moved sidecar health check to frontend JavaScript** — Eliminated a heavy Rust dependency by leveraging the frontend's existing CSP connect-src capability to poll the sidecar HTTP endpoint directly.",
+      "type": "decision",
+      "description": "Source: S02-SUMMARY.md/Deviations",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M022:4",
+      "label": "**Adopted 9-dimension weighted scoring for framework comparison** — Technical feasibility (15%), WPF migration (15%), cross-platform coverage (15%), migration cost (10%), performance (10%), ecosystem (10%), Velopack compatibility (5%), community (10%), long-term maintenance (10%).",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M022:5",
+      "label": "**Recommended Avalonia UI (#1, 4.3/5) over Tauri (#2, 3.8/5) for DocuFiller migration** — XAML compatibility with WPF allows incremental migration, Velopack integrates seamlessly, and all service-layer code (11 interfaces) requires zero modification. Tauri requires full UI rewrite and Rust skills.",
+      "type": "decision",
+      "description": "Source: S05-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M022:1",
+      "label": "**dotnet build in git worktrees on Windows requires PowerShell, not bash** — Git worktrees don't set APPDATA/LOCALAPPDATA/ProgramData env vars that dotnet needs for NuGet restore. Always use PowerShell or set env vars explicitly.",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M022:2",
+      "label": "**Tauri v2 has a hidden rustc MSRV requirement (1.88+)** — The time crate (transitive dependency of tauri v2.11) requires rustc 1.88+, but Tauri's own docs don't prominently advertise this. Upgrading from 1.86 to 1.95 was necessary.",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M022:3",
+      "label": "**Electron.NET's API uses .BrowserWindows not .Windows** — Undocumented API surface; the standard ElectronJS API naming doesn't match Electron.NET's C# wrapper.",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/What Happened",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M022:4",
+      "label": "**All 16 core DocuFiller NuGet dependencies are pure managed implementations** — OpenXml, EPPlus, CommunityToolkit.Mvvm, Velopack, etc. all support net8.0 cross-platform. Migration risk is entirely in the UI layer (WPF → new framework), not business logic.",
+      "type": "lesson",
+      "description": "Source: S04-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M022:5",
+      "label": "**Self-contained PoC directories need their own nuget.config and global.json** — Without these, PoC projects inherit the main project's SDK version and NuGet source constraints, which can cause build failures.",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M022:6",
+      "label": "**Unix verification commands (test, wc) don't work on Windows** — Task plans should always provide Windows-compatible verification commands or use cross-platform alternatives.",
+      "type": "lesson",
+      "description": "Source: S02-SUMMARY.md/Deviations",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M022:1",
+      "label": "**SSE-based progress reporting as portable cross-framework pattern** — Both Electron.NET and Tauri PoCs converged on SSE (Server-Sent Events) for progress streaming instead of framework-specific IPC (Electron IPC / Tauri commands). This makes the backend testable without any desktop runtime.",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M022:2",
+      "label": "**HybridSupport.IsElectronActive guard pattern** — Wrap Electron-specific code in runtime checks so the same ASP.NET Core app works in both Electron and browser contexts. Equivalent pattern in Tauri: CSP connect-src for frontend-origin detection.",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M022:3",
+      "label": "**Self-contained PoC project structure** — Each PoC lives in its own directory with own project file, dependency config (nuget.config/global.json for .NET, package.json for Node), and no references to the main DocuFiller project.",
+      "type": "pattern",
+      "description": "Source: S01-SUMMARY.md/Patterns established",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M022:1",
+      "label": "**Electron.NET community decline risk** — Despite being at TRL 6 (production-viable), Electron.NET lags behind upstream Electron by major versions and has sparse commit activity. The community risk is higher than the technical risk.",
+      "type": "lesson",
+      "description": "Source: S01-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M022:2",
+      "label": "**Blazor Hybrid has no Linux support at all** — A Microsoft-backed framework that only covers Windows and macOS. TRL 4 on Linux. This is a critical gap for a cross-platform migration.",
+      "type": "lesson",
+      "description": "Source: S03-SUMMARY.md/Key decisions (inferred from blazor-hybrid-research.md)",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M022:3",
+      "label": "**DocuFiller's migration workload is heavily UI-concentrated** — Only 5 file dialog call sites and 1 drag-drop file need rewriting. The entire service layer (11 interfaces), CLI, and update server are already cross-platform compatible.",
+      "type": "lesson",
+      "description": "Source: S04-SUMMARY.md/Key decisions",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M022/M022-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -3411,6 +3660,108 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M023",
+      "to": "slice:M023:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S01",
+      "to": "task:M023:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S01",
+      "to": "task:M023:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S01",
+      "to": "task:M023:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S01",
+      "to": "task:M023:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "slice:M023:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S02",
+      "to": "task:M023:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S02",
+      "to": "task:M023:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "slice:M023:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S03",
+      "to": "task:M023:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S03",
+      "to": "task:M023:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S03",
+      "to": "task:M023:S03:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S03",
+      "to": "task:M023:S03:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "slice:M023:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S04",
+      "to": "task:M023:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S04",
+      "to": "task:M023:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M023:S04",
+      "to": "task:M023:S04:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -4129,7 +4480,109 @@
       "to": "surprise:M021:1",
       "type": "relates_to",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "decision:M022:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "decision:M022:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "decision:M022:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "decision:M022:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "decision:M022:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "lesson:M022:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "lesson:M022:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "lesson:M022:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "lesson:M022:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "lesson:M022:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "lesson:M022:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "pattern:M022:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "pattern:M022:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "pattern:M022:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "surprise:M022:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "surprise:M022:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M022",
+      "to": "surprise:M022:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-04T17:48:22.878Z"
+  "builtAt": "2026-05-05T07:44:42.511Z"
 }

@@ -5,52 +5,76 @@
 
 ## Must-Haves
 
-- Upload handler accepts optional `notes` multipart form field and persists it to SQLite
-- GET /api/apps returns all registered apps with their channels (e.g., [{"id":"docufiller","channels":["stable","beta"],"created_at":"..."}])
-- GET /api/apps/{appId}/channels/{channel}/versions returns version list with notes from SQLite
-- Promote handler copies version metadata to target channel in SQLite
-- Delete handler removes version metadata from SQLite
-- All existing S01 tests continue to pass unchanged
-- New integration test proves: upload with notes → query apps → query versions with notes → promote → delete metadata cleanup
+- SQLite database package with schema migration (apps + versions tables), WAL mode
+- Upload handler accepts optional `notes` multipart form field, persists to SQLite
+- GET /api/apps returns all registered apps with their channels
+- GET /api/apps/{appId}/channels/{channel}/versions returns versions with notes
+- Promote and delete handlers keep SQLite in sync with file system
+- All existing S01 tests continue to pass
+
+## Threat Surface
+
+- **Abuse**: Notes field accepts arbitrary text — limit to reasonable length (10KB max) to prevent abuse. AppId/channel/version parameters in SQL queries use parameterized queries (no injection risk).
+- **Data exposure**: Release notes may contain internal information — protected by same Bearer token auth as upload. GET /api/apps and GET versions are public (same as existing feed serving).
+- **Input trust**: Notes text is user input stored in SQLite — parameterized queries prevent SQL injection. No HTML rendering server-side.
+
+## Requirement Impact
+
+- **Requirements touched**: R070 (SQLite metadata), R071 (release notes)
+- **Re-verify**: S01 integration test must still pass (existing upload/list/promote/delete flow unchanged except metadata additions)
+- **Decisions revisited**: D053 (SQLite confirmed as correct choice — WAL mode for concurrent access)
 
 ## Proof Level
 
 - This slice proves: integration — metadata CRUD and query APIs tested through httptest with real SQLite database and real handlers. Not mocked. File system + SQLite dual-write tested end-to-end.
-
-## Integration Closure
-
-Upstream surfaces consumed: handler/upload.go (UploadHandler), handler/promote.go (PromoteHandler), handler/delete.go (DeleteHandler), handler/list.go (ListHandler patterns), storage/store.go (Store for file operations), model/release.go (ReleaseFeed, ReleaseAsset).
-New wiring introduced: database.DB initialized in main.go, passed to all handler constructors. New route handlers for GET /api/apps and GET /api/apps/{appId}/channels/{channel}/versions.
-What remains before milestone is truly usable end-to-end: S03 (Vue 3 Web UI) consumes the new query APIs. S04 (data migration) needs to also seed SQLite metadata from migrated files.
+- Real runtime required: yes (SQLite + HTTP handlers in httptest)
+- Human/UAT required: no
 
 ## Verification
 
-- Runtime signals: structured JSON logs for metadata events (metadata_upsert, metadata_query, metadata_delete) alongside existing file operation logs.
-- Inspection surfaces: SQLite database file at data/update-hub.db — can be inspected with sqlite3 CLI for debugging metadata state.
-- Failure visibility: metadata write failures logged but do not block file operations (metadata is best-effort, file storage is authoritative).
+- `cd update-hub && go test ./database/ -v -count=1` — database CRUD tests pass
+- `cd update-hub && go test ./... -v -count=1` — all tests pass including new integration tests
+- Integration test proves: upload with notes → GET /api/apps → GET versions with notes → promote → delete metadata cleanup
+
+## Observability / Diagnostics
+
+- Runtime signals: structured JSON logs for metadata events (metadata_upsert, metadata_query, metadata_delete) alongside existing file operation logs
+- Inspection surfaces: SQLite database file at data/update-hub.db — inspectable with sqlite3 CLI for debugging
+- Failure visibility: metadata write failures logged but do not block file operations (metadata is best-effort, file storage is authoritative)
+- Redaction constraints: none (release notes are operational, not secrets)
+
+## Integration Closure
+
+- Upstream surfaces consumed: handler/upload.go (UploadHandler), handler/promote.go (PromoteHandler), handler/delete.go (DeleteHandler), handler/list.go (ListHandler patterns), storage/store.go (Store), model/release.go (ReleaseFeed, ReleaseAsset)
+- New wiring introduced: database.DB initialized in main.go, passed to all handler constructors. New route handlers for GET /api/apps and GET /api/apps/{appId}/channels/{channel}/versions.
+- What remains before the milestone is truly usable end-to-end: S03 (Vue 3 Web UI) consumes the new query APIs. S04 (data migration) needs to also seed SQLite metadata from migrated files.
 
 ## Tasks
 
-- [x] **T01: Create database package with SQLite schema and CRUD** `est:1h`
-  Create a self-contained `database` package with SQLite initialization, schema migration, and CRUD operations for apps and versions metadata. Use `modernc.org/sqlite` (pure Go, no CGO) to avoid GCC dependency on Windows. Schema has two tables: `apps` (id TEXT PK, created_at) and `versions` (id INTEGER PK AUTOINCREMENT, app_id, channel, version, notes, created_at, UNIQUE(app_id, channel, version)). CRUD methods: Init (open DB with WAL mode, run migrations), Close, UpsertApp, GetApps (with channel lists derived from versions), UpsertVersion, GetVersions(appId, channel), DeleteVersion(appId, channel, version). All methods use parameterized queries to prevent SQL injection.
+- [ ] **T01: Create database package with SQLite schema and CRUD** `est:1h`
+  - Why: Need a self-contained database layer that all handlers will use for metadata storage
   - Files: `update-hub/database/db.go`, `update-hub/database/db_test.go`, `update-hub/go.mod`, `update-hub/go.sum`
-  - Verify: cd update-hub && go test ./database/ -v -count=1
+  - Do: Add modernc.org/sqlite dependency. Create DB struct with Init (WAL mode, migrations), Close, UpsertApp, GetApps, UpsertVersion, GetVersions, DeleteVersion, GetChannels. Schema: apps (id TEXT PK, created_at) and versions (id INTEGER PK AUTOINCREMENT, app_id, channel, version, notes, created_at, UNIQUE(app_id,channel,version)). Parameterized queries throughout. Comprehensive tests.
+  - Verify: `cd update-hub && go test ./database/ -v -count=1`
+  - Done when: All CRUD tests pass, schema migration is idempotent (run twice without error)
 
-- [x] **T02: Wire metadata into handlers and add query API endpoints** `est:1.5h`
-  Wire the database package into existing handlers and add new query API endpoints. (1) Add `*database.DB` field to UploadHandler, PromoteHandler, DeleteHandler — metadata operations run after successful file operations. (2) UploadHandler: accept optional `notes` multipart form field, call UpsertApp + UpsertVersion after file storage. (3) PromoteHandler: call UpsertVersion for target channel after file copy. (4) DeleteHandler: call DeleteVersion after file cleanup. (5) Create new AppListHandler for GET /api/apps returning all apps with channels. (6) Create new VersionListHandler for GET /api/apps/{appId}/channels/{channel}/versions returning versions with notes from SQLite. (7) Update main.go: init DB at data/update-hub.db, pass to handlers, register new routes, defer DB.Close(). (8) Update integration test setup to create DB and pass to handlers. (9) Add integration sub-tests: upload with notes → GET /api/apps → GET versions with notes → promote metadata sync → delete metadata cleanup.
-  - Files: `update-hub/handler/upload.go`, `update-hub/handler/promote.go`, `update-hub/handler/delete.go`, `update-hub/handler/app_list.go`, `update-hub/handler/version_list.go`, `update-hub/main.go`, `update-hub/handler/integration_test.go`
-  - Verify: cd update-hub && go test ./... -v -count=1
+- [ ] **T02: Wire metadata into handlers and add query API endpoints** `est:1.5h`
+  - Why: Connect the database layer to existing handlers and expose new API endpoints for the Web UI
+  - Files: `update-hub/handler/app_list.go`, `update-hub/handler/version_list.go`, `update-hub/handler/upload.go`, `update-hub/handler/promote.go`, `update-hub/handler/delete.go`, `update-hub/main.go`, `update-hub/handler/integration_test.go`
+  - Do: Add *database.DB to handler structs. UploadHandler accepts `notes` form field + calls UpsertApp/UpsertVersion. PromoteHandler calls UpsertVersion on target. DeleteHandler calls DeleteVersion. New AppListHandler for GET /api/apps. New VersionListHandler for GET /api/apps/{appId}/channels/{channel}/versions. Update main.go: init DB, pass to handlers, new routes, defer Close. Update integration test with metadata flow tests.
+  - Verify: `cd update-hub && go test ./... -v -count=1`
+  - Done when: Integration test proves upload with notes → GET /api/apps returns app → GET versions returns notes → promote copies metadata → delete cleans metadata
 
 ## Files Likely Touched
 
-- update-hub/database/db.go
-- update-hub/database/db_test.go
-- update-hub/go.mod
-- update-hub/go.sum
-- update-hub/handler/upload.go
-- update-hub/handler/promote.go
-- update-hub/handler/delete.go
-- update-hub/handler/app_list.go
-- update-hub/handler/version_list.go
-- update-hub/main.go
-- update-hub/handler/integration_test.go
+- `update-hub/database/db.go`
+- `update-hub/database/db_test.go`
+- `update-hub/handler/app_list.go`
+- `update-hub/handler/version_list.go`
+- `update-hub/handler/upload.go`
+- `update-hub/handler/promote.go`
+- `update-hub/handler/delete.go`
+- `update-hub/main.go`
+- `update-hub/handler/integration_test.go`
+- `update-hub/go.mod`
+- `update-hub/go.sum`

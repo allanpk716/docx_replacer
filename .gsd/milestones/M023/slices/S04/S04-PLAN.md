@@ -29,12 +29,12 @@
 
 ## Tasks
 
-- [x] **T01: Implement migration package with old-format detection, file move, and metadata sync** `est:1h`
+- [ ] **T01: Implement migration package with old-format detection, file move, and metadata sync** `est:1h`
   Create the migration package that handles the core data migration from old single-app format to new multi-app format.
   - Files: `update-hub/migration/migrate.go`, `update-hub/migration/migrate_test.go`
   - Verify: GOCACHE=/tmp/go-cache go test ./migration/... -v -count=1
 
-- [x] **T02: Wire migration into main.go startup and verify full build** `est:30m`
+- [ ] **T02: Wire migration into main.go startup and verify full build** `est:30m`
   Integrate the migration package into the server startup sequence in main.go. Add a `-migrate-app-id` CLI flag (default: "docufiller", empty string = skip migration). The startup order becomes:
   1. Parse flags
   2. Create Store
@@ -45,7 +45,7 @@
   - Files: `update-hub/main.go`
   - Verify: GOCACHE=/tmp/go-cache go test ./... -count=1 && GOCACHE=/tmp/go-cache go build -o update-hub.exe .
 
-- [x] **T03: Create NSSM deployment scripts and deployment README** `est:45m`
+- [ ] **T03: Create NSSM deployment scripts and deployment README** `est:45m`
   Create Windows batch scripts for NSSM (Non-Sucking Service Manager) service management on Windows Server 2019. Also create a deployment README with step-by-step instructions.
   - Files: `update-hub/deploy/install-service.bat`, `update-hub/deploy/uninstall-service.bat`, `update-hub/deploy/start-service.bat`, `update-hub/deploy/stop-service.bat`, `update-hub/deploy/README.md`
   - Verify: powershell -Command "Get-ChildItem deploy/*.bat | ForEach-Object { Write-Host $_.Name }" && test -f deploy/README.md

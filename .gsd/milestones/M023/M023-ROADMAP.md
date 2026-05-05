@@ -12,16 +12,16 @@
 
 ## Slices
 
-- [x] **S01: S01** `risk:high` `depends:[]`
+- [ ] **S01: Go 服务器核心 API（多应用 Velopack 分发）** `risk:high` `depends:[]`
   > After this: curl 上传 .nupkg 到新服务器 /api/apps/docufiller/channels/stable/releases，Velopack SimpleWebSource 客户端从 /docufiller/stable/releases.win.json 成功拉取更新
 
-- [x] **S02: S02** `risk:medium` `depends:[]`
+- [ ] **S02: SQLite 元数据层 + Release notes** `risk:medium` `depends:[S01]`
   > After this: 上传时附带备注文本，通过 GET /api/apps 查询应用列表，通过 GET /api/apps/{appId}/channels/{channel}/versions 查询版本列表含备注
 
-- [x] **S03: S03** `risk:medium` `depends:[]`
+- [ ] **S03: Web 管理界面（Vue 3 SPA + Go embed）** `risk:medium` `depends:[S01,S02]`
   > After this: 浏览器打开 http://server:30001/ 看到 Web UI，登录后查看应用列表、上传新版本（带备注）、promote、删除
 
-- [x] **S04: S04** `risk:high` `depends:[]`
+- [ ] **S04: 数据迁移 + Windows Server 部署** `risk:high` `depends:[S01,S02,S03]`
   > After this: 旧 DocuFiller 数据自动迁移到 data/docufiller/，服务在端口 30001 启动，Web UI 可访问且显示迁移后的数据
 
 ## Boundary Map
