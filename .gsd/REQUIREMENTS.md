@@ -632,6 +632,51 @@ This file is the explicit capability and coverage contract for the project.
 - Status: validated
 - Validation: MainWindowViewModel.cs reduced from 1623 to 390 lines (under 400 target). FillViewModel.cs (825 lines, CT.Mvvm) extracted with all keyword-replacement tab logic. UpdateStatusViewModel.cs (397 lines, CT.Mvvm) extracted with all update status logic. dotnet build: 0 errors, 0 warnings. dotnet test: 280 passed (253 unit + 27 E2E), 0 failed.
 
+### R061 — Electron.NET 方案的 PoC 项目和完整调研文档。PoC 实现迷你 DocuFiller（文件选择→处理→进度条），在 Windows 上编译运行。
+- Class: differentiator
+- Status: validated
+- Description: Electron.NET 方案的 PoC 项目和完整调研文档。PoC 实现迷你 DocuFiller（文件选择→处理→进度条），在 Windows 上编译运行。
+- Why it matters: 用户明确要求调研 Electron.NET 作为 WPF 替代方案的可行性，需要实际代码验证
+- Source: user
+- Primary owning slice: M022/S01
+- Validation: Electron.NET PoC compiles on Windows (dotnet build exit 0, 0 errors 0 warnings). PoC includes native file dialog (Electron.Dialog), SSE progress streaming, IPC status reporting, and frontend progress bar UI. 13-section research document (21KB) covers technical overview, DocuFiller adaptability, IPC mechanisms, NuGet compatibility, cross-platform support, SWOT, TRL 6 assessment. All code in poc/electron-net-docufiller/, independent of main project.
+
+### R062 — Tauri + .NET sidecar 方案的 PoC 项目和完整调研文档。PoC 实现迷你 DocuFiller（文件选择→处理→进度条），在 Windows 上编译运行。
+- Class: differentiator
+- Status: validated
+- Description: Tauri + .NET sidecar 方案的 PoC 项目和完整调研文档。PoC 实现迷你 DocuFiller（文件选择→处理→进度条），在 Windows 上编译运行。
+- Why it matters: 用户明确要求调研 Tauri 作为轻量级跨平台壳的可行性，需要实际代码验证 .NET 集成难度
+- Source: user
+- Primary owning slice: M022/S02
+- Validation: Tauri v2 + .NET sidecar PoC compiles on Windows (cargo build + dotnet build both exit 0). PoC includes native file dialog, sidecar HTTP API with SSE progress streaming, and frontend progress bar. 649-line research document with 16 sections covers architecture, IPC, cross-platform, performance, PoC findings. All code in poc/tauri-docufiller/, independent of main project.
+
+### R063 — Avalonia、Blazor Hybrid、纯 Web 应用、MAUI 四个方案的纯文献调研对比文档
+- Class: differentiator
+- Status: validated
+- Description: Avalonia、Blazor Hybrid、纯 Web 应用、MAUI 四个方案的纯文献调研对比文档
+- Why it matters: 为跨平台迁移决策提供完整的方案全景，这四个方案不写 PoC 但需要调研覆盖
+- Source: user
+- Primary owning slice: M022/S03
+- Validation: 四份调研文档均通过自动化质量验证（≥8 章节、≥3000 字、无 TBD/TODO），综合评分：Avalonia 4.3/5 > Blazor Hybrid 3.7/5 > Web 3.0/5 > MAUI 2.8/5
+
+### R064 — Velopack 跨平台能力、核心依赖库（OpenXml/EPPlus）兼容性、平台差异处理（文件对话框/拖放/路径）、打包分发方案（macOS dmg/notarization、Linux deb/AppImage）的调研文档
+- Class: differentiator
+- Status: validated
+- Description: Velopack 跨平台能力、核心依赖库（OpenXml/EPPlus）兼容性、平台差异处理（文件对话框/拖放/路径）、打包分发方案（macOS dmg/notarization、Linux deb/AppImage）的调研文档
+- Why it matters: 基础设施层面的调研为任何迁移方案提供支撑，确保更新、依赖、打包不成为阻塞项
+- Source: inferred
+- Primary owning slice: M022/S04
+- Validation: S04 产出四份调研文档：velopack-cross-platform.md（13章节，30KB）、core-dependencies-compatibility.md（13章节，32KB）、platform-differences.md（13章节，30KB）、packaging-distribution.md（14章节，42KB）。覆盖 Velopack 三平台更新能力、16个 NuGet 依赖跨平台兼容性、6大平台差异点、macOS/Linux 打包分发方案。所有文档零 TBD/TODO，格式与 S03 产出一致。
+
+### R065 — 汇总所有 6 个 UI 方案的最终对比评估文档，包含技术可行性、迁移成本、生态成熟度、推荐排序
+- Class: differentiator
+- Status: validated
+- Description: 汇总所有 6 个 UI 方案的最终对比评估文档，包含技术可行性、迁移成本、生态成熟度、推荐排序
+- Why it matters: 为用户提供决策依据，将分散的调研结果整合为可操作的建议
+- Source: inferred
+- Primary owning slice: M022/S05
+- Validation: comparison-and-recommendation.md (36,899 bytes, 12 sections) covers all 6 UI frameworks with multi-dimensional scoring, SWOT matrices, weighted rankings, and migration roadmap. Verified: file exists, 0 TBD/TODO, 58 Avalonia references, 15 key-section references.
+
 ## Deferred
 
 ## Out of Scope
@@ -711,10 +756,15 @@ This file is the explicit capability and coverage contract for the project.
 | R058 | core-capability | validated | M016/S01 | none | S01 added TextBlock hints (11px, #AAAAAA) below template TextBox ("提示：可将 .docx 文件或文件夹拖放到上方文本框") and data TextBox ("提示：可将 Excel 文件拖放到上方文本框") in keyword replacement tab. dotnet build passes. |
 | R059 | core-capability | validated | M017/S01 | none | TemplatePathTextBox 和 DataPathTextBox 的 8 个冒泡拖放事件已改为 Preview 隧道版本（PreviewDrop/PreviewDragOver/PreviewDragEnter/PreviewDragLeave），清理区域保留冒泡事件不变。dotnet build 0 错误 0 警告。需人工 UAT 确认拖放视觉反馈和路径填入功能正常。 |
 | R060 |  | validated | none | none | MainWindowViewModel.cs reduced from 1623 to 390 lines (under 400 target). FillViewModel.cs (825 lines, CT.Mvvm) extracted with all keyword-replacement tab logic. UpdateStatusViewModel.cs (397 lines, CT.Mvvm) extracted with all update status logic. dotnet build: 0 errors, 0 warnings. dotnet test: 280 passed (253 unit + 27 E2E), 0 failed. |
+| R061 | differentiator | validated | M022/S01 | none | Electron.NET PoC compiles on Windows (dotnet build exit 0, 0 errors 0 warnings). PoC includes native file dialog (Electron.Dialog), SSE progress streaming, IPC status reporting, and frontend progress bar UI. 13-section research document (21KB) covers technical overview, DocuFiller adaptability, IPC mechanisms, NuGet compatibility, cross-platform support, SWOT, TRL 6 assessment. All code in poc/electron-net-docufiller/, independent of main project. |
+| R062 | differentiator | validated | M022/S02 | none | Tauri v2 + .NET sidecar PoC compiles on Windows (cargo build + dotnet build both exit 0). PoC includes native file dialog, sidecar HTTP API with SSE progress streaming, and frontend progress bar. 649-line research document with 16 sections covers architecture, IPC, cross-platform, performance, PoC findings. All code in poc/tauri-docufiller/, independent of main project. |
+| R063 | differentiator | validated | M022/S03 | none | 四份调研文档均通过自动化质量验证（≥8 章节、≥3000 字、无 TBD/TODO），综合评分：Avalonia 4.3/5 > Blazor Hybrid 3.7/5 > Web 3.0/5 > MAUI 2.8/5 |
+| R064 | differentiator | validated | M022/S04 | none | S04 产出四份调研文档：velopack-cross-platform.md（13章节，30KB）、core-dependencies-compatibility.md（13章节，32KB）、platform-differences.md（13章节，30KB）、packaging-distribution.md（14章节，42KB）。覆盖 Velopack 三平台更新能力、16个 NuGet 依赖跨平台兼容性、6大平台差异点、macOS/Linux 打包分发方案。所有文档零 TBD/TODO，格式与 S03 产出一致。 |
+| R065 | differentiator | validated | M022/S05 | none | comparison-and-recommendation.md (36,899 bytes, 12 sections) covers all 6 UI frameworks with multi-dimensional scoring, SWOT matrices, weighted rankings, and migration roadmap. Verified: file exists, 0 TBD/TODO, 58 Avalonia references, 15 key-section references. |
 
 ## Coverage Summary
 
 - Active requirements: 0
 - Mapped to slices: 0
-- Validated: 59 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060)
+- Validated: 64 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065)
 - Unmapped active requirements: 0
