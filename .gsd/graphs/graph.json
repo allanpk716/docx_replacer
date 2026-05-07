@@ -1,10 +1,10 @@
 {
   "nodes": [
     {
-      "id": "milestone:M023",
-      "label": "M023: update-hub 独立项目",
+      "id": "milestone:M024",
+      "label": "M024: 启动时更新检查进度动画",
       "type": "milestone",
-      "description": "Active milestone: M023",
+      "description": "Active milestone: M024",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
@@ -1076,7 +1076,7 @@
     },
     {
       "id": "milestone:M021",
-      "label": "M021: 第二轮重构 — ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步",
+      "label": "M021: 第二轮重构 - ViewModel 拆分 + 拖放 Behavior + R028 自动更新 + 文档同步",
       "type": "milestone",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M021/M021-ROADMAP.md"
@@ -1334,6 +1334,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M023",
+      "label": "M023: update-hub 独立项目",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-ROADMAP.md"
+    },
+    {
       "id": "slice:M023:S01",
       "label": "S01: Go 服务器核心 API（多应用 Velopack 分发）",
       "type": "slice",
@@ -1436,6 +1443,25 @@
     {
       "id": "task:M023:S04:T03",
       "label": "T03: Create NSSM deployment scripts and deployment README",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M024:S01",
+      "label": "S01: 状态栏更新检查旋转动画",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M024/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M024:S01:T01",
+      "label": "T01: Add ShowCheckingAnimation property and move Checking state before delay",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M024:S01:T02",
+      "label": "T02: Add spinner rotation animation to status bar XAML",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -2534,6 +2560,384 @@
       "description": "Source: S04-SUMMARY.md/Key decisions",
       "confidence": "EXTRACTED",
       "sourceFile": "milestones/M022/M022-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:1",
+      "label": "**Go 1.22 ServeMux over manual dispatch** — Chose Go 1.22's built-in method+path routing (`\"POST /api/apps/{appId}/channels/{channel}/releases\"`) over manual router registration. Eliminates boilerplate, provides PathValue extraction, and pattern specificity (literal `/assets/` beats wildcard `/`). Source: S01-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:2",
+      "label": "**modernc.org/sqlite over mattn/go-sqlite3** — Chose pure Go SQLite driver (modernc.org/sqlite v1.34.5) over CGO-backed mattn/go-sqlite3. Avoids CGO toolchain issues on Windows, cross-compiles cleanly. Trade-off: ~2x slower than CGO for heavy queries, but negligible for our read-mostly workload. Source: S02-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:3",
+      "label": "**Best-effort metadata (file authoritative, SQLite additive)** — File storage is the source of truth; SQLite is an additive index. Metadata operations are nil-safe and errors are logged but never block file operations. This simplifies error handling and means metadata can always be rebuilt via SyncMetadata. Source: S02-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:4",
+      "label": "**Vue 3 + Go embed for single-binary deployment** — Chose Go `//go:embed web/dist` over serving frontend separately. Single binary deployment matches Go philosophy. Custom SPAHandler needed because http.FileServer doesn't handle index.html fallback for client-side routes. Source: S03-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:5",
+      "label": "**Bearer token precedence over JWT cookie** — Bearer token header checked first, JWT cookie as fallback. Ensures backward compatibility with existing curl/build-internal.bat clients while enabling Web UI session management. Source: S03-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:6",
+      "label": "**os.Rename for atomic migration (not copy+delete)** — Used os.Rename for per-channel migration because it's atomic on same filesystem. Copy+delete would leave inconsistent state on failure. Trade-off: fails across volumes, needs copy+delete fallback for cross-drive scenarios. Source: S04-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:7",
+      "label": "**Migration errors are fatal** — Migration failures call log.Fatalf to prevent serving with inconsistent data. Better to fail loudly than silently serve partial state. Source: S04-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:8",
+      "label": "**All GET /api/* endpoints public** — Read-only query endpoints (app list, version list) don't require auth. Simplifies frontend development and maintains compatibility with Velopack clients that do unauthenticated GET requests. Source: S02-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:9",
+      "label": "**WAL mode must be set via DSN query params, not PRAGMA** — `file:data.db?_journal_mode=WAL&_busy_timeout=5000` works across database/sql connection pooling. `PRAGMA journal_mode=WAL` only applies to the single connection that executes it. Source: S02-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:10",
+      "label": "**GOCACHE env var must be explicitly set in some agent/Git Bash environments** — Go doesn't always auto-detect %LocalAppData% in Git Bash shells. `GOCACHE=\"$TEMP/go-cache\"` is the portable workaround. Source: S01-SUMMARY.md/Verification",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:11",
+      "label": "**esbuild postinstall may fail in restricted CI/agent environments** — `npm install --ignore-scripts` is a viable workaround when esbuild's native binary download fails. Source: S03-SUMMARY.md/Deviations",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:12",
+      "label": "**Go 1.22 doesn't have t.Context()** — Use `context.Background()` in tests instead. `t.Context()` was added in Go 1.24. Source: S04-SUMMARY.md/Deviations",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:13",
+      "label": "**os.Rename fails across filesystem volumes** — Atomic rename only works within the same filesystem. Cross-drive migration needs copy+delete with proper cleanup on failure. Source: S04-SUMMARY.md/Known Limitations",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:14",
+      "label": "**http.FileServer doesn't handle SPA fallback** — Need a custom handler that serves index.html for non-file paths. http.FileServer returns 404 for client-side routes like /login or /apps/docufiller. Source: S03-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:15",
+      "label": "**Upload dialog must use raw fetch() not wrapper** — apiFetch wrappers that set Content-Type: application/json will corrupt multipart/form-data boundaries. Use raw fetch() for file uploads. Source: S03-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:16",
+      "label": "**Empty Bearer token string disables auth entirely** — When `-token \"\"` is passed, auth middleware skips validation. Useful for dev/local but must be documented to prevent accidental auth bypass. Source: S01-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:17",
+      "label": "**Go 1.22 ServeMux method+path routing with PathValue extraction** — Register routes like `mux.Handle(\"POST /api/apps/{appId}/channels/{channel}/releases\", ...)` and extract path parameters via `r.PathValue(\"appId\")`. Pattern specificity is automatic. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:18",
+      "label": "**Multi-app URL pattern: /api/apps/{appId}/channels/{channel}/...** — All API endpoints follow this hierarchical pattern. Maps cleanly to filesystem layout `data/{appId}/{channel}/`. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:19",
+      "label": "**Atomic file writes (temp+rename)** — Write to temp file in same directory, then os.Rename to final path. Ensures atomicity on same filesystem and prevents partial writes. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:20",
+      "label": "**Structured JSON logging for all events** — All HTTP requests, metadata operations, and migration steps logged as structured JSON with method, path, status, duration_ms fields. Bearer token never logged. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:21",
+      "label": "**Best-effort metadata with nil-safe DB pattern** — All handlers check `if h.DB != nil` before metadata operations. Errors logged but never block file operations. Source: S02-SUMMARY.md/Patterns Established",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:22",
+      "label": "**Idempotent operations with skip-not-error pattern** — Migration skips existing targets instead of erroring. Delete returns success with files_deleted: 0 when nothing to remove. Source: S04-SUMMARY.md/Patterns Established",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:23",
+      "label": "**Go 1.22 ServeMux pattern specificity works perfectly for SPA + API + static routing** — Expected routing conflicts between SPA fallback (`/`) and API endpoints (`/api/*`) and Velopack static paths (`/{appId}/`). Go 1.22's most-specific-pattern-first matching resolved all conflicts without custom routing logic. Source: S03-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:24",
+      "label": "**Integration test discovered the need for auth_check endpoint** — The Vue auth composable needed a way to verify JWT session status on page load. GET /api/auth/check wasn't in the original plan but became essential for the frontend UX. Source: S03-SUMMARY.md/Deviations",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "decision:M023:25",
+      "label": "**Pure Go SQLite performed well enough for metadata workload** — Expected noticeable performance difference from CGO-backed SQLite, but modernc.org/sqlite handled our read-mostly metadata queries without measurable latency impact. Source: S02-SUMMARY.md/What Happened",
+      "type": "decision",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:1",
+      "label": "**WAL mode must be set via DSN query params, not PRAGMA** — `file:data.db?_journal_mode=WAL&_busy_timeout=5000` works across database/sql connection pooling. `PRAGMA journal_mode=WAL` only applies to the single connection that executes it. Source: S02-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:2",
+      "label": "**GOCACHE env var must be explicitly set in some agent/Git Bash environments** — Go doesn't always auto-detect %LocalAppData% in Git Bash shells. `GOCACHE=\"$TEMP/go-cache\"` is the portable workaround. Source: S01-SUMMARY.md/Verification",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:3",
+      "label": "**esbuild postinstall may fail in restricted CI/agent environments** — `npm install --ignore-scripts` is a viable workaround when esbuild's native binary download fails. Source: S03-SUMMARY.md/Deviations",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:4",
+      "label": "**Go 1.22 doesn't have t.Context()** — Use `context.Background()` in tests instead. `t.Context()` was added in Go 1.24. Source: S04-SUMMARY.md/Deviations",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:5",
+      "label": "**os.Rename fails across filesystem volumes** — Atomic rename only works within the same filesystem. Cross-drive migration needs copy+delete with proper cleanup on failure. Source: S04-SUMMARY.md/Known Limitations",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:6",
+      "label": "**http.FileServer doesn't handle SPA fallback** — Need a custom handler that serves index.html for non-file paths. http.FileServer returns 404 for client-side routes like /login or /apps/docufiller. Source: S03-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:7",
+      "label": "**Upload dialog must use raw fetch() not wrapper** — apiFetch wrappers that set Content-Type: application/json will corrupt multipart/form-data boundaries. Use raw fetch() for file uploads. Source: S03-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:8",
+      "label": "**Empty Bearer token string disables auth entirely** — When `-token \"\"` is passed, auth middleware skips validation. Useful for dev/local but must be documented to prevent accidental auth bypass. Source: S01-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:9",
+      "label": "**Go 1.22 ServeMux method+path routing with PathValue extraction** — Register routes like `mux.Handle(\"POST /api/apps/{appId}/channels/{channel}/releases\", ...)` and extract path parameters via `r.PathValue(\"appId\")`. Pattern specificity is automatic. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:10",
+      "label": "**Multi-app URL pattern: /api/apps/{appId}/channels/{channel}/...** — All API endpoints follow this hierarchical pattern. Maps cleanly to filesystem layout `data/{appId}/{channel}/`. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:11",
+      "label": "**Atomic file writes (temp+rename)** — Write to temp file in same directory, then os.Rename to final path. Ensures atomicity on same filesystem and prevents partial writes. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:12",
+      "label": "**Structured JSON logging for all events** — All HTTP requests, metadata operations, and migration steps logged as structured JSON with method, path, status, duration_ms fields. Bearer token never logged. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:13",
+      "label": "**Best-effort metadata with nil-safe DB pattern** — All handlers check `if h.DB != nil` before metadata operations. Errors logged but never block file operations. Source: S02-SUMMARY.md/Patterns Established",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:14",
+      "label": "**Idempotent operations with skip-not-error pattern** — Migration skips existing targets instead of erroring. Delete returns success with files_deleted: 0 when nothing to remove. Source: S04-SUMMARY.md/Patterns Established",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:15",
+      "label": "**Go 1.22 ServeMux pattern specificity works perfectly for SPA + API + static routing** — Expected routing conflicts between SPA fallback (`/`) and API endpoints (`/api/*`) and Velopack static paths (`/{appId}/`). Go 1.22's most-specific-pattern-first matching resolved all conflicts without custom routing logic. Source: S03-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:16",
+      "label": "**Integration test discovered the need for auth_check endpoint** — The Vue auth composable needed a way to verify JWT session status on page load. GET /api/auth/check wasn't in the original plan but became essential for the frontend UX. Source: S03-SUMMARY.md/Deviations",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "lesson:M023:17",
+      "label": "**Pure Go SQLite performed well enough for metadata workload** — Expected noticeable performance difference from CGO-backed SQLite, but modernc.org/sqlite handled our read-mostly metadata queries without measurable latency impact. Source: S02-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:1",
+      "label": "**Go 1.22 ServeMux method+path routing with PathValue extraction** — Register routes like `mux.Handle(\"POST /api/apps/{appId}/channels/{channel}/releases\", ...)` and extract path parameters via `r.PathValue(\"appId\")`. Pattern specificity is automatic. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:2",
+      "label": "**Multi-app URL pattern: /api/apps/{appId}/channels/{channel}/...** — All API endpoints follow this hierarchical pattern. Maps cleanly to filesystem layout `data/{appId}/{channel}/`. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:3",
+      "label": "**Atomic file writes (temp+rename)** — Write to temp file in same directory, then os.Rename to final path. Ensures atomicity on same filesystem and prevents partial writes. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:4",
+      "label": "**Structured JSON logging for all events** — All HTTP requests, metadata operations, and migration steps logged as structured JSON with method, path, status, duration_ms fields. Bearer token never logged. Source: S01-SUMMARY.md/Patterns Established",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:5",
+      "label": "**Best-effort metadata with nil-safe DB pattern** — All handlers check `if h.DB != nil` before metadata operations. Errors logged but never block file operations. Source: S02-SUMMARY.md/Patterns Established",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:6",
+      "label": "**Idempotent operations with skip-not-error pattern** — Migration skips existing targets instead of erroring. Delete returns success with files_deleted: 0 when nothing to remove. Source: S04-SUMMARY.md/Patterns Established",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:7",
+      "label": "**Go 1.22 ServeMux pattern specificity works perfectly for SPA + API + static routing** — Expected routing conflicts between SPA fallback (`/`) and API endpoints (`/api/*`) and Velopack static paths (`/{appId}/`). Go 1.22's most-specific-pattern-first matching resolved all conflicts without custom routing logic. Source: S03-SUMMARY.md/What Happened",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:8",
+      "label": "**Integration test discovered the need for auth_check endpoint** — The Vue auth composable needed a way to verify JWT session status on page load. GET /api/auth/check wasn't in the original plan but became essential for the frontend UX. Source: S03-SUMMARY.md/Deviations",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "pattern:M023:9",
+      "label": "**Pure Go SQLite performed well enough for metadata workload** — Expected noticeable performance difference from CGO-backed SQLite, but modernc.org/sqlite handled our read-mostly metadata queries without measurable latency impact. Source: S02-SUMMARY.md/What Happened",
+      "type": "pattern",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M023:1",
+      "label": "**Go 1.22 ServeMux pattern specificity works perfectly for SPA + API + static routing** — Expected routing conflicts between SPA fallback (`/`) and API endpoints (`/api/*`) and Velopack static paths (`/{appId}/`). Go 1.22's most-specific-pattern-first matching resolved all conflicts without custom routing logic. Source: S03-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M023:2",
+      "label": "**Integration test discovered the need for auth_check endpoint** — The Vue auth composable needed a way to verify JWT session status on page load. GET /api/auth/check wasn't in the original plan but became essential for the frontend UX. Source: S03-SUMMARY.md/Deviations",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
+    },
+    {
+      "id": "surprise:M023:3",
+      "label": "**Pure Go SQLite performed well enough for metadata workload** — Expected noticeable performance difference from CGO-backed SQLite, but modernc.org/sqlite handled our read-mostly metadata queries without measurable latency impact. Source: S02-SUMMARY.md/What Happened",
+      "type": "lesson",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M023/M023-LEARNINGS.md"
     }
   ],
   "edges": [
@@ -3762,6 +4166,24 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "milestone:M024",
+      "to": "slice:M024:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M024:S01",
+      "to": "task:M024:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M024:S01",
+      "to": "task:M024:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M015",
       "to": "decision:M015:1",
       "type": "relates_to",
@@ -4582,7 +5004,331 @@
       "to": "surprise:M022:3",
       "type": "relates_to",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:10",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:11",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:12",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:13",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:14",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:15",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:16",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:17",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:18",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:19",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:20",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:21",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:22",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:23",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:24",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "decision:M023:25",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:10",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:11",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:12",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:13",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:14",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:15",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:16",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "lesson:M023:17",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:4",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:5",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:6",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:7",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:8",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "pattern:M023:9",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "surprise:M023:1",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "surprise:M023:2",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M023",
+      "to": "surprise:M023:3",
+      "type": "relates_to",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-05-05T07:44:42.511Z"
+  "builtAt": "2026-05-07T07:44:17.258Z"
 }

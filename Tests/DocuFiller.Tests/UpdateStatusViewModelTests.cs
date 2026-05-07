@@ -241,6 +241,47 @@ namespace DocuFiller.Tests
             Assert.Contains("失败", vm.UpdateStatusMessage);
         }
 
+        // ── ShowCheckingAnimation 属性测试 ──────────────────────────
+
+        [Fact]
+        public void ShowCheckingAnimation_IsFalse_WhenNone()
+        {
+            var vm = CreateViewModel();
+            Assert.False(vm.ShowCheckingAnimation);
+        }
+
+        [Fact]
+        public void ShowCheckingAnimation_IsTrue_WhenChecking()
+        {
+            var vm = CreateViewModel();
+            vm.CurrentUpdateStatus = UpdateStatus.Checking;
+            Assert.True(vm.ShowCheckingAnimation);
+        }
+
+        [Fact]
+        public void ShowCheckingAnimation_IsTrue_WhenIsCheckingUpdate()
+        {
+            var vm = CreateViewModel();
+            vm.IsCheckingUpdate = true;
+            Assert.True(vm.ShowCheckingAnimation);
+        }
+
+        [Fact]
+        public void ShowCheckingAnimation_IsFalse_WhenUpToDate()
+        {
+            var vm = CreateViewModel();
+            vm.CurrentUpdateStatus = UpdateStatus.UpToDate;
+            Assert.False(vm.ShowCheckingAnimation);
+        }
+
+        [Fact]
+        public void ShowCheckingAnimation_IsFalse_WhenError()
+        {
+            var vm = CreateViewModel();
+            vm.CurrentUpdateStatus = UpdateStatus.Error;
+            Assert.False(vm.ShowCheckingAnimation);
+        }
+
         // ── 辅助方法 ───────────────────────────────────────────────
 
         /// <summary>

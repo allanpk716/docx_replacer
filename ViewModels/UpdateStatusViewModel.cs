@@ -70,6 +70,12 @@ namespace DocuFiller.ViewModels
 
             try
             {
+                // 在延迟前立刻设置 Checking 状态，确保 spinner 动画立即显示
+                if (_updateService != null)
+                {
+                    CurrentUpdateStatus = UpdateStatus.Checking;
+                }
+
                 _logger.LogInformation("自动检查更新：等待 5 秒延迟");
                 await Task.Delay(5000, _autoCheckCts.Token);
                 await InitializeUpdateStatusAsync();
@@ -146,6 +152,11 @@ namespace DocuFiller.ViewModels
         }
 
         /// <summary>
+        /// 是否显示旋转 spinner 动画（自动检查中或手动检查中）
+        /// </summary>
+        public bool ShowCheckingAnimation => CurrentUpdateStatus == UpdateStatus.Checking || IsCheckingUpdate;
+
+        /// <summary>
         /// 是否有可显示的更新状态（用于 UI 可见性绑定）
         /// </summary>
         public bool HasUpdateStatus => CurrentUpdateStatus != UpdateStatus.None;
@@ -165,6 +176,7 @@ namespace DocuFiller.ViewModels
         partial void OnIsCheckingUpdateChanged(bool value)
         {
             OnPropertyChanged(nameof(CanCheckUpdate));
+            OnPropertyChanged(nameof(ShowCheckingAnimation));
             CheckUpdateCommand.NotifyCanExecuteChanged();
         }
 
@@ -175,6 +187,7 @@ namespace DocuFiller.ViewModels
         {
             OnPropertyChanged(nameof(HasUpdateStatus));
             OnPropertyChanged(nameof(HasUpdateAvailable));
+            OnPropertyChanged(nameof(ShowCheckingAnimation));
             OnPropertyChanged(nameof(UpdateStatusMessage));
             OnPropertyChanged(nameof(UpdateStatusBrush));
             UpdateStatusClickCommand.NotifyCanExecuteChanged();
@@ -358,8 +371,6 @@ namespace DocuFiller.ViewModels
 
             try
             {
-                CurrentUpdateStatus = UpdateStatus.Checking;
-
                 // 更新源未配置
                 if (!_updateService.IsUpdateUrlConfigured)
                 {

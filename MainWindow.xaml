@@ -13,6 +13,14 @@
         Icon="pack://application:,,,/Resources/app.ico"
         AllowDrop="True"
         PreviewDragOver="Window_PreviewDragOver">
+
+    <Window.Resources>
+        <Storyboard x:Key="SpinnerRotateAnimation" RepeatBehavior="Forever">
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                             From="0" To="360" Duration="0:0:1"
+                             RepeatBehavior="Forever"/>
+        </Storyboard>
+    </Window.Resources>
     
     <WindowChrome.WindowChrome>
         <WindowChrome CaptionHeight="32"
@@ -128,25 +136,50 @@
                            Text="{Binding FillVM.ProgressMessage}"
                            VerticalAlignment="Center" FontSize="12" Foreground="#888888"/>
 
-                <TextBlock Grid.Column="2" x:Name="UpdateStatusText"
-                           Text="{Binding UpdateStatusVM.UpdateStatusMessage}"
-                           Foreground="{Binding UpdateStatusVM.UpdateStatusBrush}"
-                           Visibility="{Binding UpdateStatusVM.HasUpdateStatus, Converter={StaticResource BooleanToVisibilityConverter}}"
-                           VerticalAlignment="Center" FontSize="12" Cursor="Hand"
-                           Margin="15,0,15,0">
-                    <TextBlock.InputBindings>
-                        <MouseBinding MouseAction="LeftClick" Command="{Binding UpdateStatusVM.UpdateStatusClickCommand}"/>
-                    </TextBlock.InputBindings>
-                    <TextBlock.TextDecorations>
-                        <TextDecorationCollection>
-                            <TextDecoration Location="Underline">
-                                <TextDecoration.Pen>
-                                    <Pen Brush="{Binding UpdateStatusVM.UpdateStatusBrush}" Thickness="1"/>
-                                </TextDecoration.Pen>
-                            </TextDecoration>
-                        </TextDecorationCollection>
-                    </TextBlock.TextDecorations>
-                </TextBlock>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Margin="15,0,15,0">
+                    <Canvas Width="16" Height="16" Margin="0,0,5,0"
+                            x:Name="SpinnerCanvas"
+                            Visibility="{Binding UpdateStatusVM.ShowCheckingAnimation, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Canvas.RenderTransform>
+                            <RotateTransform CenterX="8" CenterY="8"/>
+                        </Canvas.RenderTransform>
+                        <Canvas.Style>
+                            <Style TargetType="Canvas">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding UpdateStatusVM.ShowCheckingAnimation}" Value="True">
+                                        <DataTrigger.EnterActions>
+                                            <BeginStoryboard x:Name="SpinnerBegin" Storyboard="{StaticResource SpinnerRotateAnimation}"/>
+                                        </DataTrigger.EnterActions>
+                                        <DataTrigger.ExitActions>
+                                            <StopStoryboard BeginStoryboardName="SpinnerBegin"/>
+                                        </DataTrigger.ExitActions>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Canvas.Style>
+                        <Ellipse Width="16" Height="16" Stroke="#888888" StrokeThickness="2"
+                                 StrokeDashArray="2 2.5" Fill="Transparent"
+                                 Canvas.Left="0" Canvas.Top="0"/>
+                    </Canvas>
+                    <TextBlock x:Name="UpdateStatusText"
+                               Text="{Binding UpdateStatusVM.UpdateStatusMessage}"
+                               Foreground="{Binding UpdateStatusVM.UpdateStatusBrush}"
+                               Visibility="{Binding UpdateStatusVM.HasUpdateStatus, Converter={StaticResource BooleanToVisibilityConverter}}"
+                               VerticalAlignment="Center" FontSize="12" Cursor="Hand">
+                        <TextBlock.InputBindings>
+                            <MouseBinding MouseAction="LeftClick" Command="{Binding UpdateStatusVM.UpdateStatusClickCommand}"/>
+                        </TextBlock.InputBindings>
+                        <TextBlock.TextDecorations>
+                            <TextDecorationCollection>
+                                <TextDecoration Location="Underline">
+                                    <TextDecoration.Pen>
+                                        <Pen Brush="{Binding UpdateStatusVM.UpdateStatusBrush}" Thickness="1"/>
+                                    </TextDecoration.Pen>
+                                </TextDecoration>
+                            </TextDecorationCollection>
+                        </TextBlock.TextDecorations>
+                    </TextBlock>
+                </StackPanel>
 
                 <Grid Grid.Column="3">
                     <Button Content="⚙" ToolTip="更新源设置"
