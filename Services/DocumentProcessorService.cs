@@ -909,8 +909,22 @@ namespace DocuFiller.Services
                     return Task.FromResult(result);
                 }
 
-                // 2. 复制模板文件
+                // 2. 复制模板文件（如果目标文件存在且为只读，先清除只读属性）
+                if (File.Exists(outputFilePath))
+                {
+                    var existingAttributes = File.GetAttributes(outputFilePath);
+                    if ((existingAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                    {
+                        File.SetAttributes(outputFilePath, existingAttributes & ~FileAttributes.ReadOnly);
+                    }
+                }
                 File.Copy(templateFilePath, outputFilePath, true);
+                // 清除复制后文件的只读属性（源文件可能为只读，File.Copy 会保留该属性）
+                var copiedAttributes = File.GetAttributes(outputFilePath);
+                if ((copiedAttributes & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
+                {
+                    File.SetAttributes(outputFilePath, copiedAttributes & ~FileAttributes.ReadOnly);
+                }
 
                 cancellationToken.ThrowIfCancellationRequested();
 
