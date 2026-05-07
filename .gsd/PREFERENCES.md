@@ -1,8 +1,6 @@
 ---
 version: 1
 mode: solo
-experimental:
-  rtk: true
 git:
   isolation: worktree
   main_branch: master

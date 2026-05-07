@@ -65,3 +65,5 @@
 | D057 | M023 | scope | DocuFiller 客户端迁移策略 | 直接在 appsettings.json 改 URL 指向新路径，不兼容旧 URL 格式 | 用户明确表示直接改配置即可，不需要旧 URL 兼容过渡期。URL 是从 appsettings.json 读取的，客户端代码不用改。 | No | collaborative |
 | D058 | M023 | pattern | 应用注册方式 | 第一次上传时自动注册，从 releases feed 的 PackageId 提取应用标识 | 降低接入成本，新应用不需要管理操作就能开始使用更新服务器。用户明确选择此方案。 | Yes — 如果以后需要应用审核/审批流程 | collaborative |
 | D059 | M023 | architecture | 通道模型 | 不硬编码 stable/beta，通道名由上传路径动态决定 | 不同应用可能需要不同的通道策略（如 nightly、rc），不应由服务器硬编码限制。 | No | collaborative |
+| D060 |  | architecture | 更新检查进度动画样式 | 旋转圆圈动画（Spinner） | 用户选择。旋转动画过程感更强，用户更熟悉。脉冲圆点过于含蓄。 | Yes | human |
+| D061 |  | architecture | 启动时更新检查动画时序 | 立刻显示动画（不等 5 秒延迟） | 用户选择。当前 5 秒延迟期间完全无反馈是主要痛点，立刻显示动画让用户知道程序在准备。 | Yes | human |

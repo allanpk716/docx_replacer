@@ -14,19 +14,30 @@ This file is the explicit capability and coverage contract for the project.
 
 ### R076 — 从 DocuFiller 项目中删除 update-server/ 目录，更新 build-internal.bat 的 upload URL 路径（加 appId 前缀），更新 appsettings.json 的 UpdateUrl，清理相关测试脚本和文档。客户端代码（UpdateService、ViewModel）完全不改。
 - Class: integration
-- Status: active
+- Status: deferred
 - Description: 从 DocuFiller 项目中删除 update-server/ 目录，更新 build-internal.bat 的 upload URL 路径（加 appId 前缀），更新 appsettings.json 的 UpdateUrl，清理相关测试脚本和文档。客户端代码（UpdateService、ViewModel）完全不改。
 - Why it matters: update-server 外置为独立项目后，DocuFiller 不再需要嵌入的 Go 代码。
 - Source: user
-- Primary owning slice: M024/S01
+- Primary owning slice: none
+- Notes: 原 M024 范围，后里程碑重新定义为更新进度动画
 
 ### R077 — 提供 Go 和 Python 语言的多语言客户端示例代码，展示如何用 Velopack SDK 或通用 HTTP 客户端检查更新和拉取新版本。配套使用文档（README + API 文档）。
 - Class: differentiator
-- Status: active
+- Status: deferred
 - Description: 提供 Go 和 Python 语言的多语言客户端示例代码，展示如何用 Velopack SDK 或通用 HTTP 客户端检查更新和拉取新版本。配套使用文档（README + API 文档）。
 - Why it matters: 用户明确要求独立项目需要有多语言客户端示例和文档，作为可复用基础设施的核心交付物。
 - Source: user
-- Primary owning slice: M024/S02
+- Primary owning slice: none
+- Notes: 原 M024 范围，后里程碑重新定义为更新进度动画
+
+### R078 — 启动时更新检查进度即时可见：程序启动后状态栏右下角立刻显示旋转动画（spinner），5 秒延迟和实际检查期间持续动画反馈。检查完成后动画切换为结果状态图标。用户不再经历"无反馈等待期"。
+- Class: primary-user-loop
+- Status: active
+- Description: 启动时更新检查进度即时可见：程序启动后状态栏右下角立刻显示旋转动画（spinner），5 秒延迟和实际检查期间持续动画反馈。检查完成后动画切换为结果状态图标。用户不再经历"无反馈等待期"。
+- Why it matters: 当前启动时 5 秒延迟+检查期间用户完全看不到任何反馈，不知道程序在做什么。需要从启动瞬间就有过程感。
+- Source: user
+- Primary owning slice: M024/S01
+- Validation: mapped
 
 ## Validated
 
@@ -884,13 +895,14 @@ This file is the explicit capability and coverage contract for the project.
 | R073 | compliance/security | validated | M023/S03 | none | POST /api/auth/login validates password, returns JWT in HttpOnly cookie (SameSite=Lax, 24h). BearerAuth middleware accepts both Bearer token header and JWT session cookie — Bearer takes precedence. Login endpoint exempt from auth. Version list and artifact download endpoints do not require auth. All verified via Go httptest (24 tests pass). |
 | R074 | launchability | validated | M023/S04 | none | S04 migration package: Migrate() detects old-format data/{channel}/ dirs via feed file presence, atomically moves via os.Rename to data/{appId}/{channel}/, skips if target exists (idempotent). 17 tests cover detection, move, idempotency, empty dirs, special-file-only dirs, .nupkg preservation. SyncMetadata() upserts parsed feed metadata into SQLite via INSERT OR REPLACE. Build + full test suite pass. |
 | R075 | launchability | active | M023/S04 | none | unmapped |
-| R076 | integration | active | M024/S01 | none | unmapped |
-| R077 | differentiator | active | M024/S02 | none | unmapped |
+| R076 | integration | deferred | none | none | unmapped |
+| R077 | differentiator | deferred | none | none | unmapped |
+| R078 | primary-user-loop | active | M024/S01 | none | mapped |
 | R078 | operability | deferred | none | none | unmapped |
 
 ## Coverage Summary
 
-- Active requirements: 3
-- Mapped to slices: 3
+- Active requirements: 2
+- Mapped to slices: 2
 - Validated: 73 (R001, R002, R003, R004, R005, R006, R007, R008, R009, R010, R011, R012, R014, R015, R016, R017, R018, R019, R020, R021, R022, R023, R024, R025, R026, R027, R028, R029, R030, R031, R032, R033, R034, R035, R036, R037, R038, R039, R040, R041, R042, R043, R044, R045, R046, R047, R048, R049, R050, R051, R052, R053, R054, R055, R056, R057, R058, R059, R060, R061, R062, R063, R064, R065, R066, R067, R068, R069, R070, R071, R072, R073, R074)
 - Unmapped active requirements: 0
