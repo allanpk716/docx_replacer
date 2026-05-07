@@ -187,7 +187,7 @@ REM Build URL from host and port (default port 80 if not set)
 if "!UPDATE_SERVER_PORT!"=="" (
     set "UPDATE_SERVER_PORT=80"
 )
-set "UPLOAD_URL=http://!UPDATE_SERVER_HOST!:!UPDATE_SERVER_PORT!/api/channels/!CHANNEL!/releases"
+set "UPLOAD_URL=http://!UPDATE_SERVER_HOST!:!UPDATE_SERVER_PORT!/api/apps/docufiller/channels/!CHANNEL!/releases"
 
 if "!UPDATE_SERVER_API_TOKEN!"=="" (
     echo [UPLOAD] FAILED: UPDATE_SERVER_API_TOKEN environment variable is not set
