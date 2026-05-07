@@ -117,5 +117,94 @@ namespace DocuFiller.Utils
                 .Any(t => !string.IsNullOrWhiteSpace(t) &&
                           string.Equals(t!.Trim(), normalizedTag, StringComparison.OrdinalIgnoreCase));
         }
+
+        /// <summary>
+        /// 将控件 sdtPr/rPr 中定义的 rStyle 应用到内容中的所有 Run，
+        /// 并移除旧程序遗留的直接格式覆盖（如标红色），确保控件预期的样式生效。
+        /// </summary>
+        /// <param name="control">内容控件元素</param>
+        /// <param name="logger">日志记录器（可选）</param>
+        public static void ApplyControlStyleToRuns(SdtElement control, ILogger? logger = null)
+        {
+            var sdtPr = control.SdtProperties;
+            if (sdtPr == null) return;
+
+            var controlRPr = sdtPr.GetFirstChild<RunProperties>();
+            if (controlRPr == null) return;
+
+            // 提取控件级别的 rStyle（字符样式引用，如"样式1 Char"）
+            var controlRunStyle = controlRPr.GetFirstChild<RunStyle>();
+            if (controlRunStyle?.Val?.Value == null) return;
+
+            string rStyle = controlRunStyle.Val.Value;
+            string tag = sdtPr.GetFirstChild<Tag>()?.Val?.Value ?? "unknown";
+            logger?.LogInformation($"[ApplyControlStyle] 控件 '{tag}' 检测到 rStyle='{rStyle}'，开始确认控件样式");
+
+            // 找到内容容器中的所有 Run
+            var contentContainer = FindContentContainer(control);
+            if (contentContainer == null) return;
+
+            var runs = contentContainer.Descendants<Run>()
+                .Where(r => GetNearestAncestorSdt(r) == control)
+                .ToList();
+
+            foreach (var run in runs)
+            {
+                var runProps = run.RunProperties;
+                if (runProps == null)
+                {
+                    runProps = new RunProperties();
+                    run.InsertAt(runProps, 0);
+                }
+
+                var existingStyle = runProps.GetFirstChild<RunStyle>();
+                if (existingStyle == null || existingStyle.Val?.Value != rStyle)
+                {
+                    if (existingStyle != null)
+                    {
+                        existingStyle.Val = rStyle;
+                    }
+                    else
+                    {
+                        runProps.InsertAt(new RunStyle() { Val = rStyle }, 0);
+                    }
+
+                    // 移除旧程序遗留的直接格式覆盖
+                    RemoveDirectFormatOverrides(runProps);
+
+                    logger?.LogDebug($"[ApplyControlStyle] 已为控件 '{tag}' 的 Run 应用 rStyle='{rStyle}' 并清除直接格式覆盖");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 移除 Run 中可能由旧替换程序遗留的直接格式覆盖（如标红色），
+        /// 这些格式会阻止控件的 rStyle 样式生效。
+        /// </summary>
+        private static void RemoveDirectFormatOverrides(RunProperties runProps)
+        {
+            var color = runProps.GetFirstChild<Color>();
+            if (color != null && color.Val?.Value != null && color.Val.Value != "auto")
+            {
+                color.Remove();
+            }
+        }
+
+        /// <summary>
+        /// 获取最近的祖先 SdtElement
+        /// </summary>
+        private static SdtElement? GetNearestAncestorSdt(OpenXmlElement element)
+        {
+            var current = element.Parent;
+            while (current != null)
+            {
+                if (current is SdtElement sdt)
+                {
+                    return sdt;
+                }
+                current = current.Parent;
+            }
+            return null;
+        }
     }
 }

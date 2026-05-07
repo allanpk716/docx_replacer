@@ -702,6 +702,9 @@ namespace DocuFiller.Services
                 FillFormattedContentStandard(control, formattedValue);
             }
 
+            // 4.5 确认控件样式：修复旧程序遗留的格式覆盖（如标红色），确保 rStyle 正确生效
+            OpenXmlHelper.ApplyControlStyleToRuns(control, _logger);
+
             // 5. 添加批注（仅正文区域支持，页眉页脚不支持批注）
             if (location == ContentControlLocation.Body)
             {
