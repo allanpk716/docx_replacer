@@ -215,7 +215,36 @@ namespace DocuFiller.ViewModels
 
             if (dialog.ShowDialog() == true)
             {
-                TemplatePath = dialog.FileName;
+                var filePath = dialog.FileName;
+
+                var fileInfo = new System.IO.FileInfo(filePath);
+                var docFileInfo = new Models.FileInfo
+                {
+                    Name = fileInfo.Name,
+                    FullPath = fileInfo.FullName,
+                    Size = fileInfo.Length,
+                    CreationTime = fileInfo.CreationTime,
+                    LastModified = fileInfo.LastWriteTime,
+                    Extension = fileInfo.Extension,
+                    IsReadOnly = fileInfo.IsReadOnly,
+                    DirectoryPath = fileInfo.DirectoryName ?? string.Empty,
+                    RelativePath = fileInfo.Name,
+                    RelativeDirectoryPath = string.Empty
+                };
+
+                SingleFileInfo = docFileInfo;
+                TemplatePath = filePath;
+                TemplateFolderPath = null;
+                FolderStructure = null;
+
+                TemplateFiles.Clear();
+                TemplateFiles.Add(docFileInfo);
+
+                InputSourceType = InputSourceType.SingleFile;
+                IsFolderMode = false;
+
+                FoundDocxFilesCount = "1";
+                ProgressMessage = $"已加载模板: {fileInfo.Name}";
             }
         }
 
