@@ -70,7 +70,97 @@ namespace DocuFiller.Services
                 ReplaceTextStandard(contentContainer, newText, control);
             }
 
+            // 4. 替换完成后，确认控件的样式（修复旧程序遗留的格式覆盖问题）
+            ApplyControlStyleToRuns(control);
+
             _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 替换完成");
+        }
+
+        /// <summary>
+        /// 将控件 sdtPr/rPr 中定义的样式（如 rStyle）应用到内容中的所有 Run，
+        /// 确保替换后的文本遵循控件预期的样式（如"样式1"），而不是旧程序遗留的格式覆盖（如标红色）。
+        /// </summary>
+        /// <param name="control">内容控件元素</param>
+        private void ApplyControlStyleToRuns(SdtElement control)
+        {
+            // 从控件的 sdtPr/rPr 中获取预期的 rStyle 和格式信息
+            var sdtPr = control.SdtProperties;
+            if (sdtPr == null) return;
+
+            var controlRPr = sdtPr.GetFirstChild<RunProperties>();
+            if (controlRPr == null) return;
+
+            // 提取控件级别的 rStyle（字符样式引用，如"样式1 Char"）
+            var controlRunStyle = controlRPr.GetFirstChild<RunStyle>();
+            if (controlRunStyle?.Val?.Value == null) return;
+
+            string rStyle = controlRunStyle.Val.Value;
+            string tag = sdtPr.GetFirstChild<Tag>()?.Val?.Value ?? "unknown";
+            _logger.LogInformation($"[SafeTextReplacer] 控件 '{tag}' 检测到 rStyle='{rStyle}'，开始确认控件样式");
+
+            // 找到内容容器中的所有 Run
+            var contentContainer = FindContentContainer(control);
+            if (contentContainer == null) return;
+
+            var runs = contentContainer.Descendants<Run>()
+                .Where(r => ReferenceEquals(GetNearestAncestorSdt(r), control))
+                .ToList();
+
+            foreach (var run in runs)
+            {
+                var runProps = run.RunProperties;
+                if (runProps == null)
+                {
+                    // Run 没有 RunProperties，创建一个并设置 rStyle
+                    runProps = new RunProperties();
+                    run.InsertAt(runProps, 0);
+                }
+
+                // 确保设置了正确的 rStyle
+                var existingStyle = runProps.GetFirstChild<RunStyle>();
+                if (existingStyle == null || existingStyle.Val?.Value != rStyle)
+                {
+                    if (existingStyle != null)
+                    {
+                        existingStyle.Val = rStyle;
+                    }
+                    else
+                    {
+                        runProps.InsertAt(new RunStyle() { Val = rStyle }, 0);
+                    }
+
+                    // 移除旧程序遗留的直接格式覆盖（如标红色等），
+                    // 这些直接格式会覆盖样式定义，导致控件预期的样式不生效
+                    RemoveDirectFormatOverrides(runProps);
+
+                    _logger.LogDebug($"[SafeTextReplacer] 已为控件 '{tag}' 的 Run 应用 rStyle='{rStyle}' 并清除直接格式覆盖");
+                }
+            }
+        }
+
+        /// <summary>
+        /// 移除 Run 中旧程序遗留的直接格式覆盖（如颜色、字体大小等），
+        /// 这些格式会阻止控件的 rStyle 样式生效。
+        /// 保留必要的属性（如上标/下标、语言设置等）。
+        /// </summary>
+        /// <param name="runProps">Run 的格式属性</param>
+        private static void RemoveDirectFormatOverrides(RunProperties runProps)
+        {
+            // 移除可能由旧程序遗留的直接格式覆盖属性
+            // 这些属性在存在 rStyle 时会覆盖样式定义
+            var color = runProps.Color;
+            if (color != null)
+            {
+                // 只移除非自动颜色的显式颜色设置
+                if (color.Val?.Value != null && color.Val.Value != "auto")
+                {
+                    color.Remove();
+                }
+            }
+
+            // 移除可能存在的其他旧程序格式覆盖
+            // 注意：不删除 rFonts、sz 等格式属性，因为它们可能是有意设置的
+            // 只移除明确由旧替换程序添加的标红色（color）即可
         }
 
         /// <summary>
