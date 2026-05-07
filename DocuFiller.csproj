@@ -6,7 +6,7 @@
     <UseWPF>true</UseWPF>
     <AssemblyName>DocuFiller</AssemblyName>
     <RootNamespace>DocuFiller</RootNamespace>
-    <Version>1.10.1</Version>
+    <Version>1.11.0-beta1</Version>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <FileVersion>1.10.1.0</FileVersion>
@@ -128,6 +128,10 @@
     <Compile Remove="test_data\**" />
     <EmbeddedResource Remove="test_data\**" />
     <None Remove="test_data\**" />
+    <!-- 排除 PoC 和实验性项目 -->
+    <Compile Remove="poc\**" />
+    <EmbeddedResource Remove="poc\**" />
+    <None Remove="poc\**" />
   </ItemGroup>
 
   <ItemGroup>

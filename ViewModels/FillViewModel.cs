@@ -548,10 +548,7 @@ namespace DocuFiller.ViewModels
 
                 _logger.LogInformation("模板文件夹已选择: {Path}", selectedPath);
 
-                Task.Run(async () =>
-                {
-                    await HandleFolderDropAsync(selectedPath);
-                });
+                _ = HandleFolderDropAsync(selectedPath);
             }
         }
 
