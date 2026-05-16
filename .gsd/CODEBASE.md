@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-05-07T09:45:20Z | Files: 206 | Described: 0/206
-<!-- gsd:codebase-meta {"generatedAt":"2026-05-07T09:45:20Z","fingerprint":"825301084157f8fbd236460f82828624a83ac081","fileCount":206,"truncated":false} -->
+Generated: 2026-05-13T01:35:55Z | Files: 207 | Described: 0/207
+<!-- gsd:codebase-meta {"generatedAt":"2026-05-13T01:35:55Z","fingerprint":"e2778e22c6f9722970c9e0aa9e7c70a808d083ec","fileCount":207,"truncated":false} -->
 
 ### (root)/
 - `.env.example`
@@ -155,6 +155,7 @@ Generated: 2026-05-07T09:45:20Z | Files: 206 | Described: 0/206
 ### Tests/DocuFiller.Tests/Services/
 - `Tests/DocuFiller.Tests/Services/CancellationTests.cs`
 - `Tests/DocuFiller.Tests/Services/ContentControlProcessorIntegrationTests.cs`
+- `Tests/DocuFiller.Tests/Services/ControlStyleConfirmationTests.cs`
 - `Tests/DocuFiller.Tests/Services/DocumentProcessorServiceIntegrationTests.cs`
 - `Tests/DocuFiller.Tests/Services/FileServiceTests.cs`
 - `Tests/DocuFiller.Tests/Services/SafeFormattedContentReplacerTests.cs`
