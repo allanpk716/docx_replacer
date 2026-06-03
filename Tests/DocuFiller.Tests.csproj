@@ -51,6 +51,7 @@
     <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />
     <Compile Include="..\Utils\OpenXmlHelper.cs" Link="Utils\OpenXmlHelper.cs" />
     <Compile Include="..\DocuFiller\Utils\OpenXmlTableCellHelper.cs" Link="Utils\OpenXmlTableCellHelper.cs" />
+    <Compile Include="..\DocuFiller\Services\CleanupCommentProcessor.cs" Link="Services\CleanupCommentProcessor.cs" />
     <Compile Include="..\Exceptions\*.cs" Link="Exceptions\%(Filename).cs" />
     <Compile Include="..\ViewModels\UpdateSettingsViewModel.cs" Link="ViewModels\UpdateSettingsViewModel.cs" />
     <Compile Include="..\ViewModels\DownloadProgressViewModel.cs" Link="ViewModels\DownloadProgressViewModel.cs" />
