@@ -405,7 +405,21 @@
             <!-- 审核清理选项卡 -->
             <TabItem Header="审核清理" FontSize="14">
                 <DockPanel DataContext="{Binding CleanupVM}">
-                <Grid Margin="10,8" DockPanel.Dock="Top">
+
+                <!-- 操作按钮 (dock bottom first so it stays visible) -->
+                <Grid DockPanel.Dock="Bottom" Margin="10,0,10,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1" Content="开始清理"
+                            Style="{StaticResource PrimaryButton}"
+                            IsEnabled="{Binding CanStartCleanup}"
+                            Command="{Binding StartCleanupCommand}"
+                            Width="100" Height="32" FontSize="13"/>
+                </Grid>
+
+                <Grid Margin="10,8">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="Auto"/>
@@ -461,7 +475,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
 
-                        <ListView Grid.Column="0" ItemsSource="{Binding FileItems}" SelectionMode="Extended" FontSize="12">
+                        <ListView x:Name="CleanupFileListView" Grid.Column="0" ItemsSource="{Binding FileItems}" SelectionMode="Extended" FontSize="12">
                             <ListView.View>
                                 <GridView>
                                     <GridViewColumn Width="35" Header=""/>
@@ -474,7 +488,7 @@
 
                         <StackPanel Grid.Column="1" Margin="5,0,0,0">
                             <Button Content="移除选中" Width="70" Height="26" FontSize="12" Margin="0,0,0,3"
-                                    Command="{Binding RemoveSelectedFilesCommand}"
+                                    Click="OnCleanupRemoveSelectedClick"
                                     Style="{StaticResource ProcessButton}"/>
                             <Button Content="清空列表" Width="70" Height="26" FontSize="12"
                                     Command="{Binding ClearListCommand}"
@@ -490,18 +504,6 @@
                     </StackPanel>
                 </Grid>
 
-                <!-- 操作按钮 -->
-                <Grid Margin="10,0,10,8">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="1" Content="开始清理"
-                            Style="{StaticResource PrimaryButton}"
-                            IsEnabled="{Binding CanStartCleanup}"
-                            Command="{Binding StartCleanupCommand}"
-                            Width="100" Height="32" FontSize="13"/>
-                </Grid>
                 </DockPanel>
             </TabItem>
 

@@ -1,7 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using DocuFiller.ViewModels;
+using DocuFiller.Models;
 using System;
+using System.Linq;
 using System.Windows;
 
 namespace DocuFiller
@@ -71,6 +73,18 @@ namespace DocuFiller
                 _logger.LogInformation("Window activated for drag-drop");
             }
             e.Handled = false;
+        }
+
+        private void OnCleanupRemoveSelectedClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                var selected = CleanupFileListView.SelectedItems.Cast<CleanupFileItem>().ToList();
+                foreach (var item in selected)
+                {
+                    vm.CleanupVM.RemoveFile(item);
+                }
+            }
         }
 
         /// <summary>
