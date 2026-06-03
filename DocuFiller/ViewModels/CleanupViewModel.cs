@@ -140,6 +140,7 @@ namespace DocuFiller.ViewModels
             FileItems.Clear();
             ProgressStatus = "等待处理...";
             ProgressPercent = 0;
+            OnPropertyChanged(nameof(CanStartCleanup));
         }
 
         [RelayCommand]

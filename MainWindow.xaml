@@ -415,7 +415,7 @@
                     <Button Grid.Column="1" Content="开始清理"
                             Style="{StaticResource PrimaryButton}"
                             IsEnabled="{Binding CanStartCleanup}"
-                            Command="{Binding StartCleanupCommand}"
+                            Click="OnCleanupStartClick"
                             Width="100" Height="32" FontSize="13"/>
                 </Grid>
 
@@ -491,7 +491,7 @@
                                     Click="OnCleanupRemoveSelectedClick"
                                     Style="{StaticResource ProcessButton}"/>
                             <Button Content="清空列表" Width="70" Height="26" FontSize="12"
-                                    Command="{Binding ClearListCommand}"
+                                    Click="OnCleanupClearListClick"
                                     Style="{StaticResource ProcessButton}"/>
                         </StackPanel>
                     </Grid>

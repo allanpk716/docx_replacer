@@ -87,6 +87,22 @@ namespace DocuFiller
             }
         }
 
+        private async void OnCleanupStartClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                await vm.CleanupVM.StartCleanupAsync();
+            }
+        }
+
+        private void OnCleanupClearListClick(object sender, RoutedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.CleanupVM.ClearList();
+            }
+        }
+
         /// <summary>
         /// 窗口关闭时的处理
         /// </summary>
