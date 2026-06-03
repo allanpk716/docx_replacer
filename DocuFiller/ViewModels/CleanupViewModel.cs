@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -31,10 +32,12 @@ namespace DocuFiller.ViewModels
             "DocuFiller输出",
             "清理");
 
+        [ObservableProperty]
+        private string? _importedFolderPath;
+
         public ObservableCollection<CleanupFileItem> FileItems { get; } = new();
 
         public bool CanStartCleanup => FileItems.Count > 0 && !IsProcessing;
-        public bool CanClearList => FileItems.Count > 0 && !IsProcessing;
 
         public CleanupViewModel(IDocumentCleanupService cleanupService, ILogger<CleanupViewModel> logger)
         {
@@ -47,7 +50,6 @@ namespace DocuFiller.ViewModels
         partial void OnIsProcessingChanged(bool value)
         {
             OnPropertyChanged(nameof(CanStartCleanup));
-            OnPropertyChanged(nameof(CanClearList));
         }
 
         #region Commands
@@ -59,57 +61,123 @@ namespace DocuFiller.ViewModels
             ProgressStatus = "准备处理...";
             ProgressPercent = 0;
 
+            var fileItemsSnapshot = FileItems.ToList();
+            var isFolderMode = !string.IsNullOrEmpty(ImportedFolderPath);
+            var importedFolder = ImportedFolderPath;
+            var outputDir = OutputDirectory;
+            var dispatcher = Application.Current.Dispatcher;
+
             int successCount = 0;
             int failureCount = 0;
             int skippedCount = 0;
 
             try
             {
-                var useOutputDir = !string.IsNullOrWhiteSpace(OutputDirectory);
+                var useOutputDir = !string.IsNullOrWhiteSpace(outputDir);
 
-                for (int i = 0; i < FileItems.Count; i++)
+                await Task.Run(() =>
                 {
-                    var fileItem = FileItems[i];
-                    fileItem.Status = CleanupFileStatus.Processing;
-                    ProgressStatus = $"正在处理: {fileItem.FileName} ({i + 1}/{FileItems.Count})";
-                    ProgressPercent = (int)((i / (double)FileItems.Count) * 100);
-
-                    CleanupResult result;
-
-                    if (useOutputDir)
+                    string? folderOutputRoot = null;
+                    if (isFolderMode && useOutputDir)
                     {
-                        Directory.CreateDirectory(OutputDirectory);
-                        result = await _cleanupService.CleanupAsync(fileItem, OutputDirectory);
-                    }
-                    else
-                    {
-                        result = await _cleanupService.CleanupAsync(fileItem);
+                        string timestamp = DateTime.Now.ToString("yyyy年M月d日HHmmss");
+                        string folderName = new DirectoryInfo(importedFolder!).Name;
+                        folderOutputRoot = Path.Combine(outputDir, $"{folderName}_{timestamp}");
+                        Directory.CreateDirectory(folderOutputRoot);
+                        _logger.LogInformation("文件夹模式输出目录: {OutputRoot}", folderOutputRoot);
                     }
 
-                    if (result.Success)
+                    for (int i = 0; i < fileItemsSnapshot.Count; i++)
                     {
-                        if (result.Message.Contains("无需处理"))
+                        var fileItem = fileItemsSnapshot[i];
+
+                        dispatcher.Invoke(() =>
                         {
-                            fileItem.Status = CleanupFileStatus.Skipped;
-                            fileItem.StatusMessage = result.Message;
-                            skippedCount++;
-                        }
-                        else
+                            fileItem.Status = CleanupFileStatus.Processing;
+                            ProgressStatus = $"正在处理: {fileItem.FileName} ({i + 1}/{fileItemsSnapshot.Count})";
+                            ProgressPercent = (int)((i / (double)fileItemsSnapshot.Count) * 100);
+                        });
+
+                        try
                         {
-                            fileItem.Status = CleanupFileStatus.Success;
-                            fileItem.StatusMessage = useOutputDir
-                                ? $"{result.Message} → {result.OutputFilePath}"
-                                : result.Message;
-                            successCount++;
+                            CleanupResult result;
+
+                            if (isFolderMode && folderOutputRoot != null)
+                            {
+                                string relativePath = Path.GetRelativePath(importedFolder!, fileItem.FilePath);
+                                string outputPath = Path.Combine(folderOutputRoot, relativePath);
+                                string? outputSubDir = Path.GetDirectoryName(outputPath);
+                                if (!string.IsNullOrEmpty(outputSubDir))
+                                    Directory.CreateDirectory(outputSubDir);
+
+                                File.Copy(fileItem.FilePath, outputPath, overwrite: true);
+
+                                var cleanItem = new CleanupFileItem
+                                {
+                                    FilePath = outputPath,
+                                    FileName = fileItem.FileName
+                                };
+                                result = _cleanupService.CleanupAsync(cleanItem).GetAwaiter().GetResult();
+                            }
+                            else if (useOutputDir)
+                            {
+                                var serviceItem = new CleanupFileItem
+                                {
+                                    FilePath = fileItem.FilePath,
+                                    FileName = fileItem.FileName,
+                                    FileSize = fileItem.FileSize
+                                };
+                                result = _cleanupService.CleanupAsync(serviceItem, outputDir).GetAwaiter().GetResult();
+                            }
+                            else
+                            {
+                                var cleanItem = new CleanupFileItem
+                                {
+                                    FilePath = fileItem.FilePath,
+                                    FileName = fileItem.FileName
+                                };
+                                result = _cleanupService.CleanupAsync(cleanItem).GetAwaiter().GetResult();
+                            }
+
+                            dispatcher.Invoke(() =>
+                            {
+                                if (result.Success)
+                                {
+                                    if (result.Message.Contains("无需处理"))
+                                    {
+                                        fileItem.Status = CleanupFileStatus.Skipped;
+                                        fileItem.StatusMessage = result.Message;
+                                        skippedCount++;
+                                    }
+                                    else
+                                    {
+                                        fileItem.Status = CleanupFileStatus.Success;
+                                        fileItem.StatusMessage = isFolderMode
+                                            ? result.Message
+                                            : (result.OutputFilePath ?? result.Message);
+                                        successCount++;
+                                    }
+                                }
+                                else
+                                {
+                                    fileItem.Status = CleanupFileStatus.Failure;
+                                    fileItem.StatusMessage = result.Message;
+                                    failureCount++;
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "处理文件 {FileName} 时出错", fileItem.FileName);
+                            dispatcher.Invoke(() =>
+                            {
+                                fileItem.Status = CleanupFileStatus.Failure;
+                                fileItem.StatusMessage = $"处理失败: {ex.Message}";
+                                failureCount++;
+                            });
                         }
                     }
-                    else
-                    {
-                        fileItem.Status = CleanupFileStatus.Failure;
-                        fileItem.StatusMessage = result.Message;
-                        failureCount++;
-                    }
-                }
+                });
 
                 ProgressPercent = 100;
                 ProgressStatus = $"处理完成: {successCount} 成功, {failureCount} 失败, {skippedCount} 跳过";
@@ -134,10 +202,11 @@ namespace DocuFiller.ViewModels
             }
         }
 
-        [RelayCommand(CanExecute = nameof(CanClearList))]
+        [RelayCommand]
         public void ClearList()
         {
             FileItems.Clear();
+            ImportedFolderPath = null;
             ProgressStatus = "等待处理...";
             ProgressPercent = 0;
             OnPropertyChanged(nameof(CanStartCleanup));
@@ -188,25 +257,30 @@ namespace DocuFiller.ViewModels
             }
         }
 
-        /// <summary>
-        /// 拖放文件命令：遍历路径，.docx 文件调用 AddFiles，文件夹调用 AddFolder。
-        /// 由 FileDragDrop Behavior 通过 DropCommand 附加属性调用。
-        /// </summary>
         [RelayCommand]
         private void DropFiles(string[] paths)
         {
             if (paths == null || paths.Length == 0) return;
 
-            foreach (var path in paths)
+            var folders = paths.Where(p => Directory.Exists(p)).ToList();
+            var docxFiles = paths.Where(p => File.Exists(p)
+                && p.EndsWith(".docx", StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (folders.Count > 0 && docxFiles.Count > 0)
             {
-                if (File.Exists(path) && path.EndsWith(".docx", StringComparison.OrdinalIgnoreCase))
-                {
-                    AddFiles(new[] { path });
-                }
-                else if (Directory.Exists(path))
-                {
-                    AddFolder(path);
-                }
+                MessageBox.Show("不支持同时导入文件和文件夹，请分开操作。", "提示",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (docxFiles.Count > 0)
+            {
+                AddFiles(docxFiles.ToArray());
+            }
+
+            foreach (var folder in folders)
+            {
+                AddFolder(folder);
             }
 
             CommandManager.InvalidateRequerySuggested();
@@ -217,6 +291,18 @@ namespace DocuFiller.ViewModels
         #region Public Methods (called from code-behind)
 
         public void AddFiles(string[] filePaths)
+        {
+            if (!string.IsNullOrEmpty(ImportedFolderPath))
+            {
+                MessageBox.Show("当前已导入文件夹，请先清空列表再添加单独的文件。", "提示",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            AddFilesCore(filePaths);
+        }
+
+        private void AddFilesCore(string[] filePaths)
         {
             foreach (var filePath in filePaths)
             {
@@ -241,7 +327,6 @@ namespace DocuFiller.ViewModels
             }
 
             OnPropertyChanged(nameof(CanStartCleanup));
-            OnPropertyChanged(nameof(CanClearList));
         }
 
         public void AddFolder(string folderPath)
@@ -249,22 +334,37 @@ namespace DocuFiller.ViewModels
             if (!Directory.Exists(folderPath))
                 return;
 
+            if (FileItems.Count > 0 && string.IsNullOrEmpty(ImportedFolderPath))
+            {
+                MessageBox.Show("当前已导入单独的文件，请先清空列表再导入文件夹。", "提示",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(ImportedFolderPath)
+                && !Path.GetFullPath(ImportedFolderPath)
+                    .Equals(Path.GetFullPath(folderPath), StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("已导入其他文件夹，请先清空列表再导入新文件夹。", "提示",
+                    MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            ImportedFolderPath = folderPath;
             var docxFiles = Directory.GetFiles(folderPath, "*.docx", SearchOption.AllDirectories);
-            AddFiles(docxFiles);
+            AddFilesCore(docxFiles);
         }
 
         public void RemoveFile(CleanupFileItem item)
         {
             FileItems.Remove(item);
             OnPropertyChanged(nameof(CanStartCleanup));
-            OnPropertyChanged(nameof(CanClearList));
         }
 
         #endregion
 
         private void OnProgressChanged(object? sender, CleanupProgressEventArgs e)
         {
-            // 可用于更细粒度的进度更新
         }
     }
 }

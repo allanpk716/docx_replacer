@@ -79,16 +79,25 @@ namespace DocuFiller.Views
                     var files = (string[])e.Data.GetData(DataFormats.FileDrop);
                     if (files != null && files.Length > 0)
                     {
-                        foreach (var file in files)
+                        var folders = files.Where(p => Directory.Exists(p)).ToList();
+                        var docxFiles = files.Where(p => File.Exists(p)
+                            && p.EndsWith(".docx", StringComparison.OrdinalIgnoreCase)).ToList();
+
+                        if (folders.Count > 0 && docxFiles.Count > 0)
                         {
-                            if (File.Exists(file) && file.EndsWith(".docx", StringComparison.OrdinalIgnoreCase))
-                            {
-                                _viewModel.AddFiles(new[] { file });
-                            }
-                            else if (Directory.Exists(file))
-                            {
-                                _viewModel.AddFolder(file);
-                            }
+                            MessageBox.Show("不支持同时导入文件和文件夹，请分开操作。", "提示",
+                                MessageBoxButton.OK, MessageBoxImage.Warning);
+                            return;
+                        }
+
+                        if (docxFiles.Count > 0)
+                        {
+                            _viewModel.AddFiles(docxFiles.ToArray());
+                        }
+
+                        foreach (var folder in folders)
+                        {
+                            _viewModel.AddFolder(folder);
                         }
                     }
                 }
