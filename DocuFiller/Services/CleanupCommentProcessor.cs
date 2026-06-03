@@ -204,10 +204,25 @@ namespace DocuFiller.Services
         /// <param name="document">Word 文档对象</param>
         private void RemoveCommentsPart(WordprocessingDocument document)
         {
-            if (document.MainDocumentPart?.WordprocessingCommentsPart != null)
+            var mainPart = document.MainDocumentPart;
+            if (mainPart == null) return;
+
+            if (mainPart.WordprocessingCommentsPart != null)
             {
-                document.MainDocumentPart.DeletePart(document.MainDocumentPart.WordprocessingCommentsPart);
-                _logger.LogDebug("已删除批注部分");
+                mainPart.DeletePart(mainPart.WordprocessingCommentsPart);
+                _logger.LogDebug("已删除批注部分 (comments.xml)");
+            }
+
+            if (mainPart.WordprocessingCommentsExPart != null)
+            {
+                mainPart.DeletePart(mainPart.WordprocessingCommentsExPart);
+                _logger.LogDebug("已删除批注扩展部分 (commentsExtended.xml)");
+            }
+
+            if (mainPart.WordprocessingPeoplePart != null)
+            {
+                mainPart.DeletePart(mainPart.WordprocessingPeoplePart);
+                _logger.LogDebug("已删除批注人员部分 (people.xml)");
             }
         }
     }
