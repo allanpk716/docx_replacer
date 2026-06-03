@@ -4,7 +4,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="审核清理" Height="600" Width="800"
+        Title="审核清理" Height="800" Width="800"
         WindowStartupLocation="CenterOwner"
         Icon="pack://application:,,,/Resources/app.ico">
     <Window.Resources>
@@ -34,7 +34,7 @@
                 <!-- 拖放提示 -->
                 <Border Grid.Row="0" x:Name="DropZoneBorder"
                          BorderBrush="#CCCCCC" BorderThickness="2"
-                         Padding="30" Background="#F9F9F9"
+                         Padding="15" Background="#F9F9F9"
                          AllowDrop="True"
                          Drop="OnDrop" DragEnter="OnDragEnter" DragLeave="OnDragLeave" DragOver="OnDragOver"
                          Margin="0,0,0,10">
@@ -53,7 +53,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <ListView Grid.Column="0" ItemsSource="{Binding FileItems}" SelectionMode="Extended">
+                    <ListView x:Name="FileListView" Grid.Column="0" ItemsSource="{Binding FileItems}" SelectionMode="Extended" VirtualizingStackPanel.IsVirtualizing="True" VirtualizingStackPanel.VirtualizationMode="Recycling">
                         <ListView.View>
                             <GridView>
                                 <GridViewColumn Width="40" Header="">
