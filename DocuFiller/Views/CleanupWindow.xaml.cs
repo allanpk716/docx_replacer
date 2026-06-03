@@ -1,8 +1,10 @@
 using System.IO;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
+using DocuFiller.Models;
 using DocuFiller.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -110,8 +112,11 @@ namespace DocuFiller.Views
 
         private void OnRemoveSelectedClick(object sender, RoutedEventArgs e)
         {
-            // 简化处理：清空列表，因为 ListView 的选中项处理较复杂
-            // 实际使用中可以添加删除选中项的功能
+            var selected = FileListView.SelectedItems.Cast<CleanupFileItem>().ToList();
+            foreach (var item in selected)
+            {
+                _viewModel.RemoveFile(item);
+            }
         }
 
         private void OnClearListClick(object sender, RoutedEventArgs e)
