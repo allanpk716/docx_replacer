@@ -83,55 +83,30 @@ namespace DocuFiller.Services
             if (string.IsNullOrEmpty(commentId) || document.MainDocumentPart?.Document == null)
                 return;
 
-            // 找到所有批注范围开始标记
-            var rangeStarts = document.MainDocumentPart.Document.Descendants<CommentRangeStart>()
-                .Where(rs => rs.Id?.Value == commentId)
-                .ToList();
+            var body = document.MainDocumentPart.Document.Body;
+            if (body == null) return;
 
-            foreach (var rangeStart in rangeStarts)
+            bool inRange = false;
+
+            foreach (var element in body.Descendants())
             {
-                // 找到对应的范围结束标记
-                var rangeEnd = rangeStart.ElementsAfter().OfType<CommentRangeEnd>()
-                    .FirstOrDefault(re => re.Id?.Value == commentId);
-
-                if (rangeEnd == null)
+                if (element is CommentRangeStart rs && rs.Id?.Value == commentId)
+                {
+                    inRange = true;
                     continue;
+                }
 
-                // 收集两者之间的所有 Run
-                var runsInRange = GetRunsBetween(rangeStart, rangeEnd);
+                if (element is CommentRangeEnd re && re.Id?.Value == commentId)
+                {
+                    inRange = false;
+                    continue;
+                }
 
-                // 将这些 Run 的颜色改为黑色
-                foreach (var run in runsInRange)
+                if (inRange && element is Run run)
                 {
                     SetRunColorToBlack(run);
                 }
             }
-        }
-
-        /// <summary>
-        /// 获取两个元素之间的所有 Run 元素
-        /// </summary>
-        /// <param name="start">起始元素</param>
-        /// <param name="end">结束元素</param>
-        /// <returns>Run 元素列表</returns>
-        private System.Collections.Generic.List<Run> GetRunsBetween(OpenXmlElement start, OpenXmlElement end)
-        {
-            var runs = new System.Collections.Generic.List<Run>();
-            var current = start.NextSibling();
-
-            while (current != null && current != end)
-            {
-                if (current is Run run)
-                {
-                    runs.Add(run);
-                }
-                // 递归查找子元素中的 Run
-                runs.AddRange(current.Descendants<Run>().ToList());
-
-                current = current.NextSibling();
-            }
-
-            return runs;
         }
 
         /// <summary>
