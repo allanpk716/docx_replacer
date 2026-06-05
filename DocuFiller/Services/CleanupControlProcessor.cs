@@ -1,4 +1,5 @@
 using System.Linq;
+using System.Text.RegularExpressions;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
@@ -9,11 +10,13 @@ namespace DocuFiller.Services
 {
     /// <summary>
     /// 内容控件解包处理器
-    /// 负责将内容控件正常化，移除 SdtElement 包装，保留原有内容
+    /// 负责将关键词控件正常化，移除 SdtElement 包装，保留原有内容
+    /// 仅处理 Tag 匹配 #关键词# 模式的控件，其他控件保持原样
     /// </summary>
     public class CleanupControlProcessor
     {
         private readonly ILogger<CleanupControlProcessor> _logger;
+        private static readonly Regex KeywordTagPattern = new(@"^#.*#$", RegexOptions.Compiled);
 
         public CleanupControlProcessor(ILogger<CleanupControlProcessor> logger)
         {
@@ -56,7 +59,7 @@ namespace DocuFiller.Services
                 }
             }
 
-            _logger.LogInformation($"共解包 {controlsUnwrapped} 个内容控件");
+            _logger.LogInformation($"共解包 {controlsUnwrapped} 个关键词内容控件");
             return controlsUnwrapped;
         }
 
@@ -71,9 +74,13 @@ namespace DocuFiller.Services
             int count = 0;
             var allControls = partRoot.Descendants<SdtElement>().ToList();
 
-            _logger.LogDebug($"在 {location} 中找到 {allControls.Count} 个内容控件");
+            var keywordControls = allControls
+                .Where(c => IsKeywordControl(c))
+                .ToList();
 
-            foreach (var control in allControls)
+            _logger.LogDebug($"在 {location} 中找到 {allControls.Count} 个内容控件，其中 {keywordControls.Count} 个为关键词控件");
+
+            foreach (var control in keywordControls)
             {
                 try
                 {
@@ -82,11 +89,29 @@ namespace DocuFiller.Services
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"解包控件时发生异常 ({location}): {ex.Message}");
+                    _logger.LogError(ex, $"解包关键词控件时发生异常 ({location}): {ex.Message}");
                 }
             }
 
             return count;
+        }
+
+        /// <summary>
+        /// 判断控件是否为关键词控件 (Tag 匹配 #关键词# 模式)
+        /// </summary>
+        private bool IsKeywordControl(SdtElement control)
+        {
+            string? tag = OpenXmlHelper.GetControlTag(control);
+            if (string.IsNullOrWhiteSpace(tag))
+                return false;
+
+            if (!KeywordTagPattern.IsMatch(tag.Trim()))
+                return false;
+
+            if (OpenXmlHelper.HasAncestorWithSameTag(control, tag))
+                return false;
+
+            return true;
         }
 
         /// <summary>
@@ -95,6 +120,12 @@ namespace DocuFiller.Services
         /// <param name="sdtElement">内容控件元素</param>
         private void UnwrapControl(SdtElement sdtElement)
         {
+            if (sdtElement.Parent == null)
+            {
+                _logger.LogDebug("控件已脱离文档树，跳过解包");
+                return;
+            }
+
             bool isInTableCell = OpenXmlTableCellHelper.IsInTableCell(sdtElement);
             bool containsTableCell = sdtElement.Descendants<TableCell>().Any();
 
@@ -139,6 +170,7 @@ namespace DocuFiller.Services
             }
 
             // 将 TableCell 提升到控件外
+            wrappedCell.Remove();
             parent.InsertBefore(wrappedCell, sdtElement);
 
             // 删除控件包装
@@ -174,6 +206,7 @@ namespace DocuFiller.Services
             var children = content.ChildElements.ToList();
             foreach (var child in children)
             {
+                child.Remove();
                 parent.InsertBefore(child, sdtElement);
             }
 
@@ -191,13 +224,13 @@ namespace DocuFiller.Services
         /// <returns>找到的内容容器，如果未找到则返回 null</returns>
         private OpenXmlElement? FindContentContainer(SdtElement control)
         {
-            var runContent = control.Descendants<SdtContentRun>().FirstOrDefault();
+            var runContent = control.Elements<SdtContentRun>().FirstOrDefault();
             if (runContent != null) return runContent;
 
-            var blockContent = control.Descendants<SdtContentBlock>().FirstOrDefault();
+            var blockContent = control.Elements<SdtContentBlock>().FirstOrDefault();
             if (blockContent != null) return blockContent;
 
-            var cellContent = control.Descendants<SdtContentCell>().FirstOrDefault();
+            var cellContent = control.Elements<SdtContentCell>().FirstOrDefault();
             return cellContent;
         }
     }
