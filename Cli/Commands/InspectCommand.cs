@@ -9,10 +9,12 @@ namespace DocuFiller.Cli.Commands;
 public class InspectCommand : ICliCommand
 {
     private readonly IDocumentProcessor _documentProcessor;
+    private readonly ITelemetryService _telemetry;
 
-    public InspectCommand(IDocumentProcessor documentProcessor)
+    public InspectCommand(IDocumentProcessor documentProcessor, ITelemetryService telemetry)
     {
         _documentProcessor = documentProcessor;
+        _telemetry = telemetry;
     }
 
     public string CommandName => "inspect";
@@ -54,6 +56,11 @@ public class InspectCommand : ICliCommand
             JsonlOutput.WriteSummary(new
             {
                 totalControls = controls.Count,
+            });
+
+            _telemetry.TrackEvent("inspect_complete", new Dictionary<string, object>
+            {
+                ["control_count"] = controls.Count,
             });
 
             return 0;

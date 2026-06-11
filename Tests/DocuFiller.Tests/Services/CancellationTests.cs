@@ -73,7 +73,8 @@ namespace DocuFiller.Tests.Services
                 contentControlProcessor,
                 commentManager,
                 serviceProvider.Object,
-                formattedReplacerMock.Object);
+                formattedReplacerMock.Object,
+                new NullTelemetryService());
 
             return processor;
         }

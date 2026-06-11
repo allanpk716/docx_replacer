@@ -11,6 +11,7 @@ namespace DocuFiller.Services
         private readonly ILogger<DocumentCleanupService> _logger;
         private readonly CleanupCommentProcessor _commentProcessor;
         private readonly CleanupControlProcessor _controlProcessor;
+        private readonly ITelemetryService _telemetry;
 
 #pragma warning disable CS0067 // 事件在接口中定义，为未来扩展预留
         public event EventHandler<CleanupProgressEventArgs>? ProgressChanged;
@@ -19,11 +20,13 @@ namespace DocuFiller.Services
         public DocumentCleanupService(
             ILogger<DocumentCleanupService> logger,
             CleanupCommentProcessor commentProcessor,
-            CleanupControlProcessor controlProcessor)
+            CleanupControlProcessor controlProcessor,
+            ITelemetryService telemetry)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _commentProcessor = commentProcessor ?? throw new ArgumentNullException(nameof(commentProcessor));
             _controlProcessor = controlProcessor ?? throw new ArgumentNullException(nameof(controlProcessor));
+            _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
         }
 
         public async Task<CleanupResult> CleanupAsync(string filePath, CancellationToken cancellationToken = default)
@@ -100,6 +103,12 @@ namespace DocuFiller.Services
                 result.Success = true;
                 result.Message = $"清理完成：删除 {result.CommentsRemoved} 个批注，解包 {result.ControlsUnwrapped} 个控件";
                 _logger.LogInformation($"文档 {fileItem.FileName} 清理完成: {result.Message}");
+
+                _telemetry.TrackEvent("cleanup_complete", new Dictionary<string, object>
+                {
+                    ["comments_removed"] = result.CommentsRemoved,
+                    ["controls_unwrapped"] = result.ControlsUnwrapped,
+                });
             }
             catch (Exception ex)
             {

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using DocuFiller.Cli;
 using DocuFiller.Cli.Commands;
+using DocuFiller.Services;
 using DocuFiller.Services.Interfaces;
 using DocuFiller.Models;
 using DocuFiller.Utils;
@@ -103,7 +104,7 @@ public class CommandValidationTests
 
     private static InspectCommand CreateInspectCommand()
     {
-        return new InspectCommand(new StubDocumentProcessor());
+        return new InspectCommand(new StubDocumentProcessor(), new NullTelemetryService());
     }
 
     // === FillCommand Tests ===

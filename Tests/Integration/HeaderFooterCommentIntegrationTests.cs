@@ -67,7 +67,8 @@ namespace DocuFiller.Tests.Integration
                     new SafeTextReplacer(_loggerFactory.CreateLogger<SafeTextReplacer>())),
                 new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
                 serviceProvider,
-                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
+                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()),
+                new NullTelemetryService());
 
             // Act
             var formattedData = new System.Collections.Generic.Dictionary<string, FormattedCellValue>
@@ -128,7 +129,8 @@ namespace DocuFiller.Tests.Integration
                     new SafeTextReplacer(_loggerFactory.CreateLogger<SafeTextReplacer>())),
                 new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
                 serviceProvider,
-                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
+                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()),
+                new NullTelemetryService());
 
             var formattedData = new System.Collections.Generic.Dictionary<string, FormattedCellValue>
             {
@@ -171,7 +173,8 @@ namespace DocuFiller.Tests.Integration
                     new SafeTextReplacer(_loggerFactory.CreateLogger<SafeTextReplacer>())),
                 new CommentManager(_loggerFactory.CreateLogger<CommentManager>()),
                 serviceProvider,
-                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()));
+                new SafeFormattedContentReplacer(_loggerFactory.CreateLogger<SafeFormattedContentReplacer>()),
+                new NullTelemetryService());
 
             var formattedData = new System.Collections.Generic.Dictionary<string, FormattedCellValue>
             {

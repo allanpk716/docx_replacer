@@ -35,6 +35,7 @@ public static class ServiceFactory
         services.AddSingleton<CommentManager>();
         services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
         services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
+        services.AddSingleton<ITelemetryService, NullTelemetryService>();
 
         // Conditional: register IDataParser -> DataParserService if types exist
         // (present on d81cd00, deleted in M004)

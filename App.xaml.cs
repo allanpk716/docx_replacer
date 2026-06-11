@@ -23,6 +23,7 @@ namespace DocuFiller
         private ServiceProvider _serviceProvider = null!;
         private ILogger<App> _logger = null!;
         private IConfiguration _configuration = null!;
+        private readonly DateTime _startTime = DateTime.Now;
 
         /// <summary>
         /// 获取服务提供程序
@@ -46,6 +47,13 @@ namespace DocuFiller
                 
                 // 清理旧日志文件
                 CleanupOldLogs();
+
+                // Track app_start
+                var telemetry = _serviceProvider.GetService<ITelemetryService>();
+                telemetry?.TrackEvent("app_start", new Dictionary<string, object>
+                {
+                    ["launch_mode"] = "gui",
+                });
                 
                 // 创建并显示主窗口
                 var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
@@ -65,6 +73,19 @@ namespace DocuFiller
             try
             {
                 _logger?.LogInformation("应用程序退出");
+
+                // Track app_exit and flush
+                var telemetry = _serviceProvider?.GetService<ITelemetryService>();
+                if (telemetry is not NullTelemetryService)
+                {
+                    telemetry.TrackEvent("app_exit", new Dictionary<string, object>
+                    {
+                        ["session_duration_sec"] = (int)(DateTime.Now - _startTime).TotalSeconds,
+                    });
+                    telemetry.FlushAsync(TimeSpan.FromSeconds(5)).GetAwaiter().GetResult();
+                }
+                telemetry?.Dispose();
+
                 _serviceProvider?.Dispose();
             }
             catch (Exception ex)
@@ -130,6 +151,29 @@ namespace DocuFiller
             services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
             services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
             services.AddSingleton<IUpdateService, UpdateService>();
+
+            // Telemetry — graceful fallback: if disabled or no UpdateUrl, use no-op
+            services.AddSingleton<ITelemetryService>(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                var telSettings = new TelemetrySettings();
+                config.GetSection(TelemetrySettings.SectionName).Bind(telSettings);
+                var updateUrl = config["Update:UpdateUrl"]?.Trim();
+
+                if (!telSettings.Enabled || string.IsNullOrEmpty(updateUrl))
+                    return new NullTelemetryService();
+
+                try
+                {
+                    return new TelemetryService(
+                        sp.GetRequiredService<ILogger<TelemetryService>>(),
+                        config);
+                }
+                catch (Exception)
+                {
+                    return new NullTelemetryService();
+                }
+            });
 
             // 注册清理服务
             services.AddTransient<CleanupCommentProcessor>();
@@ -197,6 +241,15 @@ namespace DocuFiller
             {
                 var exception = e.ExceptionObject as Exception;
                 _logger?.LogCritical(exception, "应用程序域发生未处理异常");
+
+                // Track app_crash
+                var telemetry = _serviceProvider?.GetService<ITelemetryService>();
+                telemetry?.TrackEvent("app_crash", new Dictionary<string, object>
+                {
+                    ["exception_type"] = exception?.GetType().Name ?? "Unknown",
+                    ["exception_message"] = Truncate(exception?.Message ?? "", 500),
+                });
+                telemetry?.FlushAsync(TimeSpan.FromSeconds(3)).GetAwaiter().GetResult();
                 
                 if (e.IsTerminating)
                 {
@@ -280,5 +333,8 @@ namespace DocuFiller
         /// </summary>
         /// <returns>应用程序实例</returns>
         public static new App Current => (App)Application.Current;
+
+        private static string Truncate(string s, int maxLength) =>
+            string.IsNullOrEmpty(s) ? s : s.Length <= maxLength ? s : s[..maxLength];
     }
 }

@@ -35,7 +35,7 @@ namespace DocuFiller.Tests
             Directory.CreateDirectory(tempDir);
             var persistentPath = Path.Combine(tempDir, "update-config.json");
 
-            var service = new UpdateService(CreateLogger(), config, persistentPath);
+            var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), persistentPath);
 
             if (appSettingsPath != null)
                 service.AppSettingsPath = appSettingsPath;
@@ -458,7 +458,7 @@ namespace DocuFiller.Tests
                     { "Update:UpdateUrl", "" },
                     { "Update:Channel", "stable" }
                 });
-                var service = new UpdateService(CreateLogger(), config, tempPath);
+                var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), tempPath);
 
                 // 持久化配置应覆盖 appsettings.json 的值
                 Assert.Equal("HTTP", service.UpdateSourceType);
@@ -627,7 +627,7 @@ namespace DocuFiller.Tests
                     { "Update:Channel", "beta" }
                 });
                 // 不应抛异常，应 fallback 到 appsettings.json 的值
-                var service = new UpdateService(CreateLogger(), config, tempPath);
+                var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), tempPath);
 
                 Assert.Equal("HTTP", service.UpdateSourceType);
                 Assert.Equal("http://fallback-server/updates/beta/", service.EffectiveUpdateUrl);
@@ -655,7 +655,7 @@ namespace DocuFiller.Tests
                     { "Update:UpdateUrl", "http://appsettings-url/updates" },
                     { "Update:Channel", "stable" }
                 });
-                var service = new UpdateService(CreateLogger(), config, tempPath);
+                var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), tempPath);
 
                 // UpdateUrl 从 appsettings.json fallback
                 Assert.Equal("HTTP", service.UpdateSourceType);
@@ -685,7 +685,7 @@ namespace DocuFiller.Tests
                 {
                     { "Update:UpdateUrl", "" }
                 });
-                var service = new UpdateService(CreateLogger(), config, tempPath);
+                var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), tempPath);
 
                 // Channel 从持久化配置读取为 null，IConfiguration 也无 Channel，构造函数默认 "stable"
                 Assert.Equal("stable", service.Channel);
@@ -716,7 +716,7 @@ namespace DocuFiller.Tests
                     { "Update:UpdateUrl", "http://fallback/updates" },
                     { "Update:Channel", "stable" }
                 });
-                var service = new UpdateService(CreateLogger(), config, tempPath);
+                var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), tempPath);
 
                 // 空 JSON 解析失败，被 catch 捕获，fallback 到 appsettings.json
                 Assert.Equal("HTTP", service.UpdateSourceType);
@@ -749,7 +749,7 @@ namespace DocuFiller.Tests
                     { "Update:UpdateUrl", "http://different-url/updates" },
                     { "Update:Channel", "stable" }
                 });
-                var service = new UpdateService(CreateLogger(), config, tempPath);
+                var service = new UpdateService(CreateLogger(), config, new NullTelemetryService(), tempPath);
 
                 // 文件内容应保持不变（未被覆盖为构造函数的 appsettings 值）
                 var content = File.ReadAllText(tempPath);

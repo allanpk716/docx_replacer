@@ -28,6 +28,7 @@ namespace DocuFiller.Services
         private readonly CommentManager _commentManager;
         private readonly IServiceProvider _serviceProvider;
         private readonly ISafeFormattedContentReplacer _safeFormattedContentReplacer;
+        private readonly ITelemetryService _telemetry;
         private CancellationTokenSource? _cancellationTokenSource;
         private bool _disposed = false;
 
@@ -41,7 +42,8 @@ namespace DocuFiller.Services
             ContentControlProcessor contentControlProcessor,
             CommentManager commentManager,
             IServiceProvider serviceProvider,
-            ISafeFormattedContentReplacer safeFormattedContentReplacer)
+            ISafeFormattedContentReplacer safeFormattedContentReplacer,
+            ITelemetryService telemetry)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _excelDataParser = excelDataParser ?? throw new ArgumentNullException(nameof(excelDataParser));
@@ -51,6 +53,7 @@ namespace DocuFiller.Services
             _commentManager = commentManager ?? throw new ArgumentNullException(nameof(commentManager));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _safeFormattedContentReplacer = safeFormattedContentReplacer ?? throw new ArgumentNullException(nameof(safeFormattedContentReplacer));
+            _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
 
             _progressReporter.ProgressUpdated += OnProgressUpdated;
         }
@@ -110,6 +113,12 @@ namespace DocuFiller.Services
                 _cancellationTokenSource?.Dispose();
                 _cancellationTokenSource = null;
             }
+
+            _telemetry.TrackEvent("fill_complete", new Dictionary<string, object>
+            {
+                ["success"] = result.IsSuccess,
+                ["duration_ms"] = (int)(result.EndTime - result.StartTime).TotalMilliseconds,
+            });
 
             return result;
         }

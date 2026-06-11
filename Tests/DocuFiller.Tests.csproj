@@ -46,6 +46,7 @@
     <Compile Include="..\Configuration\AppSettings.cs" Link="Configuration\AppSettings.cs" />
     <Compile Include="..\Services\ProgressReporterService.cs" Link="Services\ProgressReporterService.cs" />
     <Compile Include="..\Services\UpdateService.cs" Link="Services\UpdateService.cs" />
+    <Compile Include="..\Services\NullTelemetryService.cs" Link="Services\NullTelemetryService.cs" />
     <Compile Include="..\Services\Interfaces\*.cs" Link="Services\Interfaces\%(Filename).cs" />
     <Compile Include="..\Models\*.cs" Link="Models\%(Filename).cs" />
     <Compile Include="..\Utils\ValidationHelper.cs" Link="Utils\ValidationHelper.cs" />

@@ -18,6 +18,7 @@ namespace DocuFiller.Services
     public class UpdateService : IUpdateService
     {
         private readonly ILogger<UpdateService> _logger;
+        private readonly ITelemetryService _telemetry;
         private IUpdateSource _updateSource;
         private string _updateUrl;
         private string _baseUrl; // 不含通道后缀的基础 URL（如 http://server/），用于回退时重建 SimpleWebSource
@@ -37,17 +38,18 @@ namespace DocuFiller.Services
         /// </summary>
         internal string? PersistentConfigPath { get; set; }
 
-        public UpdateService(ILogger<UpdateService> logger, IConfiguration configuration)
-            : this(logger, configuration, persistentConfigPath: null)
+        public UpdateService(ILogger<UpdateService> logger, IConfiguration configuration, ITelemetryService telemetry)
+            : this(logger, configuration, telemetry, persistentConfigPath: null)
         {
         }
 
         /// <summary>
         /// 内部构造函数，允许测试注入持久化配置路径。
         /// </summary>
-        internal UpdateService(ILogger<UpdateService> logger, IConfiguration configuration, string? persistentConfigPath)
+        internal UpdateService(ILogger<UpdateService> logger, IConfiguration configuration, ITelemetryService telemetry, string? persistentConfigPath)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _telemetry = telemetry ?? throw new ArgumentNullException(nameof(telemetry));
 
             // 初始化持久化配置路径：用户目录下的 .docx_replacer/
             // 如果测试传入了路径则使用测试路径，否则使用默认路径
@@ -204,6 +206,13 @@ namespace DocuFiller.Services
             if (updateInfo != null)
             {
                 _logger.LogInformation("发现新版本: {Version}", updateInfo.TargetFullRelease.Version);
+
+                _telemetry.TrackEvent("update_check", new Dictionary<string, object>
+                {
+                    ["has_update"] = true,
+                    ["latest_version"] = updateInfo.TargetFullRelease.Version?.ToString() ?? "",
+                });
+
                 return updateInfo;
             }
 
@@ -227,6 +236,12 @@ namespace DocuFiller.Services
             }
 
             _logger.LogInformation("当前已是最新版本");
+
+            _telemetry.TrackEvent("update_check", new Dictionary<string, object>
+            {
+                ["has_update"] = false,
+            });
+
             return null;
         }
 
@@ -247,6 +262,9 @@ namespace DocuFiller.Services
         public void ApplyUpdatesAndRestart()
         {
             _logger.LogInformation("开始应用更新并重启应用");
+
+            _telemetry.TrackEvent("update_applied");
+            _telemetry.FlushAsync(TimeSpan.FromSeconds(3)).GetAwaiter().GetResult();
 
             var updateManager = CreateUpdateManager();
 

@@ -50,6 +50,7 @@ namespace DocuFiller.Tests
             services.AddSingleton<ISafeTextReplacer, SafeTextReplacer>();
             services.AddSingleton<ISafeFormattedContentReplacer, SafeFormattedContentReplacer>();
             services.AddSingleton<IProgressReporter, ProgressReporterService>();
+            services.AddSingleton<ITelemetryService, NullTelemetryService>();
             services.AddSingleton<IDocumentProcessor, DocumentProcessorService>();
 
             var serviceProvider = services.BuildServiceProvider();

@@ -65,7 +65,8 @@ namespace DocuFiller.Tests.Services
             var processor = new DocumentProcessorService(
                 logger, excelDataParser, fileService, progressReporter,
                 contentControlProcessor, commentManager, serviceProvider,
-                safeFormattedContentReplacer
+                safeFormattedContentReplacer,
+                new NullTelemetryService()
             );
 
             var formattedData = new Dictionary<string, FormattedCellValue>
