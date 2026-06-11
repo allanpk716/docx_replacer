@@ -194,27 +194,55 @@ POST `/api/telemetry` 请求体支持两种格式：
 
 ```
 TelemetryService
-├── 构造：读取 appsettings.json Telemetry 配置 + 内置密钥
+├── 构造：检查 Update.UpdateUrl 是否配置 → 决定是否启用
 ├── TrackEvent(event, properties?)
+│   ├── 未启用 → 直接返回，零开销
 │   ├── 构造事件对象（填充公共字段）
 │   ├── 计算 HMAC-SHA256 签名
 │   └── 放入内存队列 (Channel<T>)
-├── 后台消费线程
-│   ├── 每 30 秒或队列满 20 条时触发
+├── 后台发送策略
+│   ├── 触发条件（满足任一即发送）：
+│   │   ├── 定时：每 30 秒（可配置）
+│   │   ├── 队列满：积攒 20 条（可配置）
+│   │   └── 即时发送：app_exit / app_crash 事件入队时立即 flush
 │   ├── 批量序列化 + POST /api/telemetry
 │   └── 失败重试：最多 3 次，指数退避 (1s, 2s, 4s)
 ├── FlushAsync()
-│   └── 应用退出时调用，发送剩余事件
+│   └── 同步发送队列中所有剩余事件，应用退出时调用
 └── Dispose()
-    └── 取消后台线程，尝试最终 flush
+    └── 取消后台线程，尝试最终 flush（超时 3 秒）
 ```
+
+### 发送时机总结
+
+| 场景 | 发送时机 | 说明 |
+|------|---------|------|
+| 功能事件 (fill/cleanup/inspect/update) | 批量：30 秒定时 或 队列满 20 条 | 不阻塞主流程 |
+| `app_exit` | 立即 flush | OnExit 中同步发送 |
+| `app_crash` | 立即 flush | 全局异常处理中同步发送 |
+| `app_start` | 放入队列，随下一次批量发送 | 不需要即时 |
+| 应用更新后 | 放入队列，随下一次批量发送 | 更新后进程会重启 |
+
+### 启用条件
+
+Telemetry 功能依赖 update-hub 服务器，启用逻辑：
+
+1. 读取 `appsettings.json` 中 `Update.UpdateUrl`
+2. `UpdateUrl` 非空 → 自动启用，EndpointUrl 由 `UpdateUrl` 推导：`{UpdateUrl}/api/telemetry`
+3. `UpdateUrl` 为空 → 自动禁用，不收集不发送，零开销
+4. `Telemetry.Enabled` 显式设为 `false` → 强制禁用，即使 UpdateUrl 已配置
+
+用户无需单独配置 Telemetry 地址，跟随更新服务器地址自动生效。
 
 ### 配置（appsettings.json）
 
 ```json
 {
+  "Update": {
+    "UpdateUrl": "http://192.168.1.100:30001",
+    "Channel": "stable"
+  },
   "Telemetry": {
-    "EndpointUrl": "http://<update-hub-host>:30001/api/telemetry",
     "Enabled": true,
     "BatchSize": 20,
     "FlushIntervalSeconds": 30
@@ -222,8 +250,8 @@ TelemetryService
 }
 ```
 
-- `Enabled: false` 或 `EndpointUrl` 为空时，TrackEvent 直接返回，不收集不发送
-- 后续可在 update-hub Web UI 中提供开关控制
+- 不再需要单独的 `EndpointUrl` 字段，从 `Update.UpdateUrl` 自动推导
+- `Enabled` 默认 true，仅当 UpdateUrl 为空时才实际禁用
 
 ### 埋点位置
 
