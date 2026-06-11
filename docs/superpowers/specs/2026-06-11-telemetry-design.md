@@ -301,6 +301,16 @@ Telemetry 功能依赖 update-hub 服务器，启用逻辑：
 - 本地 telemetry.db 超过 10MB → 清理最旧事件，防膨胀
 - 日志记录发送失败（Debug 级别，不打扰用户）
 
+### 本地数据库容错
+
+telemetry.db 不是用户业务数据，丢了可接受，采取「坏了就重建」策略：
+
+1. 每次启动时执行 `PRAGMA integrity_check`
+2. 检查失败 → 删除整个 telemetry.db 文件 → 重新建库
+3. 构造函数中所有 DB 操作（打开、建表、integrity check）都用 try-catch 包裹
+4. 如果重建也失败（如磁盘只读）→ 禁用 telemetry，本次会话不收集，不影响主功能
+5. 任何异常都记录 Warning 日志，不弹窗不打扰用户
+
 ## 文件变更范围
 
 ### update-hub（Go）
