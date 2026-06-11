@@ -321,9 +321,9 @@ internal class CliRunner
 
     private static string GetVersion()
     {
-        var entry = Assembly.GetEntryAssembly();
-        if (entry is null) return "0.0.0";
-        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(entry.Location);
+        var path = System.Environment.ProcessPath;
+        if (string.IsNullOrEmpty(path)) return "0.0.0";
+        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(path);
         var pv = info.ProductVersion;
         if (string.IsNullOrEmpty(pv)) return "0.0.0";
         var match = System.Text.RegularExpressions.Regex.Match(pv, @"^\d+(\.\d+){0,3}");

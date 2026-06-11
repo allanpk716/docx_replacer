@@ -245,9 +245,9 @@ public sealed class TelemetryService : ITelemetryService
     {
         // Use ProductVersion (<Version> in .csproj) instead of AssemblyVersion,
         // because AssemblyVersion is pinned to 1.0.0.0 due to WPF BAML constraints.
-        var entry = System.Reflection.Assembly.GetEntryAssembly();
-        if (entry is null) return "0.0.0";
-        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(entry.Location);
+        var path = System.Environment.ProcessPath;
+        if (string.IsNullOrEmpty(path)) return "0.0.0";
+        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(path);
         var pv = info.ProductVersion;
         if (string.IsNullOrEmpty(pv)) return "0.0.0";
         // ProductVersion may include prerelease suffix (e.g. "1.14.0-beta2"); take the version part only.
