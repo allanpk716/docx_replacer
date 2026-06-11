@@ -14,7 +14,7 @@ namespace DocuFiller.Services;
 public sealed class TelemetryService : ITelemetryService
 {
     private const string AppId = "docufiller";
-    private const string SecretKey = "CHANGE_ME_TO_MATCH_SERVER_KEY";
+    private const string SecretKey = "f9146af6fc0f7daa44d9f4151f84ae45d49c12c9b764185fc65c1e53ed15a49e";
     private const int MaxDbSizeBytes = 10 * 1024 * 1024; // 10MB
 
     private readonly ILogger<TelemetryService> _logger;
