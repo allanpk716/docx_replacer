@@ -46,7 +46,9 @@ public sealed class TelemetryService : ITelemetryService
         if (string.IsNullOrEmpty(updateUrl))
             throw new InvalidOperationException("UpdateUrl not configured, telemetry disabled");
 
-        _endpointUrl = $"{updateUrl}/api/telemetry";
+        // UpdateUrl is like http://host:port/docufiller — extract base URL for API calls
+        var uri = new Uri(updateUrl);
+        _endpointUrl = $"{uri.Scheme}://{uri.Authority}/api/telemetry";
 
         _settings = new TelemetrySettings();
         configuration.GetSection(TelemetrySettings.SectionName).Bind(_settings);
