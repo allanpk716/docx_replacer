@@ -241,19 +241,7 @@ public sealed class TelemetryService : ITelemetryService
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
-    private static string GetVersion()
-    {
-        // Read <Version> from .csproj via AssemblyInformationalVersionAttribute.
-        // This works in single-file publish mode (no file path needed) and
-        // returns the real product version, unlike AssemblyVersion (pinned to 1.0.0.0).
-        var attr = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(System.Reflection.Assembly.GetEntryAssembly());
-        if (attr?.InformationalVersion is string iv && !string.IsNullOrEmpty(iv))
-        {
-            var match = System.Text.RegularExpressions.Regex.Match(iv, @"^\d+(\.\d+){0,3}");
-            if (match.Success) return match.Value;
-        }
-        return "0.0.0";
-    }
+    private static string GetVersion() => VersionHelper.GetCurrentVersion();
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {

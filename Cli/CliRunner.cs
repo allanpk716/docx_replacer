@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Text.Json;
 using DocuFiller.Services.Interfaces;
+using DocuFiller.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -319,17 +320,7 @@ internal class CliRunner
         });
     }
 
-    private static string GetVersion()
-    {
-        var attr = Assembly.GetEntryAssembly()
-            ?.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>();
-        if (attr?.InformationalVersion is string iv && !string.IsNullOrEmpty(iv))
-        {
-            var match = System.Text.RegularExpressions.Regex.Match(iv, @"^\d+(\.\d+){0,3}");
-            if (match.Success) return match.Value;
-        }
-        return "0.0.0";
-    }
+    private static string GetVersion() => VersionHelper.GetCurrentVersion();
 
     /// <summary>
     /// 条件性追加 update reminder JSONL 行。
