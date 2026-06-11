@@ -321,13 +321,14 @@ internal class CliRunner
 
     private static string GetVersion()
     {
-        var path = System.Environment.ProcessPath;
-        if (string.IsNullOrEmpty(path)) return "0.0.0";
-        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(path);
-        var pv = info.ProductVersion;
-        if (string.IsNullOrEmpty(pv)) return "0.0.0";
-        var match = System.Text.RegularExpressions.Regex.Match(pv, @"^\d+(\.\d+){0,3}");
-        return match.Success ? match.Value : "0.0.0";
+        var attr = Assembly.GetEntryAssembly()
+            ?.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>();
+        if (attr?.InformationalVersion is string iv && !string.IsNullOrEmpty(iv))
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(iv, @"^\d+(\.\d+){0,3}");
+            if (match.Success) return match.Value;
+        }
+        return "0.0.0";
     }
 
     /// <summary>

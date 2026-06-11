@@ -243,16 +243,16 @@ public sealed class TelemetryService : ITelemetryService
 
     private static string GetVersion()
     {
-        // Use ProductVersion (<Version> in .csproj) instead of AssemblyVersion,
-        // because AssemblyVersion is pinned to 1.0.0.0 due to WPF BAML constraints.
-        var path = System.Environment.ProcessPath;
-        if (string.IsNullOrEmpty(path)) return "0.0.0";
-        var info = System.Diagnostics.FileVersionInfo.GetVersionInfo(path);
-        var pv = info.ProductVersion;
-        if (string.IsNullOrEmpty(pv)) return "0.0.0";
-        // ProductVersion may include prerelease suffix (e.g. "1.14.0-beta2"); take the version part only.
-        var match = System.Text.RegularExpressions.Regex.Match(pv, @"^\d+(\.\d+){0,3}");
-        return match.Success ? match.Value : "0.0.0";
+        // Read <Version> from .csproj via AssemblyInformationalVersionAttribute.
+        // This works in single-file publish mode (no file path needed) and
+        // returns the real product version, unlike AssemblyVersion (pinned to 1.0.0.0).
+        var attr = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(System.Reflection.Assembly.GetEntryAssembly());
+        if (attr?.InformationalVersion is string iv && !string.IsNullOrEmpty(iv))
+        {
+            var match = System.Text.RegularExpressions.Regex.Match(iv, @"^\d+(\.\d+){0,3}");
+            if (match.Success) return match.Value;
+        }
+        return "0.0.0";
     }
 
     private static readonly JsonSerializerOptions JsonOpts = new()
