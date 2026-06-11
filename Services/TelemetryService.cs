@@ -2,6 +2,7 @@ using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using DocuFiller.Configuration;
 using DocuFiller.Services.Interfaces;
@@ -188,13 +189,36 @@ public sealed class TelemetryService : ITelemetryService
 
                     if (response.IsSuccessStatusCode)
                     {
-                        successIds.AddRange(chunk.Select(c => c.Id));
+                        var body = await response.Content.ReadAsStringAsync(ct);
+                        var doc = JsonDocument.Parse(body);
+                        var accepted = doc.RootElement.GetProperty("accepted").GetInt32();
+                        var rejected = doc.RootElement.GetProperty("rejected").GetInt32();
+
+                        if (rejected == 0)
+                        {
+                            successIds.AddRange(chunk.Select(c => c.Id));
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Telemetry server rejected {Count}/{Total} events: {Body}", rejected, chunk.Length, body);
+                            // If all rejected, treat as rejected. If partial, delete accepted ones only.
+                            if (accepted > 0 && chunk.Length > 1)
+                            {
+                                // Batch had partial success - can't tell which specific events were accepted
+                                // so keep them all for retry (they'll be re-sent next cycle)
+                            }
+                            else
+                            {
+                                // All rejected or single event - delete to avoid retry loop
+                                rejectedIds.AddRange(chunk.Select(c => c.Id));
+                            }
+                        }
                     }
                     else
                     {
                         var body = await response.Content.ReadAsStringAsync(ct);
                         _logger.LogDebug("Telemetry server returned {Status}: {Body}", (int)response.StatusCode, body);
-                        rejectedIds.AddRange(chunk.Select(c => c.Id));
+                        return; // Retry on server errors
                     }
                 }
                 catch (Exception ex)
@@ -227,5 +251,6 @@ public sealed class TelemetryService : ITelemetryService
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         WriteIndented = false,
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 }
