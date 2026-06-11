@@ -192,36 +192,62 @@ POST `/api/telemetry` 请求体支持两种格式：
 
 注册为 Singleton，接口 `ITelemetryService`。
 
+### 本地持久化队列
+
+核心原则：**事件先落盘，服务端确认收到后才删除**。应用秒开秒关也不丢数据。
+
+**本地存储**：应用数据目录下的 `telemetry.db`（SQLite），单文件，与业务数据隔离。
+
+```sql
+-- 本地待发送事件表
+CREATE TABLE pending_events (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    payload    TEXT NOT NULL,    -- 完整的 JSON 事件（含签名）
+    created_at TEXT NOT NULL
+);
+
+-- 只保留 pending 状态，服务端确认收到后 DELETE
+-- 无需 status 字段，删了就是发了
+```
+
 ```
 TelemetryService
-├── 构造：检查 Update.UpdateUrl 是否配置 → 决定是否启用
+├── 构造
+│   ├── 检查 Update.UpdateUrl → 决定是否启用
+│   └── 打开本地 telemetry.db（不存在则创建）
 ├── TrackEvent(event, properties?)
-│   ├── 未启用 → 直接返回，零开销
-│   ├── 构造事件对象（填充公共字段）
-│   ├── 计算 HMAC-SHA256 签名
-│   └── 放入内存队列 (Channel<T>)
-├── 后台发送策略
+│   ├── 未启用 → 直接返回
+│   ├── 构造事件对象 + 计算 HMAC-SHA256 签名
+│   └── INSERT INTO pending_events → 已落盘，安全
+├── 后台发送循环
 │   ├── 触发条件（满足任一即发送）：
-│   │   ├── 定时：每 30 秒（可配置）
-│   │   ├── 队列满：积攒 20 条（可配置）
-│   │   └── 即时发送：app_exit / app_crash 事件入队时立即 flush
-│   ├── 批量序列化 + POST /api/telemetry
-│   └── 失败重试：最多 3 次，指数退避 (1s, 2s, 4s)
+│   │   ├── 启动后首次发送延迟 5 秒（等网络就绪）
+│   │   ├── 定时：每 60 秒检查一次
+│   │   └── pending_events 新增事件时通过信号量立即唤醒
+│   ├── 取出最多 50 条 pending 事件
+│   ├── POST /api/telemetry 批量发送
+│   ├── 服务端返回 200 → DELETE 已发送的行（确认后删除）
+│   └── 发送失败 → 保留在 pending 表，下次重试
 ├── FlushAsync()
-│   └── 同步发送队列中所有剩余事件，应用退出时调用
+│   └── 发送所有 pending 事件（应用退出时调用，超时 5 秒）
 └── Dispose()
-    └── 取消后台线程，尝试最终 flush（超时 3 秒）
+    └── 取消后台线程，尝试最终 flush
 ```
 
 ### 发送时机总结
 
-| 场景 | 发送时机 | 说明 |
-|------|---------|------|
-| 功能事件 (fill/cleanup/inspect/update) | 批量：30 秒定时 或 队列满 20 条 | 不阻塞主流程 |
-| `app_exit` | 立即 flush | OnExit 中同步发送 |
-| `app_crash` | 立即 flush | 全局异常处理中同步发送 |
-| `app_start` | 放入队列，随下一次批量发送 | 不需要即时 |
-| 应用更新后 | 放入队列，随下一次批量发送 | 更新后进程会重启 |
+| 场景 | 写入时机 | 发送时机 | 说明 |
+|------|---------|---------|------|
+| 任何事件 | 立即写入本地 SQLite | 后台批量发送 | 落盘即安全 |
+| `app_exit` | 写入后唤醒后台线程 | 尝试立即发送 | 5 秒超时，发不完留着下次 |
+| `app_crash` | 写入后唤醒后台线程 | 尝试立即发送 | 同上 |
+| 下次启动 | — | 启动 5 秒后自动发送上次遗留事件 | 历史事件不丢 |
+
+**关键设计点**：
+- TrackEvent 只做 SQLite INSERT，极快（< 1ms），不阻塞 UI
+- 发送和确认是异步的，用户关程序时不需要等网络
+- 服务端返回非 200（包括验签失败）→ 删除对应事件（避免无限重试脏数据）
+- 本地 telemetry.db 超过 10MB 时清理最旧的 pending 事件（防止极端情况膨胀）
 
 ### 启用条件
 
@@ -269,8 +295,10 @@ Telemetry 功能依赖 update-hub 服务器，启用逻辑：
 ### 错误处理原则
 
 - telemetry 发送失败**不影响主功能**：所有网络异常静默吞掉
-- 后台线程异常不 crash 应用
-- 队列满时丢弃最旧事件（优先保证应用稳定性）
+- 后台发送线程异常不 crash 应用
+- 发送失败的事件保留在本地 SQLite，下次启动自动重试
+- 服务端返回非 200（含验签失败）→ 删除事件，不无限重试脏数据
+- 本地 telemetry.db 超过 10MB → 清理最旧事件，防膨胀
 - 日志记录发送失败（Debug 级别，不打扰用户）
 
 ## 文件变更范围
@@ -293,10 +321,11 @@ Telemetry 功能依赖 update-hub 服务器，启用逻辑：
 | 操作 | 文件 | 说明 |
 |------|------|------|
 | 新增 | `Services/Interfaces/ITelemetryService.cs` | 接口定义 |
-| 新增 | `Services/TelemetryService.cs` | 实现类 |
+| 新增 | `Services/TelemetryService.cs` | 实现类（本地 SQLite + 后台发送 + HMAC 签名） |
 | 新增 | `Configuration/TelemetrySettings.cs` | 配置类 |
+| 新增 | `Utils/TelemetryDb.cs` | 本地 pending_events SQLite 操作封装 |
 | 修改 | `App.xaml.cs` | 注册服务 + 启动/退出/异常埋点 |
-| 修改 | `appsettings.json` | 新增 Telemetry 配置节 |
+| 修改 | `appsettings.json` | 新增 Telemetry 配置节（Enabled, BatchSize, FlushIntervalSeconds） |
 | 修改 | `Services/DocumentProcessorService.cs` | fill_complete 埋点 |
 | 修改 | `DocuFiller/Services/DocumentCleanupService.cs` | cleanup_complete 埋点 |
 | 修改 | `Cli/Commands/InspectCommand.cs` | inspect_complete 埋点 |
